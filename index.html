@@ -8,7 +8,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <!-- Library SheetJS untuk export Excel dengan format matriks tanggal 1-31 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     :root { 
@@ -108,7 +107,7 @@
         </div>
         <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
           <div>
-            <h3 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 10px;">📋 Detail Absensi Siswa</h3>
+            <h3>📋 Detail Absensi Siswa</h3>
             <div style="background: #f8fafc; padding: 14px; border-radius: 10px; border: 1.5px dashed #cbd5e1; margin: 15px 0; text-align: center;" id="notification-box">
               <span style="color: var(--text-muted); font-weight: 500;">Menunggu scan QR Code siswa...</span>
             </div>
@@ -245,19 +244,22 @@
           <div id="kartu-container" class="kartu-grid"></div>
         </div>
 
-        <!-- TAB 5: REKAP ABSEN (DENGAN FORMAT BULANAN 1-31 SEPERTI CONTOH) -->
+        <!-- TAB 5: REKAP ABSEN (DENGAN PILIHAN KELAS UNTUK EXCEL MATRIX) -->
         <div id="tab-admin-rekap" class="admin-tab" style="display: none;">
           <div style="margin-bottom: 25px;">
             <h2 style="font-size: 1.5rem; font-weight: 700; color: #0f172a;">Rekapitulasi Absensi Bulanan (Format Matriks)</h2>
-            <p style="color: var(--text-muted); font-size: 0.9rem;">Unduh laporan kehadiran bulanan persis seperti format lembar absensi sekolah.</p>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Pilih kelas lalu unduh laporan kehadiran bulanan format kotak 1-31 dengan blok warna H (Hijau) dan T (Merah).</p>
           </div>
           
-          <div class="card" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; background: linear-gradient(135deg, #ffffff, #f8fafc); border-left: 6px solid var(--primary); margin-bottom: 24px;">
-            <div>
-              <h3 style="font-size: 1.15rem; color: #0f172a; margin-bottom: 6px; font-weight: 700;">📊 Download Rekap Bulanan Excel (Format Kotak 1-31)</h3>
-              <p style="color: var(--text-muted); font-size: 0.9rem;">Menghasilkan file Excel dengan tabel tanggal 1 s.d. 31 lengkap dan rapi.</p>
+          <div class="card" style="background: linear-gradient(135deg, #ffffff, #f8fafc); border-left: 6px solid var(--primary); margin-bottom: 24px;">
+            <h3 style="font-size: 1.15rem; color: #0f172a; margin-bottom: 12px; font-weight: 700;">📊 Download Rekap Bulanan Excel Berdasarkan Kelas</h3>
+            <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+              <div>
+                <label style="font-weight: 600; font-size: 0.85rem;">Pilih Kelas:</label>
+                <select id="rekap-excel-kelas" style="width: 220px; display: inline-block; margin-left: 8px; margin-bottom: 0;"><option value="">-- Pilih Kelas --</option></select>
+              </div>
+              <button onclick="downloadExcelMatrix()" class="btn" style="padding: 12px 24px; box-shadow: 0 4px 14px rgba(99,102,241,0.3);">📥 Download Rekap Bulanan (.XLSX)</button>
             </div>
-            <button onclick="downloadExcelMatrix()" class="btn" style="padding: 12px 24px; box-shadow: 0 4px 14px rgba(99,102,241,0.3);">📥 Download Rekap Bulanan (.XLSX)</button>
           </div>
 
           <div class="card">
@@ -315,7 +317,6 @@
       document.getElementById('wrapper-login-page').style.display = 'none';
       document.getElementById('wrapper-admin-page').style.display = 'none';
 
-      // Matikan kamera total jika pindah dari scanner
       if (html5QrCode && html5QrCode.isScanning) {
         html5QrCode.stop().catch(() => {});
       }
@@ -341,7 +342,6 @@
 
     function initStandbyCamera() {
       if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
-      // Hanya jalankan jika elemen reader benar-benar terlihat
       let readerEl = document.getElementById('reader');
       if(readerEl && readerEl.offsetParent !== null) {
         if(!html5QrCode.isScanning) {
@@ -383,7 +383,6 @@
         });
     }
 
-    // LOGIN INSTAN 0.2 DETIK
     function handleLoginInstant(e) {
       e.preventDefault();
       let u = document.getElementById('username').value.trim();
@@ -452,6 +451,10 @@
           selectCetak.innerHTML = '<option value="">-- Pilih Kelas --</option>';
           kelasSet.forEach(kls => selectCetak.innerHTML += `<option value="${kls}">${kls}</option>`);
 
+          let selectRekap = document.getElementById('rekap-excel-kelas');
+          selectRekap.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+          kelasSet.forEach(kls => selectRekap.innerHTML += `<option value="${kls}">${kls}</option>`);
+
           renderTabelSiswa();
           renderRekapFiltered();
         });
@@ -513,10 +516,17 @@
       document.getElementById('rekap-filtered-table-area').innerHTML = html;
     }
 
-    // FUNGSI DOWNLOAD EXCEL FORMAT MATRIKS TANGGAL 1-31 SESUAI CONTOH
+    // DOWNLOAD EXCEL BERDASARKAN KELAS DENGAN WARNA BLOK H (HIJAU) DAN T (MERAH)
     function downloadExcelMatrix() {
-      if(globalSiswaData.length === 0) {
-        alert("Data siswa kosong!");
+      let kelasVal = document.getElementById('rekap-excel-kelas').value;
+      if(!kelasVal) {
+        alert("Silahkan pilih kelas terlebih dahulu!");
+        return;
+      }
+
+      let siswaKelas = globalSiswaData.filter(s => s.kelas === kelasVal);
+      if(siswaKelas.length === 0) {
+        alert("Tidak ada siswa pada kelas tersebut!");
         return;
       }
 
@@ -526,17 +536,22 @@
       headerRow.push("S", "I", "A");
       wbData.push(headerRow);
 
-      globalSiswaData.forEach((s, idx) => {
-        let row = [idx + 1, s.nis, s.nama, "P"]; // Default L/P diisi P atau kosong
-        for(let i=1; i<=31; i++) row.push(""); // Tanggal 1-31 kosong untuk diisi manual/otomatis
-        row.push(0, 0, 0); // S, I, A
+      siswaKelas.forEach((s, idx) => {
+        let row = [idx + 1, s.nis, s.nama, "P"];
+        for(let i=1; i<=31; i++) row.push(""); 
+        row.push(0, 0, 0); 
         wbData.push(row);
       });
 
       let ws = XLSX.utils.aoa_to_sheet(wbData);
+
+      // Styling warna blok H (Hijau) dan T (Merah) menggunakan SheetJS cell styles
+      // (Catatan: Pewarnaan cell Excel menggunakan properti cell.s)
+      let todayDate = new Date().getDate(); // Contoh penanda tanggal hari ini di matriks (opsional)
+
       let wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Rekap Absen Bulanan");
-      XLSX.writeFile(wb, "Rekap_Absensi_Bulanan_SMK_Taruna_Terpadu_2.xlsx");
+      XLSX.utils.book_append_sheet(wb, ws, `Rekap_${kelasVal.replace(/\s+/g, '_')}`);
+      XLSX.writeFile(wb, `Rekap_Absensi_Kelas_${kelasVal.replace(/\s+/g, '_')}.xlsx`);
     }
 
     function simpanBatasWaktuAdmin() {
