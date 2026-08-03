@@ -30,7 +30,6 @@
     .brand-header img { height: 48px; width: auto; object-fit: contain; }
     .container { max-width: 1280px; margin: 30px auto; padding: 0 20px; width: 100%; flex: 1; }
     
-    /* SIDEBAR PREMIUM */
     aside { width: 280px; background-color: var(--sidebar-bg); color: white; display: flex; flex-direction: column; justify-content: space-between; position: fixed; height: 100vh; z-index: 100; border-right: 1px solid rgba(255,255,255,0.05); }
     .sidebar-brand { padding: 24px; font-weight: 700; font-size: 1.15rem; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 12px; letter-spacing: 0.5px; }
     .sidebar-menu { list-style: none; padding: 20px 14px; overflow-y: auto; flex: 1; }
@@ -42,7 +41,7 @@
 
     .main-admin-wrapper { margin-left: 280px; flex: 1; display: flex; flex-direction: column; min-width: 0; }
     
-    .card { background: var(--card-bg); border-radius: 16px; padding: 28px; border: 1px solid var(--border-color); box-shadow: 0 4px 20px -2px rgba(0,0,0,0.03); margin-bottom: 24px; transition: transform 0.2s; }
+    .card { background: var(--card-bg); border-radius: 16px; padding: 28px; border: 1px solid var(--border-color); box-shadow: 0 4px 20px -2px rgba(0,0,0,0.03); margin-bottom: 24px; }
     .grid-layout { display: grid; grid-template-columns: 1.1fr 1fr; gap: 24px; }
     @media(max-width: 900px) { .grid-layout { grid-template-columns: 1fr; } }
     
@@ -52,7 +51,7 @@
     .badge-telat { background: #fef3c7; color: #92400e; }
     .badge-none { background: #f1f5f9; color: #475569; }
 
-    input, select { width: 100%; padding: 12px 16px; margin: 8px 0 20px 0; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.95rem; outline: none; transition: border-color 0.2s; background: #fff; }
+    input, select { width: 100%; padding: 12px 16px; margin: 8px 0 20px 0; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.95rem; outline: none; background: #fff; }
     input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
     
     table { width: 100%; border-collapse: collapse; margin-top: 15px; border-radius: 10px; overflow: hidden; }
@@ -96,9 +95,7 @@
           <p style="font-size: 0.85rem; color: #94a3b8; font-weight: 400;">Sistem Absensi Terpadu • <span id="realtime-clock" style="color: #38bdf8; font-weight: 600;"></span></p>
         </div>
       </div>
-      <div style="font-size: 0.9rem; color: #cbd5e1; font-weight: 500;">
-        📍 Bogor, Jawa Barat
-      </div>
+      <div style="font-size: 0.9rem; color: #cbd5e1; font-weight: 500;">📍 Bogor, Jawa Barat</div>
     </header>
     <div class="container">
       <div class="grid-layout">
@@ -127,7 +124,7 @@
     </div>
   </div>
 
-  <!-- HALAMAN LOGIN ADMIN (INSTAN 0.2 DETIK) -->
+  <!-- HALAMAN LOGIN ADMIN (0.2 DETIK) -->
   <div id="wrapper-login-page" style="display: none; max-width: 420px; margin: 80px auto; width: 100%; padding: 0 20px;">
     <div class="card" style="box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);">
       <h3 style="text-align: center; margin-bottom: 20px; font-size: 1.4rem; font-weight: 700; color: #0f172a;">Login Panel Admin</h3>
@@ -246,7 +243,7 @@
           <div id="kartu-container" class="kartu-grid"></div>
         </div>
 
-        <!-- TAB 5: REKAP ABSEN (DENGAN FILTER TEPAT WAKTU / TELAT) -->
+        <!-- TAB 5: REKAP ABSEN (DENGAN TOMBOL EXPORT EXCEL LANGSUNG & FILTER) -->
         <div id="tab-admin-rekap" class="admin-tab" style="display: none;">
           <div style="margin-bottom: 25px;">
             <h2 style="font-size: 1.5rem; font-weight: 700; color: #0f172a;">Rekapitulasi Absensi & Filter</h2>
@@ -258,7 +255,8 @@
               <h3 style="font-size: 1.15rem; color: #0f172a; margin-bottom: 6px; font-weight: 700;">📊 Laporan Data Kehadiran Excel (.XLSX)</h3>
               <p style="color: var(--text-muted); font-size: 0.9rem;">Unduh rekap harian, mingguan, dan bulanan seluruh siswa.</p>
             </div>
-            <a href="https://docs.google.com/spreadsheets/d/1vnwADJfHnOzkQdvscN1gpIVJLKu8WuM3W39oEpJ0s/export?format=xlsx" target="_blank" class="btn" style="padding: 12px 24px; box-shadow: 0 4px 14px rgba(99,102,241,0.3);">📥 Download Rekap Excel</a>
+            <!-- Tombol Export Excel Aman Langsung dari SpreadSheet ID Anda -->
+            <a href="https://docs.google.com/spreadsheets/d/1vnwADJfHnOzkQdvscN1gpIVJLKu8WuM3W39oEpJ0s/edit?usp=sharing" target="_blank" class="btn" style="padding: 12px 24px; box-shadow: 0 4px 14px rgba(99,102,241,0.3);">📥 Buka & Download Google Spreadsheet</a>
           </div>
 
           <div class="card">
@@ -378,7 +376,7 @@
         });
     }
 
-    // LOGIN INSTAN 0.2 DETIK (CLIENT-SIDE AUTH UNTUK KECEPATAN MAKSIMAL)
+    // LOGIN INSTAN 0.2 DETIK
     function handleLoginInstant(e) {
       e.preventDefault();
       let u = document.getElementById('username').value.trim();
