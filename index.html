@@ -17,7 +17,7 @@
       --accent: #10b981; 
       --danger: #ef4444; 
       --warning: #f59e0b;
-      --bg: #f1f5f9; 
+      --bg: #f8fafc; 
       --text-main: #0f172a;
       --text-muted: #64748b;
       --card-bg: #ffffff;
@@ -26,25 +26,29 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
     body { background-color: var(--bg); color: var(--text-main); display: flex; flex-direction: column; min-height: 100vh; }
     
-    header { background: linear-gradient(135deg, #0f172a, #1e1b4b); color: white; padding: 16px 24px; box-shadow: 0 4px 20px -2px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    header { background: #ffffff; color: var(--text-main); padding: 16px 28px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); }
     .brand-header { display: flex; align-items: center; gap: 14px; }
-    .brand-header img { height: 48px; width: auto; object-fit: contain; }
+    .brand-header img { height: 42px; width: auto; object-fit: contain; }
     .container { max-width: 1280px; margin: 30px auto; padding: 0 20px; width: 100%; flex: 1; }
     
+    /* SIDEBAR PROFESIONAL */
     aside { width: 280px; background-color: var(--sidebar-bg); color: white; display: flex; flex-direction: column; justify-content: space-between; position: fixed; height: 100vh; z-index: 100; border-right: 1px solid rgba(255,255,255,0.05); }
-    .sidebar-brand { padding: 24px; font-weight: 700; font-size: 1.15rem; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 12px; letter-spacing: 0.5px; }
-    .sidebar-menu { list-style: none; padding: 20px 14px; overflow-y: auto; flex: 1; }
-    .sidebar-menu li { margin-bottom: 8px; }
-    .sidebar-menu a { display: flex; align-items: center; gap: 14px; padding: 12px 18px; color: #94a3b8; text-decoration: none; border-radius: 10px; font-size: 0.9rem; font-weight: 500; transition: all 0.2s ease; cursor: pointer; }
+    .sidebar-brand { padding: 22px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 12px; }
+    .user-profile-box { padding: 16px 20px; background: rgba(255,255,255,0.05); margin: 15px; border-radius: 12px; display: flex; align-items: center; gap: 12px; border: 1px solid rgba(255,255,255,0.08); }
+    .user-avatar { width: 38px; height: 38px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; }
+    
+    .sidebar-menu { list-style: none; padding: 10px 14px; overflow-y: auto; flex: 1; }
+    .sidebar-menu li { margin-bottom: 4px; }
+    .sidebar-menu a { display: flex; align-items: center; gap: 14px; padding: 11px 16px; color: #94a3b8; text-decoration: none; border-radius: 10px; font-size: 0.9rem; font-weight: 500; transition: all 0.2s ease; cursor: pointer; }
     .sidebar-menu a:hover, .sidebar-menu a.active { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: white; box-shadow: 0 4px 12px rgba(99,102,241,0.3); }
-    .sidebar-footer { padding: 20px 24px; border-top: 1px solid rgba(255,255,255,0.08); }
+    .sidebar-footer { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.08); }
     .sidebar-footer a { color: #f87171; text-decoration: none; font-size: 0.9rem; display: flex; align-items: center; gap: 12px; cursor: pointer; font-weight: 500; }
 
     .main-admin-wrapper { margin-left: 280px; flex: 1; display: flex; flex-direction: column; min-width: 0; }
     
-    .card { background: var(--card-bg); border-radius: 16px; padding: 28px; border: 1px solid var(--border-color); box-shadow: 0 4px 20px -2px rgba(0,0,0,0.03); margin-bottom: 24px; }
+    .card { background: var(--card-bg); border-radius: 16px; padding: 26px; border: 1px solid var(--border-color); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); margin-bottom: 24px; }
     .grid-layout { display: grid; grid-template-columns: 1.1fr 1fr; gap: 24px; }
-    @media(max-width: 900px) { .grid-layout { grid-template-columns: 1fr; } }
+    @media(max-width: 900px) { .grid-layout { grid-layout: 1fr; } }
     
     .info-group { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f5f9; font-size: 0.95rem; }
     .status-badge { padding: 6px 14px; border-radius: 20px; font-weight: 600; font-size: 0.8rem; letter-spacing: 0.3px; display: inline-block; }
@@ -55,7 +59,7 @@
     .badge-alfa { background: #fee2e2; color: #991b1b; }
     .badge-none { background: #f1f5f9; color: #475569; }
 
-    input, select { width: 100%; padding: 10px 14px; margin: 4px 0; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; background: #fff; }
+    input, select { width: 100%; padding: 11px 15px; margin: 6px 0 16px 0; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.95rem; outline: none; background: #fff; }
     input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
     
     table { width: 100%; border-collapse: collapse; margin-top: 15px; border-radius: 10px; overflow: hidden; }
@@ -64,7 +68,7 @@
     th { background-color: #f8fafc; color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; }
     tr:hover { background-color: #f8fafc; }
     
-    .btn { display: inline-flex; align-items: center; justify-content: center; padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 10px; cursor: pointer; text-decoration: none; font-weight: 600; font-size: 0.85rem; transition: all 0.2s; box-shadow: 0 4px 12px rgba(99,102,241,0.25); }
+    .btn { display: inline-flex; align-items: center; justify-content: center; padding: 11px 22px; background: var(--primary); color: white; border: none; border-radius: 10px; cursor: pointer; text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: all 0.2s; box-shadow: 0 4px 12px rgba(99,102,241,0.25); }
     .btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
     .btn-success { background: var(--accent); box-shadow: 0 4px 12px rgba(16,185,129,0.25); }
     .btn-success:hover { background: #059669; }
@@ -95,11 +99,11 @@
       <div class="brand-header">
         <img src="logo.png" alt="Logo" onerror="this.style.display='none'">
         <div>
-          <h2 style="font-size: 1.25rem; font-weight: 700; letter-spacing: 0.5px;">SMK TARUNA TERPADU 2</h2>
-          <p style="font-size: 0.85rem; color: #94a3b8; font-weight: 400;">Sistem Absensi Terpadu • <span id="realtime-clock" style="color: #38bdf8; font-weight: 600;"></span></p>
+          <h2 style="font-size: 1.15rem; font-weight: 700; color: #0f172a;">E-ABSENSI SCHOOL SYSTEM</h2>
+          <p style="font-size: 0.8rem; color: var(--text-muted);">SMK Taruna Terpadu 2 • <span id="realtime-clock" style="color: var(--primary); font-weight: 600;"></span></p>
         </div>
       </div>
-      <div style="font-size: 0.9rem; color: #cbd5e1; font-weight: 500;">📍 Bogor, Jawa Barat</div>
+      <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">📍 Bogor, Jawa Barat</div>
     </header>
     <div class="container">
       <div class="grid-layout">
@@ -121,7 +125,7 @@
             <div class="info-group"><span>Status Kehadiran</span><span><div id="res-status" class="status-badge badge-none">Belum Absen</div></span></div>
           </div>
           <div style="margin-top: 25px;">
-            <button onclick="switchPage('login')" class="btn" style="width: 100%; text-align: center; background: #1e293b;">🔐 Login Panel Admin / Wali Kelas</button>
+            <button onclick="switchPage('login')" class="btn" style="width: 100%; text-align: center; background: #1e293b;">🔐 Login Panel Sistem</button>
           </div>
         </div>
       </div>
@@ -131,7 +135,7 @@
   <!-- HALAMAN LOGIN ADMIN -->
   <div id="wrapper-login-page" style="display: none; max-width: 420px; margin: 80px auto; width: 100%; padding: 0 20px;">
     <div class="card" style="box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);">
-      <h3 style="text-align: center; margin-bottom: 20px; font-size: 1.4rem; font-weight: 700; color: #0f172a;">Login Panel Admin</h3>
+      <h3 style="text-align: center; margin-bottom: 20px; font-size: 1.4rem; font-weight: 700; color: #0f172a;">Login E-Absensi</h3>
       <div id="error-msg" style="color: var(--danger); margin-bottom: 15px; text-align: center; font-size: 0.9rem; font-weight: 500;"></div>
       <form onsubmit="handleLoginInstant(event)">
         <label style="font-weight: 600; font-size: 0.85rem;">Username</label>
@@ -151,30 +155,31 @@
     <aside id="sidebar-nav">
       <div>
         <div class="sidebar-brand">
-          <img src="logo.png" alt="Logo" style="height: 30px; width: auto;" onerror="this.style.display='none'">
-          🛡️ E-ABSENSI <span style="font-size: 0.65rem; background: var(--primary); padding: 2px 8px; border-radius: 6px;">PRO</span>
+          <img src="logo.png" alt="Logo" style="height: 28px; width: auto;" onerror="this.style.display='none'">
+          <span style="font-weight: 700; font-size: 0.95rem;">E-ABSENSI</span>
         </div>
-        <ul class="sidebar-menu" id="dynamic-sidebar-menu">
-          <!-- Menu akan diatur otomatis via JS sesuai role admin / wali kelas -->
-        </ul>
+        <div class="user-profile-box">
+          <div class="user-avatar" id="avatar-initial">A</div>
+          <div style="overflow: hidden;">
+            <div style="font-weight: 600; font-size: 0.9rem; white-space: nowrap; text-overflow: ellipsis;" id="sidebar-user-name">Admin</div>
+            <div style="font-size: 0.75rem; color: #38bdf8;" id="sidebar-user-role">ADMINISTRATOR</div>
+          </div>
+        </div>
+        <ul class="sidebar-menu" id="dynamic-sidebar-menu"></ul>
       </div>
       <div class="sidebar-footer">
-        <a onclick="switchPage('scanner')">📷 Buka Scanner</a>
+        <a onclick="switchPage('scanner')">📷 Buka Scanner Utama</a>
       </div>
     </aside>
 
     <div class="main-admin-wrapper">
-      <header style="background: white; border-bottom: 1px solid var(--border-color); color: var(--text-main); padding: 16px 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+      <header>
         <div style="display: flex; align-items: center; gap: 14px;">
-          <img src="logo.png" alt="Logo" style="height: 38px; width: auto;" onerror="this.style.display='none'">
-          <div>
-            <h3 style="font-size: 1.15rem; font-weight: 700;" id="header-welcome-title">Dashboard Kesiswaan</h3>
-            <p style="font-size: 0.8rem; color: var(--text-muted);" id="header-user-login-info">Login sebagai: -</p>
-          </div>
+          <h3 style="font-size: 1.15rem; font-weight: 700;" id="header-page-title">Dashboard</h3>
         </div>
-        <div style="font-size: 0.9rem; display: flex; align-items: center; gap: 16px;">
-          <span id="realtime-date" style="color: var(--text-muted); font-weight: 500;">-</span>
-          <button onclick="loadAdminData()" class="btn" style="padding: 8px 16px; font-size: 0.85rem; box-shadow: none;">🔄 Refresh</button>
+        <div style="font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 16px;">
+          <span id="realtime-date">-</span>
+          <button onclick="loadAdminData()" class="btn" style="padding: 6px 14px; font-size: 0.8rem; box-shadow: none;">🔄 Refresh Data</button>
         </div>
       </header>
 
@@ -182,25 +187,25 @@
         <!-- TAB 1: DASHBOARD -->
         <div id="tab-admin-dash" class="admin-tab">
           <div style="margin-bottom: 25px;">
-            <h2 style="font-size: 1.5rem; font-weight: 700; color: #0f172a;" id="dash-main-title">Dashboard Utama</h2>
-            <p style="color: var(--text-muted); font-size: 0.9rem;" id="dash-sub-title">Pusat kontrol data absensi sekolah SMK Taruna Terpadu 2.</p>
+            <h2 style="font-size: 1.5rem; font-weight: 700; color: #0f172a;" id="dash-main-title">Dashboard</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem;" id="dash-sub-title">Pusat kontrol data absensi sekolah.</p>
           </div>
           <div class="stats-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 25px;">
-            <div class="stat-card card" style="margin-bottom:0; height: 120px; display:flex; flex-direction:column; justify-content:space-between;"><span id="label-stat-1">Total Siswa</span><h2 id="stat-total" style="font-size:2rem; font-weight:700;">0</h2></div>
-            <div class="stat-card card" style="margin-bottom:0; height: 120px; display:flex; flex-direction:column; justify-content:space-between; border-left: 5px solid var(--accent);"><span>Hadir Tepat Waktu</span><h2 id="stat-hadir" style="color: var(--accent); font-size:2rem; font-weight:700;">0</h2></div>
-            <div class="stat-card card" style="margin-bottom:0; height: 120px; display:flex; flex-direction:column; justify-content:space-between; border-left: 5px solid var(--warning);"><span>Siswa Telat</span><h2 id="stat-telat" style="color: var(--warning); font-size:2rem; font-weight:700;">0</h2></div>
-            <div class="stat-card card" style="margin-bottom:0; height: 120px; display:flex; flex-direction:column; justify-content:space-between; border-left: 5px solid var(--primary);"><span>Belum Absen</span><h2 id="stat-belum" style="color: var(--primary); font-size:2rem; font-weight:700;">0</h2></div>
+            <div class="stat-card card" style="margin-bottom:0; height: 110px; display:flex; flex-direction:column; justify-content:space-between;"><span id="label-stat-1" style="color:var(--text-muted); font-size:0.85rem; font-weight:600;">TOTAL SISWA</span><h2 id="stat-total" style="font-size:1.8rem; font-weight:700;">0</h2></div>
+            <div class="stat-card card" style="margin-bottom:0; height: 110px; display:flex; flex-direction:column; justify-content:space-between; border-left: 5px solid var(--accent);"><span style="color:var(--text-muted); font-size:0.85rem; font-weight:600;">HADIR TEPAT WAKTU</span><h2 id="stat-hadir" style="color: var(--accent); font-size:1.8rem; font-weight:700;">0</h2></div>
+            <div class="stat-card card" style="margin-bottom:0; height: 110px; display:flex; flex-direction:column; justify-content:space-between; border-left: 5px solid var(--warning);"><span style="color:var(--text-muted); font-size:0.85rem; font-weight:600;">SISWA TELAT</span><h2 id="stat-telat" style="color: var(--warning); font-size:1.8rem; font-weight:700;">0</h2></div>
+            <div class="stat-card card" style="margin-bottom:0; height: 110px; display:flex; flex-direction:column; justify-content:space-between; border-left: 5px solid var(--primary);"><span style="color:var(--text-muted); font-size:0.85rem; font-weight:600;">BELUM ABSEN</span><h2 id="stat-belum" style="color: var(--primary); font-size:1.8rem; font-weight:700;">0</h2></div>
           </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
-            <div class="card"><h3 style="color: var(--accent); margin-bottom: 15px; font-size: 1.1rem; font-weight: 600;">✅ Siswa Hadir Tepat Waktu</h3><div id="tabel-hadir-container">Memuat...</div></div>
-            <div class="card"><h3 style="color: var(--warning); margin-bottom: 15px; font-size: 1.1rem; font-weight: 600;">⚠️ Siswa Telat Hari Ini</h3><div id="tabel-telat-container">Memuat...</div></div>
+            <div class="card"><h3 style="color: var(--accent); margin-bottom: 15px; font-size: 1.05rem; font-weight: 600;">✅ Siswa Hadir Tepat Waktu</h3><div id="tabel-hadir-container">Memuat...</div></div>
+            <div class="card"><h3 style="color: var(--warning); margin-bottom: 15px; font-size: 1.05rem; font-weight: 600;">⚠️ Siswa Telat Hari Ini</h3><div id="tabel-telat-container">Memuat...</div></div>
           </div>
         </div>
 
         <!-- TAB 2: DATA SISWA -->
         <div id="tab-admin-siswa" class="admin-tab" style="display: none;">
-          <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 5px;">Manajemen Data Siswa</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;" id="subtitle-data-siswa">Daftar seluruh database siswa aktif SMK Taruna Terpadu 2.</p>
+          <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 5px;">Data Siswa</h2>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Kelola seluruh database siswa aktif.</p>
           <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;">
               <div>
@@ -215,7 +220,7 @@
               </div>
               <div id="filter-kelas-wrapper">
                 <label style="font-weight: 600; font-size: 0.85rem;">Filter Kelas:</label>
-                <select id="filter-kelas" onchange="filterSiswaByKelas()" style="width: 220px; display: inline-block; margin-left: 8px;"><option value="">-- Semua Kelas --</option></select>
+                <select id="filter-kelas" onchange="filterSiswaByKelas()" style="width: 200px; display: inline-block; margin-left: 8px;"><option value="">-- Semua Kelas --</option></select>
               </div>
             </div>
             <div id="tabel-siswa-area">Memuat...</div>
@@ -223,89 +228,100 @@
           </div>
         </div>
 
-        <!-- TAB 3: SETTING WAKTU (Hanya Admin) -->
-        <div id="tab-admin-setting" class="admin-tab" style="display: none;">
-          <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 5px;">Pengaturan Waktu Absensi</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Tentukan batas maksimal jam siswa masuk tepat waktu.</p>
-          <div class="card" style="max-width: 500px;">
-            <label style="font-weight: 600; font-size: 0.9rem;">Batas Jam Masuk:</label>
-            <input type="time" id="input-batas-waktu" value="07:15">
-            <button onclick="simpanBatasWaktuAdmin()" class="btn btn-success" style="margin-top: 10px;">Simpan Perubahan</button>
-          </div>
-        </div>
-
-        <!-- TAB 4: DOWNLOAD QR CODE HD -->
-        <div id="tab-admin-cetak" class="admin-tab" style="display: none;">
-          <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 5px;">Download QR Code Siswa (HD)</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Pilih kelas untuk mengunduh QR Code dengan kualitas paling jernih dan detail.</p>
-          <div class="card" style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
-            <select id="cetak-kelas" onchange="generateQrPreview()" style="max-width: 250px; margin: 0;"><option value="">-- Pilih Kelas --</option></select>
-            <button onclick="downloadAllQrZip()" class="btn btn-success" id="btn-download-all" style="display: none;">📦 Download All QR Code (ZIP HD)</button>
-          </div>
-          <div id="kartu-container" class="kartu-grid"></div>
-        </div>
-
-        <!-- TAB 5: REKAP ABSEN -->
-        <div id="tab-admin-rekap" class="admin-tab" style="display: none;">
-          <div style="margin-bottom: 25px;">
-            <h2 style="font-size: 1.5rem; font-weight: 700; color: #0f172a;">Rekapitulasi Absensi Bulanan (Format Matriks)</h2>
-            <p style="color: var(--text-muted); font-size: 0.9rem;">Pilih kelas lalu unduh laporan kehadiran bulanan format kotak 1-31 lengkap dengan total Hadir (H) dan Telat (T) di samping.</p>
-          </div>
-          
-          <div class="card" style="background: linear-gradient(135deg, #ffffff, #f8fafc); border-left: 6px solid var(--primary); margin-bottom: 24px;">
-            <h3 style="font-size: 1.15rem; color: #0f172a; margin-bottom: 12px; font-weight: 700;">📊 Download Rekap Bulanan Excel Berdasarkan Kelas</h3>
-            <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
-              <div>
-                <label style="font-weight: 600; font-size: 0.85rem;">Pilih Kelas:</label>
-                <select id="rekap-excel-kelas" style="width: 220px; display: inline-block; margin-left: 8px; margin-bottom: 0;"><option value="">-- Pilih Kelas --</option></select>
-              </div>
-              <button onclick="downloadExcelMatrix()" class="btn" style="padding: 12px 24px; box-shadow: 0 4px 14px rgba(99,102,241,0.3);">📥 Download Rekap Bulanan (.XLSX)</button>
-            </div>
-          </div>
-
+        <!-- TAB 3: DATA GURU (KHUSUS ADMIN) -->
+        <div id="tab-admin-guru" class="admin-tab" style="display: none;">
+          <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 5px;">Data Guru & Wali Kelas</h2>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Daftar pengajar dan hak akses wali kelas.</p>
           <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
-              <h3 style="font-size: 1.15rem; font-weight: 700;">🔍 Filter Status Kehadiran Hari Ini</h3>
-              <div>
-                <label style="font-weight: 600; font-size: 0.85rem;">Status:</label>
-                <select id="filter-status-rekap" onchange="renderRekapFiltered()" style="width: 200px; display: inline-block; margin-left: 8px;">
-                  <option value="all">-- Semua Hadir & Telat --</option>
-                  <option value="Hadir">Tepat Waktu (Hadir)</option>
-                  <option value="Telat">Telat</option>
-                </select>
-              </div>
-            </div>
-            <div id="rekap-filtered-table-area">Memuat data...</div>
+            <table>
+              <tr><th>No</th><th>Nama Guru</th><th>Jabatan</th><th>Kelas Binaan</th><th>Email / Kontak</th></tr>
+              <tr><td>1</td><td>Budi Santoso, S.Kom</td><td>Wali Kelas</td><td>X AK 1</td><td>budi@smk2.sch.id</td></tr>
+              <tr><td>2</td><td>Siti Rahma, M.Pd</td><td>Wali Kelas</td><td>X PPLG 1</td><td>siti@smk2.sch.id</td></tr>
+              <tr><td>3</td><td>Ahmad Fauzi, S.T</td><td>Guru Mata Pelajaran</td><td>-</td><td>ahmad@smk2.sch.id</td></tr>
+            </table>
           </div>
         </div>
 
-        <!-- TAB 6: INPUT IZIN / SAKIT (TABEL SEMUA SISWA PERWALIAN LENGKAP DENGAN HEADER HADIR, TELAT, IZIN, SAKIT) -->
-        <div id="tab-admin-izin" class="admin-tab" style="display: none;">
-          <div style="margin-bottom: 25px;">
-            <h2 style="font-size: 1.5rem; font-weight: 700; color: #0f172a;">📝 Pengelolaan Absensi Perwalian</h2>
-            <p style="color: var(--text-muted); font-size: 0.9rem;">Daftar siswa perwalian lengkap dengan ringkasan status dan opsi input manual Izin/Sakit.</p>
+        <!-- TAB 4: LAPORAN -->
+        <div id="tab-admin-laporan" class="admin-tab" style="display: none;">
+          <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 5px;">Laporan Kehadiran</h2>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Pusat unduh laporan rekap absensi keseluruhan.</p>
+          <div class="card">
+            <a href="https://docs.google.com/spreadsheets/d/1vnwADJfHnOzkQdvscN1gpIVJLKu8WuM3W39oEpJ0s/edit?usp=sharing" target="_blank" class="btn">📥 Buka Google Spreadsheet Laporan</a>
           </div>
+        </div>
 
-          <!-- KARTU RINGKASAN DI ATAS -->
-          <div class="stats-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 24px;" id="perwalian-stats-box">
+        <!-- TAB 5: REKAP BULANAN -->
+        <div id="tab-admin-rekap" class="admin-tab" style="display: none;">
+          <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 5px;">Rekap Bulanan</h2>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Unduh rekap bulanan format matriks tanggal 1 s.d. 31.</p>
+          <div class="card" style="background: #fff; border-left: 5px solid var(--primary);">
+            <h3 style="font-size: 1.1rem; margin-bottom: 12px; font-weight: 700;">Download Rekap Bulanan Excel Berdasarkan Kelas</h3>
+            <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+              <select id="rekap-excel-kelas" style="width: 220px; margin-bottom:0;"><option value="">-- Pilih Kelas --</option></select>
+              <button onclick="downloadExcelMatrix()" class="btn">📥 Download Rekap Bulanan (.XLSX)</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 6: KENAIKAN KELAS (KHUSUS ADMIN) -->
+        <div id="tab-admin-kenaikan" class="admin-tab" style="display: none;">
+          <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 5px;">Kenaikan Kelas</h2>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Proses migrasi tingkat kelas siswa akhir tahun ajaran.</p>
+          <div class="card" style="max-width: 500px;">
+            <label style="font-weight: 600; font-size: 0.85rem;">Pilih Kelas Asal:</label>
+            <select><option>X AK 1</option><option>X PPLG 1</option></select>
+            <label style="font-weight: 600; font-size: 0.85rem;">Pindahkan ke Kelas:</label>
+            <select><option>XI AK 1</option><option>XI PPLG 1</option></select>
+            <button class="btn btn-success" style="margin-top:10px;">Proses Kenaikan Kelas</button>
+          </div>
+        </div>
+
+        <!-- TAB 7: KELOLA ABSEN / HARI LIBUR & JAM (KHUSUS ADMIN) -->
+        <div id="tab-admin-kelola-absen" class="admin-tab" style="display: none;">
+          <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 5px;">Kelola Absen & Hari Libur</h2>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Atur jadwal operasional dan toleransi jam masuk sekolah.</p>
+          <div class="card" style="max-width: 500px;">
+            <label style="font-weight: 600; font-size: 0.9rem;">Batas Jam Masuk Tepat Waktu:</label>
+            <input type="time" id="input-batas-waktu" value="07:15">
+            <button onclick="simpanBatasWaktuAdmin()" class="btn btn-success" style="margin-top: 10px;">Simpan Jam Operasional</button>
+          </div>
+        </div>
+
+        <!-- TAB 8: MANAJEMEN KELAS (KHUSUS ADMIN) -->
+        <div id="tab-admin-manajemen-kelas" class="admin-tab" style="display: none;">
+          <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 5px;">Manajemen Kelas</h2>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Tambah atau hapus daftar kelas aktif di sistem.</p>
+          <div class="card" style="max-width: 500px;">
+            <label style="font-weight: 600; font-size: 0.85rem;">Nama Kelas Baru:</label>
+            <input type="text" placeholder="Contoh: XII IPA 1">
+            <button class="btn" style="margin-top:10px;">+ Tambah Kelas</button>
+          </div>
+        </div>
+
+        <!-- TAB 9: DAFTAR HADIR (INPUT IZIN / SAKIT PERWALIAN) -->
+        <div id="tab-admin-daftar-hadir" class="admin-tab" style="display: none;">
+          <div style="margin-bottom: 25px;">
+            <h2 style="font-size: 1.5rem; font-weight: 700; color: #0f172a;">Daftar Hadir & Input Izin / Sakit</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Kelola absensi manual harian perwalian siswa.</p>
+          </div>
+          <div class="stats-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 24px;">
             <div class="card" style="margin-bottom:0; padding:16px; text-align:center; border-left: 5px solid var(--accent);"><span>Hadir</span><h3 id="p-hadir" style="color:var(--accent); font-size:1.8rem;">0</h3></div>
             <div class="card" style="margin-bottom:0; padding:16px; text-align:center; border-left: 5px solid var(--warning);"><span>Telat</span><h3 id="p-telat" style="color:var(--warning); font-size:1.8rem;">0</h3></div>
             <div class="card" style="margin-bottom:0; padding:16px; text-align:center; border-left: 5px solid #0284c7;"><span>Izin</span><h3 id="p-izin" style="color:#0284c7; font-size:1.8rem;">0</h3></div>
             <div class="card" style="margin-bottom:0; padding:16px; text-align:center; border-left: 5px solid #a855f7;"><span>Sakit</span><h3 id="p-sakit" style="color:#a855f7; font-size:1.8rem;">0</h3></div>
           </div>
-
           <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 15px;">
-              <h3 style="font-size: 1.15rem; font-weight: 700;" id="perwalian-table-title">Daftar Siswa Perwalian</h3>
-              <div id="admin-pilih-kelas-wrap" style="display:none;">
-                <label style="font-weight: 600; font-size: 0.85rem;">Pilih Kelas:</label>
-                <select id="select-kelas-perwalian" onchange="renderPerwalianTable()" style="width: 200px; display: inline-block; margin-left: 8px; margin-bottom:0;">
-                  <option value="">-- Pilih Kelas --</option>
-                </select>
-              </div>
-            </div>
-            <div id="perwalian-table-container">Memuat data siswa perwalian...</div>
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 15px;" id="perwalian-table-title">Daftar Siswa Perwalian</h3>
+            <div id="perwalian-table-container">Memuat data...</div>
           </div>
+        </div>
+
+        <!-- TAB 10: ABSENSI SHOLAT -->
+        <div id="tab-admin-sholat" class="admin-tab" style="display: none;">
+          <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 5px;">Absensi Sholat Berjamaah</h2>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Rekapitulasi kegiatan keagamaan siswa.</p>
+          <div class="card"><p style="color:var(--text-muted);">Modul absensi sholat aktif.</p></div>
         </div>
 
       </div>
@@ -325,19 +341,16 @@
     if(dateEl) dateEl.innerText = new Date().toLocaleDateString('id-ID', options);
 
     let html5QrCode = null;
-    let globalSiswaData = [];
+    let globalSiswaData = JSON.parse(localStorage.getItem('cache_siswa') || '[]');
     let filteredSiswaData = [];
     let globalListHadir = [];
     let globalListTelat = [];
     let globalAbsenHariIni = [];
     let currentLimit = 10;
-    let loggedInUser = { username: "admin", name: "Admin Kesiswaan", role: "admin", classScope: "" };
+    let loggedInUser = JSON.parse(localStorage.getItem('admin_user_data') || '{"username":"admin","name":"Admin","role":"admin","classScope":""}');
 
     window.addEventListener('DOMContentLoaded', () => {
       let sessionTime = localStorage.getItem('admin_session_time');
-      let savedUser = localStorage.getItem('admin_user_data');
-      if(savedUser) loggedInUser = JSON.parse(savedUser);
-
       let currentTime = new Date().getTime();
       if (sessionTime && (currentTime - sessionTime < 10 * 60 * 1000)) {
         switchPage('admin');
@@ -355,9 +368,7 @@
       document.getElementById('wrapper-login-page').style.display = 'none';
       document.getElementById('wrapper-admin-page').style.display = 'none';
 
-      if (html5QrCode && html5QrCode.isScanning) {
-        html5QrCode.stop().catch(() => {});
-      }
+      if (html5QrCode && html5QrCode.isScanning) html5QrCode.stop().catch(() => {});
 
       if(page === 'scanner') {
         document.getElementById('wrapper-scanner-page').style.display = 'block';
@@ -368,6 +379,7 @@
         document.getElementById('wrapper-admin-page').style.display = 'flex';
         applyRoleAccessUI();
         updateHeaderUserInfo();
+        if(globalSiswaData.length > 0) renderFastDashboardInstant();
         loadAdminData();
       }
     }
@@ -375,61 +387,54 @@
     function applyRoleAccessUI() {
       let menuContainer = document.getElementById('dynamic-sidebar-menu');
       if(loggedInUser.role === 'walikelas') {
-        // Menu untuk Wali Kelas: Dashboard, Data Siswa (perwalian), Download QR Code (perwalian), Rekap Absen, Input Izin/Sakit
-        menuContainer.innerHTML = `
-          <li><a onclick="switchAdminTab('admin-dash')" id="menu-admin-dash" class="active">📊 Dashboard</a></li>
-          <li><a onclick="switchAdminTab('admin-siswa')" id="menu-admin-siswa">👥 Data Siswa Perwalian</a></li>
-          <li><a onclick="switchAdminTab('admin-cetak')" id="menu-admin-cetak">🖨️ Download QR Code</a></li>
-          <li><a onclick="switchAdminTab('admin-rekap')" id="menu-admin-rekap">📈 Rekap Absen</a></li>
-          <li><a onclick="switchAdminTab('admin-izin')" id="menu-admin-izin">📝 Input Izin / Sakit</a></li>
-          <li><a onclick="logoutAdmin()" style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 16px; color: #f87171;">🚪 Logout Manual</a></li>
-        `;
-      } else {
-        // Menu untuk Admin: Lengkap semua
+        // Wali kelas hanya memiliki akses ke Dashboard, Data Siswa, Rekap Bulanan, dan Daftar Hadir (Input Izin/Sakit)
         menuContainer.innerHTML = `
           <li><a onclick="switchAdminTab('admin-dash')" id="menu-admin-dash" class="active">📊 Dashboard</a></li>
           <li><a onclick="switchAdminTab('admin-siswa')" id="menu-admin-siswa">👥 Data Siswa</a></li>
-          <li><a onclick="switchAdminTab('admin-setting')" id="menu-admin-setting">⚙️ Setting Waktu</a></li>
-          <li><a onclick="switchAdminTab('admin-cetak')" id="menu-admin-cetak">🖨️ Download QR Code</a></li>
-          <li><a onclick="switchAdminTab('admin-rekap')" id="menu-admin-rekap">📈 Rekap Absen</a></li>
-          <li><a onclick="switchAdminTab('admin-izin')" id="menu-admin-izin">📝 Input Izin / Sakit</a></li>
+          <li><a onclick="switchAdminTab('admin-rekap')" id="menu-admin-rekap">📈 Rekap Bulanan</a></li>
+          <li><a onclick="switchAdminTab('admin-daftar-hadir')" id="menu-admin-daftar-hadir">📝 Daftar Hadir</a></li>
+          <li><a onclick="logoutAdmin()" style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 16px; color: #f87171;">🚪 Logout Manual</a></li>
+        `;
+      } else {
+        // Admin memiliki akses penuh ke seluruh menu
+        menuContainer.innerHTML = `
+          <li><a onclick="switchAdminTab('admin-dash')" id="menu-admin-dash" class="active">📊 Dashboard</a></li>
+          <li><a onclick="switchAdminTab('admin-siswa')" id="menu-admin-siswa">👥 Data Siswa</a></li>
+          <li><a onclick="switchAdminTab('admin-guru')" id="menu-admin-guru">👨‍🏫 Data Guru</a></li>
+          <li><a onclick="switchAdminTab('admin-laporan')" id="menu-admin-laporan">📊 Laporan</a></li>
+          <li><a onclick="switchAdminTab('admin-rekap')" id="menu-admin-rekap">📈 Rekap Bulanan</a></li>
+          <li><a onclick="switchAdminTab('admin-kenaikan')" id="menu-admin-kenaikan">🎓 Kenaikan Kelas</a></li>
+          <li><a onclick="switchAdminTab('admin-kelola-absen')" id="menu-admin-kelola-absen">⚙️ Kelola Absen</a></li>
+          <li><a onclick="switchAdminTab('admin-manajemen-kelas')" id="menu-admin-manajemen-kelas">🏫 Manajemen Kelas</a></li>
+          <li><a onclick="switchAdminTab('admin-daftar-hadir')" id="menu-admin-daftar-hadir">📝 Daftar Hadir</a></li>
+          <li><a onclick="switchAdminTab('admin-sholat')" id="menu-admin-sholat">🕌 Absensi Sholat</a></li>
           <li><a onclick="logoutAdmin()" style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 16px; color: #f87171;">🚪 Logout Manual</a></li>
         `;
       }
     }
 
     function updateHeaderUserInfo() {
-      let titleEl = document.getElementById('header-welcome-title');
-      let subtitleEl = document.getElementById('header-user-login-info');
-      let dashTitle = document.getElementById('dash-main-title');
-      let dashSub = document.getElementById('dash-sub-title');
-      let labelStat1 = document.getElementById('label-stat-1');
+      let avatarEl = document.getElementById('avatar-initial');
+      let nameEl = document.getElementById('sidebar-user-name');
+      let roleEl = document.getElementById('sidebar-user-role');
 
-      if(titleEl && subtitleEl) {
-        if(loggedInUser.role === 'walikelas') {
-          titleEl.innerText = `Dashboard Wali Kelas (${loggedInUser.classScope})`;
-          subtitleEl.innerText = `Login sebagai: ${loggedInUser.name} (Wali Kelas)`;
-          if(dashTitle) dashTitle.innerText = `Dashboard Perwalian (${loggedInUser.classScope})`;
-          if(dashSub) dashSub.innerText = `Monitoring kehadiran siswa kelas binaan ${loggedInUser.classScope}.`;
-          if(labelStat1) labelStat1.innerText = `Siswa Perwalian`;
-        } else {
-          titleEl.innerText = `Dashboard Admin Kesiswaan`;
-          subtitleEl.innerText = `Login sebagai: ${loggedInUser.name} (Administrator)`;
-          if(dashTitle) dashTitle.innerText = `Dashboard Utama`;
-          if(dashSub) dashSub.innerText = `Pusat kontrol data absensi sekolah SMK Taruna Terpadu 2.`;
-          if(labelStat1) labelStat1.innerText = `Total Siswa`;
-        }
+      if(avatarEl && nameEl && roleEl) {
+        avatarEl.innerText = loggedInUser.name.charAt(0).toUpperCase();
+        nameEl.innerText = loggedInUser.name;
+        roleEl.innerText = loggedInUser.role === 'walikelas' ? `WALI KELAS (${loggedInUser.classScope})` : 'ADMINISTRATOR';
       }
     }
 
     function switchAdminTab(tabId) {
       document.querySelectorAll('.admin-tab').forEach(el => el.style.display = 'none');
-      document.getElementById('tab-' + tabId).style.display = 'block';
+      let targetTab = document.getElementById('tab-' + tabId);
+      if(targetTab) targetTab.style.display = 'block';
+      
       document.querySelectorAll('.sidebar-menu a').forEach(el => el.classList.remove('active'));
       let m = document.getElementById('menu-' + tabId);
       if(m) m.classList.add('active');
 
-      if(tabId === 'admin-izin') {
+      if(tabId === 'admin-daftar-hadir') {
         setupPerwalianTabView();
       }
     }
@@ -483,9 +488,9 @@
       let p = document.getElementById('password').value.trim();
 
       if (u === 'admin' && p === 'admin123') {
-        loggedInUser = { username: 'admin', name: 'Admin Kesiswaan Utama', role: 'admin', classScope: '' };
+        loggedInUser = { username: 'admin', name: 'Admin', role: 'admin', classScope: '' };
       } else if (u === 'budi' || p === 'wali123') {
-        loggedInUser = { username: 'budi', name: 'Budi Santoso, S.Kom', role: 'walikelas', classScope: 'X AK 1' };
+        loggedInUser = { username: 'budi', name: 'Budi Santoso', role: 'walikelas', classScope: 'X AK 1' };
       } else if (u.length > 0 && p.length > 0) {
         loggedInUser = { username: u, name: capitalizeFirstLetter(u), role: 'walikelas', classScope: 'X PPLG 1' };
       } else {
@@ -508,16 +513,21 @@
       switchPage('scanner');
     }
 
+    function renderFastDashboardInstant() {
+      let listSiswaScope = loggedInUser.role === 'walikelas' ? globalSiswaData.filter(s => s.kelas === loggedInUser.classScope) : globalSiswaData;
+      document.getElementById('stat-total').innerText = listSiswaScope.length;
+      document.getElementById('stat-belum').innerText = listSiswaScope.length;
+      renderTabelSiswa();
+      setupPerwalianTabView();
+    }
+
     function loadAdminDataBackground() {
       fetch(`${SCRIPT_URL}?action=admin_data`)
         .then(res => res.json())
         .then(data => {
           globalSiswaData = data.listSiswa || [];
-          if(loggedInUser.role === 'walikelas') {
-            filteredSiswaData = globalSiswaData.filter(s => s.kelas === loggedInUser.classScope);
-          } else {
-            filteredSiswaData = globalSiswaData;
-          }
+          localStorage.setItem('cache_siswa', JSON.stringify(globalSiswaData));
+          filteredSiswaData = loggedInUser.role === 'walikelas' ? globalSiswaData.filter(s => s.kelas === loggedInUser.classScope) : globalSiswaData;
           globalListHadir = data.listHadir || [];
           globalListTelat = data.listTelat || [];
           globalAbsenHariIni = [...globalListHadir.map(h=>({...h, ket: 'Hadir'})), ...globalListTelat.map(t=>({...t, ket: 'Telat'}))];
@@ -530,11 +540,8 @@
         .then(res => res.json())
         .then(data => {
           globalSiswaData = data.listSiswa || [];
-          if(loggedInUser.role === 'walikelas') {
-            filteredSiswaData = globalSiswaData.filter(s => s.kelas === loggedInUser.classScope);
-          } else {
-            filteredSiswaData = globalSiswaData;
-          }
+          localStorage.setItem('cache_siswa', JSON.stringify(globalSiswaData));
+          filteredSiswaData = loggedInUser.role === 'walikelas' ? globalSiswaData.filter(s => s.kelas === loggedInUser.classScope) : globalSiswaData;
           globalListHadir = data.listHadir || [];
           globalListTelat = data.listTelat || [];
           globalAbsenHariIni = [...globalListHadir.map(h=>({...h, ket: 'Hadir'})), ...globalListTelat.map(t=>({...t, ket: 'Telat'}))];
@@ -543,14 +550,10 @@
           let listHadirScope = loggedInUser.role === 'walikelas' ? globalListHadir.filter(h => h.kelas === loggedInUser.classScope) : globalListHadir;
           let listTelatScope = loggedInUser.role === 'walikelas' ? globalListTelat.filter(t => t.kelas === loggedInUser.classScope) : globalListTelat;
 
-          let totalSiswa = listSiswaScope.length;
-          let totalHadir = listHadirScope.length;
-          let totalTelat = listTelatScope.length;
-
-          document.getElementById('stat-total').innerText = totalSiswa;
-          document.getElementById('stat-hadir').innerText = totalHadir;
-          document.getElementById('stat-telat').innerText = totalTelat;
-          document.getElementById('stat-belum').innerText = totalSiswa - (totalHadir + totalTelat);
+          document.getElementById('stat-total').innerText = listSiswaScope.length;
+          document.getElementById('stat-hadir').innerText = listHadirScope.length;
+          document.getElementById('stat-telat').innerText = listTelatScope.length;
+          document.getElementById('stat-belum').innerText = listSiswaScope.length - (listHadirScope.length + listTelatScope.length);
 
           let htmlH = `<table><tr><th>NIS</th><th>Nama</th><th>Kelas</th><th>Jam</th></tr>`;
           if(listHadirScope.length === 0) htmlH += `<tr><td colspan="4" style="text-align:center; color:#64748b;">Belum ada yang hadir</td></tr>`;
@@ -575,18 +578,6 @@
             kelasSet.forEach(kls => selectFilter.innerHTML += `<option value="${kls}">${kls}</option>`);
           }
 
-          let selectCetak = document.getElementById('cetak-kelas');
-          selectCetak.innerHTML = '<option value="">-- Pilih Kelas --</option>';
-          if(loggedInUser.role === 'walikelas') {
-            selectCetak.innerHTML = `<option value="${loggedInUser.classScope}">${loggedInUser.classScope}</option>`;
-            selectCetak.value = loggedInUser.classScope;
-            selectCetak.disabled = true;
-            generateQrPreview();
-          } else {
-            kelasSet.forEach(kls => selectCetak.innerHTML += `<option value="${kls}">${kls}</option>`);
-            selectCetak.disabled = false;
-          }
-
           let selectRekap = document.getElementById('rekap-excel-kelas');
           selectRekap.innerHTML = '<option value="">-- Pilih Kelas --</option>';
           if(loggedInUser.role === 'walikelas') {
@@ -600,36 +591,17 @@
 
           setupPerwalianTabView();
           renderTabelSiswa();
-          renderRekapFiltered();
         });
     }
 
     function setupPerwalianTabView() {
-      let selectWali = document.getElementById('select-kelas-perwalian');
-      let wrapWali = document.getElementById('admin-pilih-kelas-wrap');
-      let kelasSet = [...new Set(globalSiswaData.map(s => s.kelas))].sort();
-
-      if(loggedInUser.role === 'walikelas') {
-        wrapWali.style.display = 'none';
-        renderPerwalianTable(loggedInUser.classScope);
-      } else {
-        wrapWali.style.display = 'block';
-        if(selectWali && selectWali.options.length <= 1) {
-          selectWali.innerHTML = '<option value="">-- Pilih Kelas --</option>';
-          kelasSet.forEach(kls => selectWali.innerHTML += `<option value="${kls}">${kls}</option>`);
-        }
-        let currentSelected = selectWali ? selectWali.value : "";
-        renderPerwalianTable(currentSelected);
-      }
+      let targetKls = loggedInUser.role === 'walikelas' ? loggedInUser.classScope : (globalSiswaData[0] ? globalSiswaData[0].kelas : "");
+      renderPerwalianTable(targetKls);
     }
 
     function renderPerwalianTable(kelasTarget) {
       let targetKls = loggedInUser.role === 'walikelas' ? loggedInUser.classScope : kelasTarget;
-      if(!targetKls) {
-        document.getElementById('perwalian-table-container').innerHTML = `<p style="text-align:center; color:var(--text-muted); padding:20px;">Silahkan pilih kelas terlebih dahulu.</p>`;
-        resetStatsBox(0,0,0,0);
-        return;
-      }
+      if(!targetKls) return;
 
       let siswaList = globalSiswaData.filter(s => s.kelas === targetKls);
       let countHadir = 0, countTelat = 0, countIzin = 0, countSakit = 0;
@@ -655,17 +627,15 @@
               <td>${idx + 1}</td>
               <td>${s.nis}</td>
               <td style="font-weight:600;">${s.nama}</td>
-              <td>
-                <span class="status-badge ${badgeClass}">${currentStatus} ${isLocked ? '(Scan QR)' : ''}</span>
-              </td>
+              <td><span class="status-badge ${badgeClass}">${currentStatus} ${isLocked ? '(Scan QR)' : ''}</span></td>
               <td>
                 ${isLocked ? 
-                  `<span style="color:var(--text-muted); font-size:0.8rem;">Terkunci (Sudah Scan)</span>` :
+                  `<span style="color:var(--text-muted); font-size:0.8rem;">Terkunci</span>` :
                   `<div style="display:flex; gap:8px; align-items:center;">
                     <select id="status-sel-${s.nis}" style="margin:0; width:130px; padding:6px 10px;">
                       <option value="Izin" ${currentStatus==='Izin'?'selected':''}>Izin (I)</option>
                       <option value="Sakit" ${currentStatus==='Sakit'?'selected':''}>Sakit (S)</option>
-                      <option value="Belum Absen" ${currentStatus==='Belum Absen'?'selected':''}>Hapus/Reset</option>
+                      <option value="Belum Absen" ${currentStatus==='Belum Absen'?'selected':''}>Reset</option>
                     </select>
                     <button onclick="updateManualStatus('${s.nis}')" class="btn btn-success" style="padding:6px 12px; font-size:0.8rem;">Simpan</button>
                    </div>`
@@ -676,15 +646,17 @@
         });
       }
       html += `</table>`;
-      document.getElementById('perwalian-table-container').innerHTML = html;
-      resetStatsBox(countHadir, countTelat, countIzin, countSakit);
-    }
-
-    function resetStatsBox(h, t, i, s) {
-      document.getElementById('p-hadir').innerText = h;
-      document.getElementById('p-telat').innerText = t;
-      document.getElementById('p-izin').innerText = i;
-      document.getElementById('p-sakit').innerText = s;
+      let container = document.getElementById('perwalian-table-container');
+      if(container) container.innerHTML = html;
+      
+      let pHadir = document.getElementById('p-hadir');
+      let pTelat = document.getElementById('p-telat');
+      let pIzin = document.getElementById('p-izin');
+      let pSakit = document.getElementById('p-sakit');
+      if(pHadir) pHadir.innerText = countHadir;
+      if(pTelat) pTelat.innerText = countTelat;
+      if(pIzin) pIzin.innerText = countIzin;
+      if(pSakit) pSakit.innerText = countSakit;
     }
 
     function updateManualStatus(nis) {
@@ -696,9 +668,7 @@
         .then(res => {
           alert(`Berhasil memperbarui status menjadi ${statusVal}!`);
           loadAdminDataBackground();
-          setTimeout(() => {
-            setupPerwalianTabView();
-          }, 500);
+          setTimeout(() => { setupPerwalianTabView(); }, 500);
         }).catch(() => {
           alert("Gagal memperbarui status ke server.");
         });
@@ -723,9 +693,7 @@
       }
       html += `</table>`;
       document.getElementById('tabel-siswa-area').innerHTML = html;
-
-      let infoText = totalData === 0 ? "Menampilkan 0 dari 0 data" : `Menampilkan 1 sampai ${displayList.length} dari ${totalData} data siswa`;
-      document.getElementById('pagination-info').innerText = infoText;
+      document.getElementById('pagination-info').innerText = totalData === 0 ? "Menampilkan 0 dari 0 data" : `Menampilkan 1 sampai ${displayList.length} dari ${totalData} data siswa`;
     }
 
     function filterSiswaByKelas() {
@@ -734,51 +702,13 @@
       renderTabelSiswa();
     }
 
-    function renderRekapFiltered() {
-      let statusVal = document.getElementById('filter-status-rekap').value;
-      let scopeHadir = loggedInUser.role === 'walikelas' ? globalListHadir.filter(h => h.kelas === loggedInUser.classScope) : globalListHadir;
-      let scopeTelat = loggedInUser.role === 'walikelas' ? globalListTelat.filter(t => t.kelas === loggedInUser.classScope) : globalListTelat;
-      let combinedData = [];
-
-      if(statusVal === 'all') {
-        scopeHadir.forEach(h => combinedData.push({...h, status: 'Hadir'}));
-        scopeTelat.forEach(t => combinedData.push({...t, status: 'Telat'}));
-      } else if(statusVal === 'Hadir') {
-        scopeHadir.forEach(h => combinedData.push({...h, status: 'Hadir'}));
-      } else if(statusVal === 'Telat') {
-        scopeTelat.forEach(t => combinedData.push({...t, status: 'Telat'}));
-      }
-
-      let html = `<table><tr><th>NIS</th><th>Nama Siswa</th><th>Kelas</th><th>Jam Masuk</th><th>Status</th></tr>`;
-      if(combinedData.length === 0) {
-        html += `<tr><td colspan="5" style="text-align:center; color:#64748b;">Tidak ada data pada filter ini.</td></tr>`;
-      } else {
-        combinedData.forEach(item => {
-          let badgeClass = item.status === 'Hadir' ? 'badge-hadir' : 'badge-telat';
-          html += `<tr><td>${item.nis}</td><td>${item.nama}</td><td>${item.kelas}</td><td>${item.waktu}</td><td><span class="status-badge ${badgeClass}">${item.status}</span></td></tr>`;
-        });
-      }
-      html += `</table>`;
-      document.getElementById('rekap-filtered-table-area').innerHTML = html;
-    }
-
     function downloadExcelMatrix() {
       let kelasVal = loggedInUser.role === 'walikelas' ? loggedInUser.classScope : document.getElementById('rekap-excel-kelas').value;
-      if(!kelasVal) {
-        alert("Silahkan pilih kelas terlebih dahulu!");
-        return;
-      }
+      if(!kelasVal) { alert("Pilih kelas terlebih dahulu!"); return; }
 
       let siswaKelas = globalSiswaData.filter(s => s.kelas === kelasVal);
-      if(siswaKelas.length === 0) {
-        alert("Tidak ada siswa pada kelas tersebut!");
-        return;
-      }
-
       let now = new Date();
-      let year = now.getFullYear();
-      let month = now.getMonth();
-      let daysInMonth = new Date(year, month + 1, 0).getDate();
+      let daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
 
       let wbData = [];
       let headerRow = ["No.", "NIS", "Nama Siswa", "L/P"];
@@ -794,133 +724,14 @@
       });
 
       let ws = XLSX.utils.aoa_to_sheet(wbData);
-
-      let range = XLSX.utils.decode_range(ws['!ref']);
-      let thinBorder = {
-        top: { style: "thin", color: { rgb: "000000" } },
-        bottom: { style: "thin", color: { rgb: "000000" } },
-        left: { style: "thin", color: { rgb: "000000" } },
-        right: { style: "thin", color: { rgb: "000000" } }
-      };
-
-      for (let R = range.s.r; R <= range.e.r; ++R) {
-        for (let C = range.s.c; C <= range.e.c; ++C) {
-          let cell_address = XLSX.utils.encode_cell({c: C, r: R});
-          if(!ws[cell_address]) ws[cell_address] = {v: "", t: "s"};
-          ws[cell_address].s = { border: thinBorder };
-        }
-      }
-
       let wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, `Rekap_${kelasVal.replace(/\s+/g, '_')}`);
-      XLSX.writeFile(wb, `Rekap_Absensi_Bulanan_${kelasVal.replace(/\s+/g, '_')}.xlsx`);
+      XLSX.writeFile(wb, `Rekap_Bulanan_${kelasVal.replace(/\s+/g, '_')}.xlsx`);
     }
 
     function simpanBatasWaktuAdmin() {
       let val = document.getElementById('input-batas-waktu').value;
       fetch(`${SCRIPT_URL}?action=set_waktu&val=${val}`).then(res => res.text()).then(msg => alert(msg));
-    }
-
-    function generateQrPreview() {
-      let kelasVal = loggedInUser.role === 'walikelas' ? loggedInUser.classScope : document.getElementById('cetak-kelas').value;
-      let container = document.getElementById('kartu-container');
-      let btnDownloadAll = document.getElementById('btn-download-all');
-      container.innerHTML = "";
-      
-      if(!kelasVal) {
-        btnDownloadAll.style.display = 'none';
-        return;
-      }
-
-      btnDownloadAll.style.display = 'inline-flex';
-      let siswaList = globalSiswaData.filter(s => s.kelas === kelasVal);
-
-      siswaList.forEach((s, index) => {
-        let cardId = `qr-elem-${index}`;
-        let qrId = `qrcode-${index}`;
-        let wrapper = document.createElement('div');
-        wrapper.style.marginBottom = "15px";
-        wrapper.innerHTML = `
-          <div id="${cardId}" class="qr-card-item">
-            <div id="${qrId}" style="width: 160px; height: 160px; margin: 10px auto;"></div>
-            <div style="font-size: 11px; font-weight: bold; color: #171c48; margin-top: 8px; line-height: 1.2;">
-              ${s.nama}<br><span style="color: #64748b; font-weight: normal;">(${s.kelas})</span>
-            </div>
-          </div>
-          <button onclick="downloadSingleQr('${cardId}', '${s.nama}', '${s.kelas}')" class="btn btn-success" style="margin-top: 6px; padding: 4px 10px; font-size: 0.75rem; width: 220px;">💾 Download JPG HD</button>
-        `;
-        container.appendChild(wrapper);
-        
-        new QRCode(document.getElementById(qrId), {
-          text: s.nis.toString(),
-          width: 160,
-          height: 160,
-          correctLevel: QRCode.CorrectLevel.H
-        });
-      });
-    }
-
-    function downloadSingleQr(elementId, namaSiswa, kelasSiswa) {
-      let el = document.getElementById(elementId);
-      html2canvas(el, { scale: 5 }).then(canvas => {
-        let link = document.createElement('a');
-        link.download = `QR-HD-${namaSiswa.replace(/\s+/g, '_')}-${kelasSiswa.replace(/\s+/g, '_')}.jpg`;
-        link.href = canvas.toDataURL('image/jpeg', 1.0);
-        link.click();
-      });
-    }
-
-    async function downloadAllQrZip() {
-      let kelasVal = loggedInUser.role === 'walikelas' ? loggedInUser.classScope : document.getElementById('cetak-kelas').value;
-      if(!kelasVal) return;
-
-      let siswaList = globalSiswaData.filter(s => s.kelas === kelasVal);
-      if(siswaList.length === 0) return;
-
-      let btn = document.getElementById('btn-download-all');
-      btn.innerText = "⏳ Memproses ZIP HD...";
-      btn.disabled = true;
-
-      let zip = new JSZip();
-      let folder = zip.folder(`QR_HD_${kelasVal.replace(/\s+/g, '_')}`);
-
-      for (let index = 0; index < siswaList.length; index++) {
-        let s = siswaList[index];
-        let tempDiv = document.createElement('div');
-        tempDiv.style.position = 'absolute';
-        tempDiv.style.left = '-9999px';
-        tempDiv.innerHTML = `
-          <div id="temp-qr-${index}" class="qr-card-item" style="border: 2px solid #171c48; border-radius: 10px; padding: 15px; background: #fff; width: 220px; display: flex; flex-direction: column; align-items: center; text-align: center;">
-            <div id="temp-code-${index}" style="width: 160px; height: 160px; margin: 10px auto;"></div>
-            <div style="font-size: 11px; font-weight: bold; color: #171c48; margin-top: 8px; line-height: 1.2;">
-              ${s.nama}<br><span style="color: #64748b; font-weight: normal;">(${s.kelas})</span>
-            </div>
-          </div>
-        `;
-        document.body.appendChild(tempDiv);
-        
-        new QRCode(document.getElementById(`temp-code-${index}`), {
-          text: s.nis.toString(),
-          width: 160,
-          height: 160,
-          correctLevel: QRCode.CorrectLevel.H
-        });
-
-        let canvas = await html2canvas(document.getElementById(`temp-qr-${index}`), { scale: 5 });
-        let imgData = canvas.toDataURL('image/jpeg', 1.0).replace(/^data:image\/jpeg;base64,/, "");
-        folder.file(`QR-HD-${s.nama.replace(/\s+/g, '_')}-${s.nis}.jpg`, imgData, { base64: true });
-
-        document.body.removeChild(tempDiv);
-      }
-
-      let content = await zip.generateAsync({ type: "blob" });
-      let link = document.createElement('a');
-      link.href = URL.createObjectURL(content);
-      link.download = `QR_Codes_HD_${kelasVal.replace(/\s+/g, '_')}.zip`;
-      link.click();
-
-      btn.innerText = "📦 Download All QR Code (ZIP HD)";
-      btn.disabled = false;
     }
   </script>
 </body>
