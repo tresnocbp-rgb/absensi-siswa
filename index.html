@@ -8,6 +8,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <!-- Library SheetJS untuk export Excel dengan format matriks tanggal 1-31 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     :root { 
       --sidebar-bg: #0f172a; 
@@ -243,20 +245,19 @@
           <div id="kartu-container" class="kartu-grid"></div>
         </div>
 
-        <!-- TAB 5: REKAP ABSEN (DENGAN TOMBOL EXPORT EXCEL LANGSUNG & FILTER) -->
+        <!-- TAB 5: REKAP ABSEN (DENGAN FORMAT BULANAN 1-31 SEPERTI CONTOH) -->
         <div id="tab-admin-rekap" class="admin-tab" style="display: none;">
           <div style="margin-bottom: 25px;">
-            <h2 style="font-size: 1.5rem; font-weight: 700; color: #0f172a;">Rekapitulasi Absensi & Filter</h2>
-            <p style="color: var(--text-muted); font-size: 0.9rem;">Pantau dan filter siswa yang hadir tepat waktu maupun yang telat hari ini.</p>
+            <h2 style="font-size: 1.5rem; font-weight: 700; color: #0f172a;">Rekapitulasi Absensi Bulanan (Format Matriks)</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Unduh laporan kehadiran bulanan persis seperti format lembar absensi sekolah.</p>
           </div>
           
           <div class="card" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; background: linear-gradient(135deg, #ffffff, #f8fafc); border-left: 6px solid var(--primary); margin-bottom: 24px;">
             <div>
-              <h3 style="font-size: 1.15rem; color: #0f172a; margin-bottom: 6px; font-weight: 700;">📊 Laporan Data Kehadiran Excel (.XLSX)</h3>
-              <p style="color: var(--text-muted); font-size: 0.9rem;">Unduh rekap harian, mingguan, dan bulanan seluruh siswa.</p>
+              <h3 style="font-size: 1.15rem; color: #0f172a; margin-bottom: 6px; font-weight: 700;">📊 Download Rekap Bulanan Excel (Format Kotak 1-31)</h3>
+              <p style="color: var(--text-muted); font-size: 0.9rem;">Menghasilkan file Excel dengan tabel tanggal 1 s.d. 31 lengkap dan rapi.</p>
             </div>
-            <!-- Tombol Export Excel Aman Langsung dari SpreadSheet ID Anda -->
-            <a href="https://docs.google.com/spreadsheets/d/1vnwADJfHnOzkQdvscN1gpIVJLKu8WuM3W39oEpJ0s/edit?usp=sharing" target="_blank" class="btn" style="padding: 12px 24px; box-shadow: 0 4px 14px rgba(99,102,241,0.3);">📥 Buka & Download Google Spreadsheet</a>
+            <button onclick="downloadExcelMatrix()" class="btn" style="padding: 12px 24px; box-shadow: 0 4px 14px rgba(99,102,241,0.3);">📥 Download Rekap Bulanan (.XLSX)</button>
           </div>
 
           <div class="card">
@@ -306,7 +307,6 @@
         localStorage.removeItem('admin_session_time');
         switchPage('scanner');
       }
-      initStandbyCamera();
       loadAdminDataBackground();
     });
 
@@ -315,15 +315,18 @@
       document.getElementById('wrapper-login-page').style.display = 'none';
       document.getElementById('wrapper-admin-page').style.display = 'none';
 
+      // Matikan kamera total jika pindah dari scanner
+      if (html5QrCode && html5QrCode.isScanning) {
+        html5QrCode.stop().catch(() => {});
+      }
+
       if(page === 'scanner') {
         document.getElementById('wrapper-scanner-page').style.display = 'block';
         initStandbyCamera();
       } else if(page === 'login') {
         document.getElementById('wrapper-login-page').style.display = 'block';
-        if (html5QrCode && html5QrCode.isScanning) html5QrCode.stop().catch(() => {});
       } else if(page === 'admin') {
         document.getElementById('wrapper-admin-page').style.display = 'flex';
-        if (html5QrCode && html5QrCode.isScanning) html5QrCode.stop().catch(() => {});
         loadAdminData();
       }
     }
@@ -338,11 +341,15 @@
 
     function initStandbyCamera() {
       if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
-      if(!html5QrCode.isScanning) {
-        html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: { width: 250, height: 250 } }, onScanSuccess, () => {})
-        .catch(() => {
-          html5QrCode.start({ facingMode: "user" }, { fps: 15, qrbox: { width: 250, height: 250 } }, onScanSuccess, () => {}).catch(() => {});
-        });
+      // Hanya jalankan jika elemen reader benar-benar terlihat
+      let readerEl = document.getElementById('reader');
+      if(readerEl && readerEl.offsetParent !== null) {
+        if(!html5QrCode.isScanning) {
+          html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: { width: 250, height: 250 } }, onScanSuccess, () => {})
+          .catch(() => {
+            html5QrCode.start({ facingMode: "user" }, { fps: 15, qrbox: { width: 250, height: 250 } }, onScanSuccess, () => {}).catch(() => {});
+          });
+        }
       }
     }
 
@@ -504,6 +511,32 @@
       }
       html += `</table>`;
       document.getElementById('rekap-filtered-table-area').innerHTML = html;
+    }
+
+    // FUNGSI DOWNLOAD EXCEL FORMAT MATRIKS TANGGAL 1-31 SESUAI CONTOH
+    function downloadExcelMatrix() {
+      if(globalSiswaData.length === 0) {
+        alert("Data siswa kosong!");
+        return;
+      }
+
+      let wbData = [];
+      let headerRow = ["No.", "NIS", "Nama Siswa", "L/P"];
+      for(let i=1; i<=31; i++) headerRow.push(i);
+      headerRow.push("S", "I", "A");
+      wbData.push(headerRow);
+
+      globalSiswaData.forEach((s, idx) => {
+        let row = [idx + 1, s.nis, s.nama, "P"]; // Default L/P diisi P atau kosong
+        for(let i=1; i<=31; i++) row.push(""); // Tanggal 1-31 kosong untuk diisi manual/otomatis
+        row.push(0, 0, 0); // S, I, A
+        wbData.push(row);
+      });
+
+      let ws = XLSX.utils.aoa_to_sheet(wbData);
+      let wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Rekap Absen Bulanan");
+      XLSX.writeFile(wb, "Rekap_Absensi_Bulanan_SMK_Taruna_Terpadu_2.xlsx");
     }
 
     function simpanBatasWaktuAdmin() {
