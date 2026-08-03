@@ -118,14 +118,14 @@
             <div class="info-group"><span>Status Kehadiran</span><span><div id="res-status" class="status-badge badge-none">Belum Absen</div></span></div>
           </div>
           <div style="margin-top: 25px;">
-            <button onclick="switchPage('login')" class="btn" style="width: 100%; text-align: center; background: #1e293b;">🔐 Login Panel Admin</button>
+            <button onclick="switchPage('login')" class="btn" style="width: 100%; text-align: center; background: #1e293b;">🔐 Login Panel Admin / Wali Kelas</button>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- HALAMAN LOGIN ADMIN (0.2 DETIK) -->
+  <!-- HALAMAN LOGIN ADMIN -->
   <div id="wrapper-login-page" style="display: none; max-width: 420px; margin: 80px auto; width: 100%; padding: 0 20px;">
     <div class="card" style="box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);">
       <h3 style="text-align: center; margin-bottom: 20px; font-size: 1.4rem; font-weight: 700; color: #0f172a;">Login Panel Admin</h3>
@@ -143,7 +143,7 @@
     </div>
   </div>
 
-  <!-- HALAMAN PANEL ADMIN -->
+  <!-- HALAMAN PANEL ADMIN / WALI KELAS -->
   <div id="wrapper-admin-page" style="display: none; width: 100%;">
     <aside id="sidebar-nav">
       <div>
@@ -157,6 +157,7 @@
           <li><a onclick="switchAdminTab('admin-setting')" id="menu-admin-setting">⚙️ Setting Waktu</a></li>
           <li><a onclick="switchAdminTab('admin-cetak')" id="menu-admin-cetak">🖨️ Download QR Code</a></li>
           <li><a onclick="switchAdminTab('admin-rekap')" id="menu-admin-rekap">📈 Rekap Absen</a></li>
+          <li><a onclick="switchAdminTab('admin-izin')" id="menu-admin-izin">📝 Input Izin / Sakit</a></li>
           <li><a onclick="logoutAdmin()" style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 16px; color: #f87171;">🚪 Logout Manual</a></li>
         </ul>
       </div>
@@ -169,7 +170,7 @@
       <header style="background: white; border-bottom: 1px solid var(--border-color); color: var(--text-main); padding: 16px 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
         <div style="display: flex; align-items: center; gap: 14px;">
           <img src="logo.png" alt="Logo" style="height: 38px; width: auto;" onerror="this.style.display='none'">
-          <h3 style="font-size: 1.15rem; font-weight: 700;">Dashboard Admin Kesiswaan</h3>
+          <h3 style="font-size: 1.15rem; font-weight: 700;">Dashboard Admin & Wali Kelas</h3>
         </div>
         <div style="font-size: 0.9rem; display: flex; align-items: center; gap: 16px;">
           <span id="realtime-date" style="color: var(--text-muted); font-weight: 500;">-</span>
@@ -244,7 +245,7 @@
           <div id="kartu-container" class="kartu-grid"></div>
         </div>
 
-        <!-- TAB 5: REKAP ABSEN (DENGAN FORMAT MATRIKS BULANAN SESUAI CONTOH) -->
+        <!-- TAB 5: REKAP ABSEN -->
         <div id="tab-admin-rekap" class="admin-tab" style="display: none;">
           <div style="margin-bottom: 25px;">
             <h2 style="font-size: 1.5rem; font-weight: 700; color: #0f172a;">Rekapitulasi Absensi Bulanan (Format Matriks)</h2>
@@ -277,6 +278,36 @@
             <div id="rekap-filtered-table-area">Memuat data...</div>
           </div>
         </div>
+
+        <!-- TAB 6: INPUT IZIN / SAKIT (KHUSUS WALI KELAS / ADMIN) -->
+        <div id="tab-admin-izin" class="admin-tab" style="display: none;">
+          <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 5px;">📝 Input Kehadiran Manual (Izin / Sakit / Alfa)</h2>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Catat siswa yang tidak hadir karena Izin, Sakit, atau Alfa.</p>
+          <div class="card" style="max-width: 600px;">
+            <div id="izin-msg" style="margin-bottom: 15px; font-weight: 600; text-align: center;"></div>
+            <form onsubmit="submitManualAbsen(event)">
+              <label style="font-weight: 600; font-size: 0.85rem;">Pilih Kelas</label>
+              <select id="manual-kelas" onchange="populateSiswaDropdown()" required>
+                <option value="">-- Pilih Kelas --</option>
+              </select>
+
+              <label style="font-weight: 600; font-size: 0.85rem;">Pilih Siswa</label>
+              <select id="manual-nis" required>
+                <option value="">-- Pilih Siswa --</option>
+              </select>
+
+              <label style="font-weight: 600; font-size: 0.85rem;">Keterangan Status</label>
+              <select id="manual-status" required>
+                <option value="Sakit">Sakit (S)</option>
+                <option value="Izin">Izin (I)</option>
+                <option value="Alfa">Alfa (A)</option>
+              </select>
+
+              <button type="submit" class="btn btn-success" style="width: 100%; margin-top: 15px;">Simpan Status Ketidakhadiran</button>
+            </form>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -410,6 +441,7 @@
           filteredSiswaData = globalSiswaData;
           globalListHadir = data.listHadir || [];
           globalListTelat = data.listTelat || [];
+          populateManualKelasDropdown();
         }).catch(() => {});
     }
 
@@ -456,8 +488,53 @@
           selectRekap.innerHTML = '<option value="">-- Pilih Kelas --</option>';
           kelasSet.forEach(kls => selectRekap.innerHTML += `<option value="${kls}">${kls}</option>`);
 
+          populateManualKelasDropdown();
           renderTabelSiswa();
           renderRekapFiltered();
+        });
+    }
+
+    function populateManualKelasDropdown() {
+      let kelasSet = [...new Set(globalSiswaData.map(s => s.kelas))].sort();
+      let selectManual = document.getElementById('manual-kelas');
+      if(selectManual && selectManual.options.length <= 1) {
+        selectManual.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+        kelasSet.forEach(kls => selectManual.innerHTML += `<option value="${kls}">${kls}</option>`);
+      }
+    }
+
+    function populateSiswaDropdown() {
+      let klsVal = document.getElementById('manual-kelas').value;
+      let siswaSelect = document.getElementById('manual-nis');
+      siswaSelect.innerHTML = '<option value="">-- Pilih Siswa --</option>';
+      if(!klsVal) return;
+
+      let list = globalSiswaData.filter(s => s.kelas === klsVal);
+      list.forEach(s => {
+        siswaSelect.innerHTML += `<option value="${s.nis}">${s.nis} - ${s.nama}</option>`;
+      });
+    }
+
+    function submitManualAbsen(e) {
+      e.preventDefault();
+      let nis = document.getElementById('manual-nis').value;
+      let status = document.getElementById('manual-status').value;
+      let msgBox = document.getElementById('izin-msg');
+
+      if(!nis) {
+        msgBox.innerHTML = `<span style="color: red;">Pilih siswa terlebih dahulu!</span>`;
+        return;
+      }
+
+      msgBox.innerHTML = `<span style="color: blue;">Menyimpan data...</span>`;
+      fetch(`${SCRIPT_URL}?action=absen&nis=${nis}&status=${status}`)
+        .then(res => res.json())
+        .then(res => {
+          msgBox.innerHTML = `<span style="color: green;">✅ Berhasil mencatat status (${status}) untuk siswa!</span>`;
+          document.getElementById('manual-nis').value = "";
+          loadAdminDataBackground();
+        }).catch(() => {
+          msgBox.innerHTML = `<span style="color: red;">Gagal terhubung ke server.</span>`;
         });
     }
 
@@ -517,7 +594,7 @@
       document.getElementById('rekap-filtered-table-area').innerHTML = html;
     }
 
-    // DOWNLOAD EXCEL FORMAT MATRIKS BULANAN MENYESUAIKAN JUMLAH HARI DALAM BULAN DENGAN REKAP TOTAL DI SAMPING
+    // DOWNLOAD EXCEL LENGKAP DENGAN BORDER TABEL & KOLOM REKAP TOTAL DI SAMPING
     function downloadExcelMatrix() {
       let kelasVal = document.getElementById('rekap-excel-kelas').value;
       if(!kelasVal) {
@@ -531,11 +608,10 @@
         return;
       }
 
-      // Hitung jumlah hari pada bulan aktif saat ini
       let now = new Date();
       let year = now.getFullYear();
-      let month = now.getMonth(); // 0 - 11
-      let daysInMonth = new Date(year, month + 1, 0).getDate(); // 28, 29, 30, atau 31
+      let month = now.getMonth();
+      let daysInMonth = new Date(year, month + 1, 0).getDate();
 
       let wbData = [];
       let headerRow = ["No.", "NIS", "Nama Siswa", "L/P"];
@@ -546,11 +622,29 @@
       siswaKelas.forEach((s, idx) => {
         let row = [idx + 1, s.nis, s.nama, "P"];
         for(let i=1; i<=daysInMonth; i++) row.push(""); 
-        row.push(0, 0, 0, 0, 0); // Kolom Total Hadir, Telat, S, I, A di samping
+        row.push(0, 0, 0, 0, 0); 
         wbData.push(row);
       });
 
       let ws = XLSX.utils.aoa_to_sheet(wbData);
+
+      // Berikan border ke seluruh sel tabel Excel
+      let range = XLSX.utils.decode_range(ws['!ref']);
+      let thinBorder = {
+        top: { style: "thin", color: { rgb: "000000" } },
+        bottom: { style: "thin", color: { rgb: "000000" } },
+        left: { style: "thin", color: { rgb: "000000" } },
+        right: { style: "thin", color: { rgb: "000000" } }
+      };
+
+      for (let R = range.s.r; R <= range.e.r; ++R) {
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+          let cell_address = XLSX.utils.encode_cell({c: C, r: R});
+          if(!ws[cell_address]) ws[cell_address] = {v: "", t: "s"};
+          ws[cell_address].s = { border: thinBorder };
+        }
+      }
+
       let wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, `Rekap_${kelasVal.replace(/\s+/g, '_')}`);
       XLSX.writeFile(wb, `Rekap_Absensi_Bulanan_${kelasVal.replace(/\s+/g, '_')}.xlsx`);
