@@ -132,7 +132,7 @@
       <div id="error-msg" style="color: var(--danger); margin-bottom: 15px; text-align: center; font-size: 0.9rem; font-weight: 500;"></div>
       <form onsubmit="handleLoginInstant(event)">
         <label style="font-weight: 600; font-size: 0.85rem;">Username</label>
-        <input type="text" id="username" required placeholder="Masukkan username">
+        <input type="text" id="username" required placeholder="Contoh: admin atau budi (wali kelas)">
         <label style="font-weight: 600; font-size: 0.85rem;">Password</label>
         <input type="password" id="password" required placeholder="Masukkan password">
         <button type="submit" class="btn" style="width: 100%; margin-top: 10px;">Masuk Instan</button>
@@ -143,7 +143,7 @@
     </div>
   </div>
 
-  <!-- HALAMAN PANEL ADMIN / WALI KELAS -->
+  <!-- HALAMAN PANEL ADMIN -->
   <div id="wrapper-admin-page" style="display: none; width: 100%;">
     <aside id="sidebar-nav">
       <div>
@@ -170,7 +170,10 @@
       <header style="background: white; border-bottom: 1px solid var(--border-color); color: var(--text-main); padding: 16px 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
         <div style="display: flex; align-items: center; gap: 14px;">
           <img src="logo.png" alt="Logo" style="height: 38px; width: auto;" onerror="this.style.display='none'">
-          <h3 style="font-size: 1.15rem; font-weight: 700;">Dashboard Admin & Wali Kelas</h3>
+          <div>
+            <h3 style="font-size: 1.15rem; font-weight: 700;" id="header-welcome-title">Dashboard Admin Kesiswaan</h3>
+            <p style="font-size: 0.8rem; color: var(--text-muted);" id="header-user-login-info">Login sebagai: Admin</p>
+          </div>
         </div>
         <div style="font-size: 0.9rem; display: flex; align-items: center; gap: 16px;">
           <span id="realtime-date" style="color: var(--text-muted); font-weight: 500;">-</span>
@@ -279,10 +282,10 @@
           </div>
         </div>
 
-        <!-- TAB 6: INPUT IZIN / SAKIT (KHUSUS WALI KELAS / ADMIN) -->
+        <!-- TAB 6: INPUT IZIN / SAKIT (WALI KELAS / ADMIN) -->
         <div id="tab-admin-izin" class="admin-tab" style="display: none;">
           <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 5px;">📝 Input Kehadiran Manual (Izin / Sakit / Alfa)</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Catat siswa yang tidak hadir karena Izin, Sakit, atau Alfa.</p>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Catat siswa perwalian yang tidak hadir karena Izin, Sakit, atau Alfa.</p>
           <div class="card" style="max-width: 600px;">
             <div id="izin-msg" style="margin-bottom: 15px; font-weight: 600; text-align: center;"></div>
             <form onsubmit="submitManualAbsen(event)">
@@ -330,14 +333,19 @@
     let globalListHadir = [];
     let globalListTelat = [];
     let currentLimit = 10;
+    let loggedInUser = { username: "admin", name: "Admin Kesiswaan", role: "admin", classScope: "" };
 
     window.addEventListener('DOMContentLoaded', () => {
       let sessionTime = localStorage.getItem('admin_session_time');
+      let savedUser = localStorage.getItem('admin_user_data');
+      if(savedUser) loggedInUser = JSON.parse(savedUser);
+
       let currentTime = new Date().getTime();
       if (sessionTime && (currentTime - sessionTime < 10 * 60 * 1000)) {
         switchPage('admin');
       } else {
         localStorage.removeItem('admin_session_time');
+        localStorage.removeItem('admin_user_data');
         switchPage('scanner');
       }
       initStandbyCamera();
@@ -360,7 +368,22 @@
         document.getElementById('wrapper-login-page').style.display = 'block';
       } else if(page === 'admin') {
         document.getElementById('wrapper-admin-page').style.display = 'flex';
+        updateHeaderUserInfo();
         loadAdminData();
+      }
+    }
+
+    function updateHeaderUserInfo() {
+      let titleEl = document.getElementById('header-welcome-title');
+      let subtitleEl = document.getElementById('header-user-login-info');
+      if(titleEl && subtitleEl) {
+        if(loggedInUser.role === 'walikelas') {
+          titleEl.innerText = `Dashboard Wali Kelas (${loggedInUser.classScope})`;
+          subtitleEl.innerText = `Login sebagai: ${loggedInUser.name} (Wali Kelas)`;
+        } else {
+          titleEl.innerText = `Dashboard Admin Kesiswaan`;
+          subtitleEl.innerText = `Login sebagai: ${loggedInUser.name} (Administrator)`;
+        }
       }
     }
 
@@ -415,21 +438,35 @@
         });
     }
 
+    // LOGIN INSTAN 0.2 DETIK (DENGAN IDENTIFIKASI NAMA & WALI KELAS)
     function handleLoginInstant(e) {
       e.preventDefault();
-      let u = document.getElementById('username').value.trim();
+      let u = document.getElementById('username').value.trim().toLowerCase();
       let p = document.getElementById('password').value.trim();
 
-      if ((u === 'admin' && p === 'admin123') || (u === 'budi' && p === 'wali123') || (u.length > 0 && p.length > 0)) {
-        localStorage.setItem('admin_session_time', new Date().getTime());
-        switchPage('admin');
+      if (u === 'admin' && p === 'admin123') {
+        loggedInUser = { username: 'admin', name: 'Admin Kesiswaan Utama', role: 'admin', classScope: '' };
+      } else if (u === 'budi' || p === 'wali123') {
+        loggedInUser = { username: 'budi', name: 'Budi Santoso, S.Kom', role: 'walikelas', classScope: 'X AK 1' };
+      } else if (u.length > 0 && p.length > 0) {
+        loggedInUser = { username: u, name: capitalizeFirstLetter(u), role: 'walikelas', classScope: 'X PPLG 1' };
       } else {
         document.getElementById('error-msg').innerText = "Username atau password salah!";
+        return;
       }
+
+      localStorage.setItem('admin_session_time', new Date().getTime());
+      localStorage.setItem('admin_user_data', JSON.stringify(loggedInUser));
+      switchPage('admin');
+    }
+
+    function capitalizeFirstLetter(string) {
+      return string.charAt(0).toUpperCase() + string.slice(1);
     }
 
     function logoutAdmin() {
       localStorage.removeItem('admin_session_time');
+      localStorage.removeItem('admin_user_data');
       switchPage('scanner');
     }
 
@@ -495,11 +532,19 @@
     }
 
     function populateManualKelasDropdown() {
-      let kelasSet = [...new Set(globalSiswaData.map(s => s.kelas))].sort();
       let selectManual = document.getElementById('manual-kelas');
-      if(selectManual && selectManual.options.length <= 1) {
+      if(!selectManual) return;
+
+      if(loggedInUser.role === 'walikelas') {
+        selectManual.innerHTML = `<option value="${loggedInUser.classScope}">${loggedInUser.classScope} (Perwalian)</option>`;
+        selectManual.value = loggedInUser.classScope;
+        selectManual.disabled = true;
+        populateSiswaDropdown();
+      } else {
+        let kelasSet = [...new Set(globalSiswaData.map(s => s.kelas))].sort();
         selectManual.innerHTML = '<option value="">-- Pilih Kelas --</option>';
         kelasSet.forEach(kls => selectManual.innerHTML += `<option value="${kls}">${kls}</option>`);
+        selectManual.disabled = false;
       }
     }
 
@@ -594,7 +639,7 @@
       document.getElementById('rekap-filtered-table-area').innerHTML = html;
     }
 
-    // DOWNLOAD EXCEL LENGKAP DENGAN BORDER TABEL & KOLOM REKAP TOTAL DI SAMPING
+    // DOWNLOAD EXCEL MATRIKS BULANAN DENGAN BORDER TABEL LENGKAP
     function downloadExcelMatrix() {
       let kelasVal = document.getElementById('rekap-excel-kelas').value;
       if(!kelasVal) {
@@ -628,7 +673,6 @@
 
       let ws = XLSX.utils.aoa_to_sheet(wbData);
 
-      // Berikan border ke seluruh sel tabel Excel
       let range = XLSX.utils.decode_range(ws['!ref']);
       let thinBorder = {
         top: { style: "thin", color: { rgb: "000000" } },
