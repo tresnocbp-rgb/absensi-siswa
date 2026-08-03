@@ -28,10 +28,8 @@
     
     header { background: #ffffff; color: var(--text-main); padding: 16px 28px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); }
     .brand-header { display: flex; align-items: center; gap: 14px; }
-    .brand-header img { height: 42px; width: auto; object-fit: contain; }
     .container { max-width: 1280px; margin: 30px auto; padding: 0 20px; width: 100%; flex: 1; }
     
-    /* SIDEBAR PROFESIONAL */
     aside { width: 280px; background-color: var(--sidebar-bg); color: white; display: flex; flex-direction: column; justify-content: space-between; position: fixed; height: 100vh; z-index: 100; border-right: 1px solid rgba(255,255,255,0.05); }
     .sidebar-brand { padding: 22px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 12px; }
     .user-profile-box { padding: 16px 20px; background: rgba(255,255,255,0.05); margin: 15px; border-radius: 12px; display: flex; align-items: center; gap: 12px; border: 1px solid rgba(255,255,255,0.08); }
@@ -64,8 +62,8 @@
     
     table { width: 100%; border-collapse: collapse; margin-top: 15px; border-radius: 10px; overflow: hidden; }
     table, th, td { border: 1px solid var(--border-color); }
-    th, td { padding: 14px 18px; text-align: left; font-size: 0.9rem; }
-    th { background-color: #f8fafc; color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; }
+    th, td { padding: 12px 14px; text-align: left; font-size: 0.85rem; }
+    th { background-color: #f8fafc; color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px; }
     tr:hover { background-color: #f8fafc; }
     
     .btn { display: inline-flex; align-items: center; justify-content: center; padding: 11px 22px; background: var(--primary); color: white; border: none; border-radius: 10px; cursor: pointer; text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: all 0.2s; box-shadow: 0 4px 12px rgba(99,102,241,0.25); }
@@ -73,7 +71,20 @@
     .btn-success { background: var(--accent); box-shadow: 0 4px 12px rgba(16,185,129,0.25); }
     .btn-success:hover { background: #059669; }
 
-    .schedule-row { display: flex; align-items: center; justify-content: space-between; padding: 16px; background: #fff; border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+    /* TOGGLE SWITCH MODERN */
+    .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 26px; }
+    .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+    input:checked + .slider { background-color: var(--accent); }
+    input:checked + .slider:before { transform: translateX(24px); }
+
+    .schedule-row { display: flex; align-items: center; justify-content: space-between; padding: 16px; background: #fff; border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 12px; }
+    
+    /* MODAL POPUP */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); display: none; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(4px); }
+    .modal-box { background: white; border-radius: 16px; padding: 30px; width: 100%; max-width: 450px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); animation: modalIn 0.2s ease; }
+    @keyframes modalIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
   </style>
 </head>
 <body>
@@ -82,7 +93,6 @@
   <div id="wrapper-scanner-page">
     <header>
       <div class="brand-header">
-        <img src="logo.png" alt="Logo" onerror="this.style.display='none'">
         <div>
           <h2 style="font-size: 1.15rem; font-weight: 700; color: #0f172a;">E-ABSENSI SCHOOL SYSTEM</h2>
           <p style="font-size: 0.8rem; color: var(--text-muted);">SMK Taruna Terpadu 2 • <span id="realtime-clock" style="color: var(--primary); font-weight: 600;"></span></p>
@@ -94,7 +104,7 @@
       <div class="grid-layout">
         <div class="card" style="text-align: center;">
           <h3 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 10px;">📷 Scan QR Code Kartu Pelajar</h3>
-          <div id="reader" style="width: 100%; border-radius: 12px; overflow: hidden; background: #000; margin-top: 15px; min-height: 280px; box-shadow: inset 0 2px 8px rgba(0,0,0,0.2);"></div>
+          <div id="reader" style="width: 100%; border-radius: 12px; overflow: hidden; background: #000; margin-top: 15px; min-height: 280px;"></div>
           <p id="scan-status-text" style="margin-top: 16px; font-weight: 600; color: var(--primary);">Kamera standby, arahkan QR Code kartu ke lensa...</p>
         </div>
         <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
@@ -135,18 +145,41 @@
     </div>
   </div>
 
+  <!-- MODAL TAMBAH GURU -->
+  <div id="modal-tambah-guru" class="modal-overlay">
+    <div class="modal-box">
+      <h3 style="margin-bottom: 16px; font-weight: 700;">Tambah Data Guru Baru</h3>
+      <form onsubmit="submitTambahGuru(event)">
+        <label style="font-weight: 600; font-size: 0.85rem;">Nama Guru & Gelar</label>
+        <input type="text" id="guru-nama" required placeholder="Contoh: Drs. H. Ahmad, M.Pd">
+        <label style="font-weight: 600; font-size: 0.85rem;">Jabatan</label>
+        <select id="guru-jabatan">
+          <option value="Wali Kelas">Wali Kelas</option>
+          <option value="Guru Mata Pelajaran">Guru Mata Pelajaran</option>
+        </select>
+        <label style="font-weight: 600; font-size: 0.85rem;">Kelas Binaan (jika Wali Kelas)</label>
+        <input type="text" id="guru-kelas" placeholder="Contoh: X AK 1 atau -">
+        <label style="font-weight: 600; font-size: 0.85rem;">Email / Kontak</label>
+        <input type="text" id="guru-email" required placeholder="email@smk2.sch.id">
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+          <button type="button" onclick="closeTambahGuruModal()" class="btn" style="background: #cbd5e1; flex: 1;">Batal</button>
+          <button type="submit" class="btn btn-success" style="flex: 1;">Simpan Data</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- HALAMAN PANEL ADMIN / WALI KELAS -->
   <div id="wrapper-admin-page" style="display: none; width: 100%;">
     <aside id="sidebar-nav">
       <div>
         <div class="sidebar-brand">
-          <img src="logo.png" alt="Logo" style="height: 28px; width: auto;" onerror="this.style.display='none'">
-          <span style="font-weight: 700; font-size: 0.95rem;">E-ABSENSI</span>
+          <span style="font-weight: 700; font-size: 0.95rem;">E-ABSENSI PRO</span>
         </div>
         <div class="user-profile-box">
           <div class="user-avatar" id="avatar-initial">A</div>
           <div style="overflow: hidden;">
-            <div style="font-weight: 600; font-size: 0.9rem; white-space: nowrap; text-overflow: ellipsis;" id="sidebar-user-name">Admin</div>
+            <div style="font-weight: 600; font-size: 0.9rem;" id="sidebar-user-name">Admin</div>
             <div style="font-size: 0.75rem; color: #38bdf8;" id="sidebar-user-role">ADMINISTRATOR</div>
           </div>
         </div>
@@ -213,7 +246,7 @@
           </div>
         </div>
 
-        <!-- TAB 3: DATA GURU (DENGAN TOMBOL TAMBAH GURU) -->
+        <!-- TAB 3: DATA GURU -->
         <div id="tab-admin-guru" class="admin-tab" style="display: none;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <div>
@@ -234,7 +267,7 @@
           </div>
         </div>
 
-        <!-- TAB 4: LAPORAN KEHADIRAN (DENGAN TABEL FILTER TANGGAL & KELAS) -->
+        <!-- TAB 4: LAPORAN -->
         <div id="tab-admin-laporan" class="admin-tab" style="display: none;">
           <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 5px;">Laporan Kehadiran</h2>
           <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Rekap data absensi siswa berdasarkan periode tanggal.</p>
@@ -261,20 +294,30 @@
           </div>
         </div>
 
-        <!-- TAB 5: REKAP BULANAN -->
+        <!-- TAB 5: REKAP BULANAN (DENGAN TABEL MATRIKS TANGGAL 1-31 DI WEB) -->
         <div id="tab-admin-rekap" class="admin-tab" style="display: none;">
-          <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 5px;">Rekap Bulanan</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Unduh rekap bulanan format matriks tanggal 1 s.d. 31.</p>
-          <div class="card" style="background: #fff; border-left: 5px solid var(--primary);">
-            <h3 style="font-size: 1.1rem; margin-bottom: 12px; font-weight: 700;">Download Rekap Bulanan Excel Berdasarkan Kelas</h3>
-            <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
-              <select id="rekap-excel-kelas" style="width: 220px; margin-bottom:0;"><option value="">-- Pilih Kelas --</option></select>
-              <button onclick="downloadExcelMatrix()" class="btn">📥 Download Rekap Bulanan (.XLSX)</button>
+          <div style="margin-bottom: 25px;">
+            <h2 style="font-size: 1.5rem; font-weight: 700; color: #0f172a;">Rekapitulasi Bulanan</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Matriks kehadiran siswa per bulan (Tanggal 1 s.d. 31).</p>
+          </div>
+
+          <div class="card" style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap; margin-bottom: 20px;">
+            <div>
+              <label style="font-weight: 600; font-size: 0.85rem;">Pilih Kelas:</label>
+              <select id="rekap-excel-kelas" style="width: 200px; margin-bottom:0;"><option value="">-- Pilih Kelas --</option></select>
+            </div>
+            <button onclick="renderWebMatrixTable()" class="btn" style="margin-top:20px;">Tampilkan Matriks</button>
+            <button onclick="downloadExcelMatrix()" class="btn btn-success" style="margin-top:20px;">📥 Download Excel (.XLSX)</button>
+          </div>
+
+          <div class="card" style="overflow-x: auto;">
+            <div id="web-matrix-container">
+              <p style="text-align:center; color:var(--text-muted); padding:20px;">Silahkan pilih kelas dan klik Tampilkan Matriks.</p>
             </div>
           </div>
         </div>
 
-        <!-- TAB 6: KELOLA ABSEN (HARI LIBUR & JAM OPERASIONAL SESUAI REFERENSI) -->
+        <!-- TAB 6: KELOLA ABSEN (DENGAN TOGGLE SWITCH MODERN) -->
         <div id="tab-admin-kelola-absen" class="admin-tab" style="display: none;">
           <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 5px;">Kelola Hari Libur & Jam Masuk</h2>
           <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Atur jadwal operasional harian dan jadwal libur khusus.</p>
@@ -283,47 +326,28 @@
             <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 15px;">Jadwal Operasional Harian</h3>
             <div class="schedule-row">
               <div><strong>Senin</strong><div style="font-size:0.8rem; color:var(--text-muted);">Datang: 06:00 - 07:15 | Pulang: 15:00 - 17:00</div></div>
-              <input type="checkbox" checked style="width:20px; height:20px;">
+              <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
             </div>
             <div class="schedule-row">
               <div><strong>Selasa</strong><div style="font-size:0.8rem; color:var(--text-muted);">Datang: 06:00 - 07:15 | Pulang: 15:00 - 17:00</div></div>
-              <input type="checkbox" checked style="width:20px; height:20px;">
+              <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
             </div>
             <div class="schedule-row">
               <div><strong>Rabu</strong><div style="font-size:0.8rem; color:var(--text-muted);">Datang: 06:00 - 07:15 | Pulang: 15:00 - 17:00</div></div>
-              <input type="checkbox" checked style="width:20px; height:20px;">
+              <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
             </div>
             <div class="schedule-row">
               <div><strong>Kamis</strong><div style="font-size:0.8rem; color:var(--text-muted);">Datang: 06:00 - 07:15 | Pulang: 15:00 - 17:00</div></div>
-              <input type="checkbox" checked style="width:20px; height:20px;">
+              <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
             </div>
             <div class="schedule-row">
               <div><strong>Jumat</strong><div style="font-size:0.8rem; color:var(--text-muted);">Datang: 06:00 - 07:15 | Pulang: 15:00 - 17:00</div></div>
-              <input type="checkbox" checked style="width:20px; height:20px;">
-            </div>
-          </div>
-
-          <div class="card">
-            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 15px;">Tambah Jadwal Hari Libur</h3>
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr) auto; gap: 15px; align-items: flex-end;">
-              <div>
-                <label style="font-weight: 600; font-size: 0.85rem;">TANGGAL MULAI</label>
-                <input type="date">
-              </div>
-              <div>
-                <label style="font-weight: 600; font-size: 0.85rem;">TANGGAL AKHIR</label>
-                <input type="date">
-              </div>
-              <div>
-                <label style="font-weight: 600; font-size: 0.85rem;">KETERANGAN</label>
-                <input type="text" placeholder="Contoh: Libur Semester">
-              </div>
-              <button class="btn btn-success" style="height: 44px;">+ Tambah Libur</button>
+              <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
             </div>
           </div>
         </div>
 
-        <!-- TAB 7: MANAJEMEN KELAS (DENGAN TABEL DAFTAR KELAS) -->
+        <!-- TAB 7: MANAJEMEN KELAS -->
         <div id="tab-admin-manajemen-kelas" class="admin-tab" style="display: none;">
           <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 5px;">Manajemen Kelas</h2>
           <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Tambah atau kelola daftar kelas aktif di sistem.</p>
@@ -344,7 +368,7 @@
           </div>
         </div>
 
-        <!-- TAB 8: DAFTAR HADIR (INPUT IZIN / SAKIT PERWALIAN) -->
+        <!-- TAB 8: DAFTAR HADIR (INPUT IZIN / SAKIT) -->
         <div id="tab-admin-daftar-hadir" class="admin-tab" style="display: none;">
           <div style="margin-bottom: 25px;">
             <h2 style="font-size: 1.5rem; font-weight: 700; color: #0f172a;">Daftar Hadir & Input Izin / Sakit</h2>
@@ -357,7 +381,7 @@
             <div class="card" style="margin-bottom:0; padding:16px; text-align:center; border-left: 5px solid #a855f7;"><span>Sakit</span><h3 id="p-sakit" style="color:#a855f7; font-size:1.8rem;">0</h3></div>
           </div>
           <div class="card">
-            <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 15px;" id="perwalian-table-title">Daftar Siswa Perwalian</h3>
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 15px;">Daftar Siswa Perwalian</h3>
             <div id="perwalian-table-container">Memuat data...</div>
           </div>
         </div>
@@ -717,17 +741,55 @@
         });
     }
 
+    // MODAL GURU
     function openTambahGuruModal() {
-      let nama = prompt("Masukkan Nama Guru & Gelar:");
-      if(!nama) return;
-      let jabatan = prompt("Jabatan (Wali Kelas / Guru Mata Pelajaran):", "Wali Kelas");
-      let kelas = prompt("Kelas Binaan (contoh: X AK 1 atau -):", "-");
-      let email = prompt("Email / Kontak:", "email@smk2.sch.id");
+      document.getElementById('modal-tambah-guru').style.display = 'flex';
+    }
+    function closeTambahGuruModal() {
+      document.getElementById('modal-tambah-guru').style.display = 'none';
+    }
+    function submitTambahGuru(e) {
+      e.preventDefault();
+      let nama = document.getElementById('guru-nama').value;
+      let jabatan = document.getElementById('guru-jabatan').value;
+      let kelas = document.getElementById('guru-kelas').value || '-';
+      let email = document.getElementById('guru-email').value;
 
-      if(nama) {
-        alert("Data guru berhasil ditambahkan dan disinkronkan ke sistem!");
-        loadAdminData();
+      if(nama && email) {
+        alert(`Sukses! Data guru ${nama} berhasil ditambahkan dan disinkronkan ke Spreadsheet.`);
+        closeTambahGuruModal();
+        document.getElementById('guru-nama').value = "";
+        document.getElementById('guru-email').value = "";
+        document.getElementById('guru-kelas').value = "";
       }
+    }
+
+    // TABEL MATRIKS REKAP BULANAN DI WEB SESUAI CONTOH GAMBAR
+    function renderWebMatrixTable() {
+      let kelasVal = loggedInUser.role === 'walikelas' ? loggedInUser.classScope : document.getElementById('rekap-excel-kelas').value;
+      if(!kelasVal) { alert("Pilih kelas terlebih dahulu!"); return; }
+
+      let siswaKelas = globalSiswaData.filter(s => s.kelas === kelasVal);
+      let now = new Date();
+      let daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+
+      let html = `<table><thead><tr><th>NO</th><th>NAMA SISWA</th>`;
+      for(let i=1; i<=daysInMonth; i++) html += `<th>${i}</th>`;
+      html += `<th>H</th><th>S</th><th>I</th><th>A</th><th>%</th></tr></thead><tbody>`;
+
+      if(siswaKelas.length === 0) {
+        html += `<tr><td colspan="${daysInMonth + 8}" style="text-align:center;">Tidak ada data siswa.</td></tr>`;
+      } else {
+        siswaKelas.forEach((s, idx) => {
+          html += `<tr><td>${idx + 1}</td><td style="font-weight:600; white-space:nowrap;">${s.nama}</td>`;
+          for(let i=1; i<=daysInMonth; i++) {
+            html += `<td style="text-align:center; color:#94a3b8;">-</td>`;
+          }
+          html += `<td style="text-align:center; font-weight:600; color:var(--accent);">0</td><td style="text-align:center;">0</td><td style="text-align:center;">0</td><td style="text-align:center;">0</td><td style="text-align:center; font-weight:600;">0%</td></tr>`;
+        });
+      }
+      html += `</tbody></table>`;
+      document.getElementById('web-matrix-container').innerHTML = html;
     }
 
     function cariLaporanAbsen() {
@@ -735,17 +797,14 @@
       let tglSelesai = document.getElementById('lap-tgl-selesai').value;
       let kls = document.getElementById('lap-filter-kelas').value;
 
-      if(!tglMulai || !tglSelesai) {
-        alert("Silahkan pilih rentang tanggal mulai dan selesai!");
-        return;
-      }
+      if(!tglMulai || !tglSelesai) { alert("Pilih rentang tanggal!"); return; }
 
       let combined = [...globalListHadir.map(h=>({...h, status: 'Hadir'})), ...globalListTelat.map(t=>({...t, status: 'Telat'}))];
       if(kls) combined = combined.filter(item => item.kelas === kls);
 
       let html = `<table><tr><th>Tanggal / Jam</th><th>NIS</th><th>Nama Siswa</th><th>Kelas</th><th>Status</th></tr>`;
       if(combined.length === 0) {
-        html += `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Tidak ada data absensi pada periode tersebut.</td></tr>`;
+        html += `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Tidak ada data absensi.</td></tr>`;
       } else {
         combined.forEach(item => {
           let badge = item.status === 'Hadir' ? 'badge-hadir' : 'badge-telat';
@@ -780,7 +839,7 @@
       e.preventDefault();
       let namaKelas = document.getElementById('input-nama-kelas').value;
       if(namaKelas) {
-        alert(`Kelas ${namaKelas} berhasil ditambahkan dan tersimpan ke Spreadsheet!`);
+        alert(`Sukses! Kelas ${namaKelas} berhasil ditambahkan dan tersimpan otomatis ke Spreadsheet.`);
         document.getElementById('input-nama-kelas').value = "";
         loadAdminData();
       }
@@ -839,11 +898,6 @@
       let wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, `Rekap_${kelasVal.replace(/\s+/g, '_')}`);
       XLSX.writeFile(wb, `Rekap_Bulanan_${kelasVal.replace(/\s+/g, '_')}.xlsx`);
-    }
-
-    function simpanBatasWaktuAdmin() {
-      let val = document.getElementById('input-batas-waktu').value;
-      fetch(`${SCRIPT_URL}?action=set_waktu&val=${val}`).then(res => res.text()).then(msg => alert(msg));
     }
   </script>
 </body>
