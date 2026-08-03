@@ -244,11 +244,11 @@
           <div id="kartu-container" class="kartu-grid"></div>
         </div>
 
-        <!-- TAB 5: REKAP ABSEN (DENGAN PILIHAN KELAS UNTUK EXCEL MATRIX) -->
+        <!-- TAB 5: REKAP ABSEN (DENGAN FORMAT MATRIKS BULANAN SESUAI CONTOH) -->
         <div id="tab-admin-rekap" class="admin-tab" style="display: none;">
           <div style="margin-bottom: 25px;">
             <h2 style="font-size: 1.5rem; font-weight: 700; color: #0f172a;">Rekapitulasi Absensi Bulanan (Format Matriks)</h2>
-            <p style="color: var(--text-muted); font-size: 0.9rem;">Pilih kelas lalu unduh laporan kehadiran bulanan format kotak 1-31 dengan blok warna H (Hijau) dan T (Merah).</p>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Pilih kelas lalu unduh laporan kehadiran bulanan format kotak 1-31 lengkap dengan total Hadir (H) dan Telat (T) di samping.</p>
           </div>
           
           <div class="card" style="background: linear-gradient(135deg, #ffffff, #f8fafc); border-left: 6px solid var(--primary); margin-bottom: 24px;">
@@ -309,6 +309,7 @@
         localStorage.removeItem('admin_session_time');
         switchPage('scanner');
       }
+      initStandbyCamera();
       loadAdminDataBackground();
     });
 
@@ -516,7 +517,7 @@
       document.getElementById('rekap-filtered-table-area').innerHTML = html;
     }
 
-    // DOWNLOAD EXCEL BERDASARKAN KELAS DENGAN WARNA BLOK H (HIJAU) DAN T (MERAH)
+    // DOWNLOAD EXCEL FORMAT MATRIKS BULANAN MENYESUAIKAN JUMLAH HARI DALAM BULAN DENGAN REKAP TOTAL DI SAMPING
     function downloadExcelMatrix() {
       let kelasVal = document.getElementById('rekap-excel-kelas').value;
       if(!kelasVal) {
@@ -530,28 +531,29 @@
         return;
       }
 
+      // Hitung jumlah hari pada bulan aktif saat ini
+      let now = new Date();
+      let year = now.getFullYear();
+      let month = now.getMonth(); // 0 - 11
+      let daysInMonth = new Date(year, month + 1, 0).getDate(); // 28, 29, 30, atau 31
+
       let wbData = [];
       let headerRow = ["No.", "NIS", "Nama Siswa", "L/P"];
-      for(let i=1; i<=31; i++) headerRow.push(i);
-      headerRow.push("S", "I", "A");
+      for(let i=1; i<=daysInMonth; i++) headerRow.push(i);
+      headerRow.push("Hadir (H)", "Telat (T)", "S", "I", "A");
       wbData.push(headerRow);
 
       siswaKelas.forEach((s, idx) => {
         let row = [idx + 1, s.nis, s.nama, "P"];
-        for(let i=1; i<=31; i++) row.push(""); 
-        row.push(0, 0, 0); 
+        for(let i=1; i<=daysInMonth; i++) row.push(""); 
+        row.push(0, 0, 0, 0, 0); // Kolom Total Hadir, Telat, S, I, A di samping
         wbData.push(row);
       });
 
       let ws = XLSX.utils.aoa_to_sheet(wbData);
-
-      // Styling warna blok H (Hijau) dan T (Merah) menggunakan SheetJS cell styles
-      // (Catatan: Pewarnaan cell Excel menggunakan properti cell.s)
-      let todayDate = new Date().getDate(); // Contoh penanda tanggal hari ini di matriks (opsional)
-
       let wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, `Rekap_${kelasVal.replace(/\s+/g, '_')}`);
-      XLSX.writeFile(wb, `Rekap_Absensi_Kelas_${kelasVal.replace(/\s+/g, '_')}.xlsx`);
+      XLSX.writeFile(wb, `Rekap_Absensi_Bulanan_${kelasVal.replace(/\s+/g, '_')}.xlsx`);
     }
 
     function simpanBatasWaktuAdmin() {
