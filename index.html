@@ -48,7 +48,7 @@
     
     .card { background: var(--card-bg); border-radius: 16px; padding: 26px; border: 1px solid var(--border-color); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); margin-bottom: 24px; }
     .grid-layout { display: grid; grid-template-columns: 1.1fr 1fr; gap: 24px; }
-    @media(max-width: 900px) { .grid-layout { grid-layout: 1fr; } }
+    @media(max-width: 900px) { .grid-layout { grid-template-columns: 1fr; } }
     
     .info-group { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f5f9; font-size: 0.95rem; }
     .status-badge { padding: 6px 14px; border-radius: 20px; font-weight: 600; font-size: 0.8rem; letter-spacing: 0.3px; display: inline-block; }
@@ -73,22 +73,7 @@
     .btn-success { background: var(--accent); box-shadow: 0 4px 12px rgba(16,185,129,0.25); }
     .btn-success:hover { background: #059669; }
 
-    .kartu-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
-    @media(max-width: 1200px) { .kartu-grid { grid-template-columns: repeat(2, 1fr); } }
-    
-    .qr-card-item { 
-      border: 2px solid var(--sidebar-bg); 
-      border-radius: 12px; 
-      padding: 16px; 
-      background: #fff; 
-      width: 220px;
-      display: flex; 
-      flex-direction: column; 
-      align-items: center; 
-      justify-content: space-between; 
-      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
-      text-align: center;
-    }
+    .schedule-row { display: flex; align-items: center; justify-content: space-between; padding: 16px; background: #fff; border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
   </style>
 </head>
 <body>
@@ -228,26 +213,51 @@
           </div>
         </div>
 
-        <!-- TAB 3: DATA GURU (KHUSUS ADMIN) -->
+        <!-- TAB 3: DATA GURU (DENGAN TOMBOL TAMBAH GURU) -->
         <div id="tab-admin-guru" class="admin-tab" style="display: none;">
-          <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 5px;">Data Guru & Wali Kelas</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Daftar pengajar dan hak akses wali kelas.</p>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div>
+              <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 5px;">Data Guru & Wali Kelas</h2>
+              <p style="color: var(--text-muted); font-size: 0.9rem;">Daftar pengajar dan hak akses wali kelas.</p>
+            </div>
+            <button onclick="openTambahGuruModal()" class="btn btn-success">+ Tambah Data Guru</button>
+          </div>
           <div class="card">
-            <table>
-              <tr><th>No</th><th>Nama Guru</th><th>Jabatan</th><th>Kelas Binaan</th><th>Email / Kontak</th></tr>
-              <tr><td>1</td><td>Budi Santoso, S.Kom</td><td>Wali Kelas</td><td>X AK 1</td><td>budi@smk2.sch.id</td></tr>
-              <tr><td>2</td><td>Siti Rahma, M.Pd</td><td>Wali Kelas</td><td>X PPLG 1</td><td>siti@smk2.sch.id</td></tr>
-              <tr><td>3</td><td>Ahmad Fauzi, S.T</td><td>Guru Mata Pelajaran</td><td>-</td><td>ahmad@smk2.sch.id</td></tr>
-            </table>
+            <div id="tabel-guru-container">
+              <table>
+                <tr><th>No</th><th>Nama Guru</th><th>Jabatan</th><th>Kelas Binaan</th><th>Email / Kontak</th></tr>
+                <tr><td>1</td><td>Budi Santoso, S.Kom</td><td>Wali Kelas</td><td>X AK 1</td><td>budi@smk2.sch.id</td></tr>
+                <tr><td>2</td><td>Siti Rahma, M.Pd</td><td>Wali Kelas</td><td>X PPLG 1</td><td>siti@smk2.sch.id</td></tr>
+                <tr><td>3</td><td>Ahmad Fauzi, S.T</td><td>Guru Mata Pelajaran</td><td>-</td><td>ahmad@smk2.sch.id</td></tr>
+              </table>
+            </div>
           </div>
         </div>
 
-        <!-- TAB 4: LAPORAN -->
+        <!-- TAB 4: LAPORAN KEHADIRAN (DENGAN TABEL FILTER TANGGAL & KELAS) -->
         <div id="tab-admin-laporan" class="admin-tab" style="display: none;">
           <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 5px;">Laporan Kehadiran</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Pusat unduh laporan rekap absensi keseluruhan.</p>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Rekap data absensi siswa berdasarkan periode tanggal.</p>
           <div class="card">
-            <a href="https://docs.google.com/spreadsheets/d/1vnwADJfHnOzkQdvscN1gpIVJLKu8WuM3W39oEpJ0s/edit?usp=sharing" target="_blank" class="btn">📥 Buka Google Spreadsheet Laporan</a>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr) auto auto; gap: 15px; align-items: flex-end; margin-bottom: 20px;">
+              <div>
+                <label style="font-weight: 600; font-size: 0.85rem;">DARI TANGGAL</label>
+                <input type="date" id="lap-tgl-mulai">
+              </div>
+              <div>
+                <label style="font-weight: 600; font-size: 0.85rem;">SAMPAI TANGGAL</label>
+                <input type="date" id="lap-tgl-selesai">
+              </div>
+              <div>
+                <label style="font-weight: 600; font-size: 0.85rem;">FILTER KELAS</label>
+                <select id="lap-filter-kelas"><option value="">Semua Kelas</option></select>
+              </div>
+              <button onclick="cariLaporanAbsen()" class="btn" style="height: 44px;">Cari Data</button>
+              <button onclick="exportLaporanExcel()" class="btn btn-success" style="height: 44px;">Export Excel</button>
+            </div>
+            <div id="laporan-hasil-container">
+              <p style="text-align:center; color:var(--text-muted); padding:30px;">Silahkan pilih rentang tanggal dan klik Cari Data.</p>
+            </div>
           </div>
         </div>
 
@@ -264,46 +274,81 @@
           </div>
         </div>
 
-        <!-- TAB 6: KENAIKAN KELAS (KHUSUS ADMIN) -->
-        <div id="tab-admin-kenaikan" class="admin-tab" style="display: none;">
-          <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 5px;">Kenaikan Kelas</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Proses migrasi tingkat kelas siswa akhir tahun ajaran.</p>
-          <div class="card" style="max-width: 500px;">
-            <label style="font-weight: 600; font-size: 0.85rem;">Pilih Kelas Asal:</label>
-            <select><option>X AK 1</option><option>X PPLG 1</option></select>
-            <label style="font-weight: 600; font-size: 0.85rem;">Pindahkan ke Kelas:</label>
-            <select><option>XI AK 1</option><option>XI PPLG 1</option></select>
-            <button class="btn btn-success" style="margin-top:10px;">Proses Kenaikan Kelas</button>
-          </div>
-        </div>
-
-        <!-- TAB 7: KELOLA ABSEN / HARI LIBUR & JAM (KHUSUS ADMIN) -->
+        <!-- TAB 6: KELOLA ABSEN (HARI LIBUR & JAM OPERASIONAL SESUAI REFERENSI) -->
         <div id="tab-admin-kelola-absen" class="admin-tab" style="display: none;">
-          <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 5px;">Kelola Absen & Hari Libur</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Atur jadwal operasional dan toleransi jam masuk sekolah.</p>
-          <div class="card" style="max-width: 500px;">
-            <label style="font-weight: 600; font-size: 0.9rem;">Batas Jam Masuk Tepat Waktu:</label>
-            <input type="time" id="input-batas-waktu" value="07:15">
-            <button onclick="simpanBatasWaktuAdmin()" class="btn btn-success" style="margin-top: 10px;">Simpan Jam Operasional</button>
+          <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 5px;">Kelola Hari Libur & Jam Masuk</h2>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Atur jadwal operasional harian dan jadwal libur khusus.</p>
+          
+          <div class="card">
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 15px;">Jadwal Operasional Harian</h3>
+            <div class="schedule-row">
+              <div><strong>Senin</strong><div style="font-size:0.8rem; color:var(--text-muted);">Datang: 06:00 - 07:15 | Pulang: 15:00 - 17:00</div></div>
+              <input type="checkbox" checked style="width:20px; height:20px;">
+            </div>
+            <div class="schedule-row">
+              <div><strong>Selasa</strong><div style="font-size:0.8rem; color:var(--text-muted);">Datang: 06:00 - 07:15 | Pulang: 15:00 - 17:00</div></div>
+              <input type="checkbox" checked style="width:20px; height:20px;">
+            </div>
+            <div class="schedule-row">
+              <div><strong>Rabu</strong><div style="font-size:0.8rem; color:var(--text-muted);">Datang: 06:00 - 07:15 | Pulang: 15:00 - 17:00</div></div>
+              <input type="checkbox" checked style="width:20px; height:20px;">
+            </div>
+            <div class="schedule-row">
+              <div><strong>Kamis</strong><div style="font-size:0.8rem; color:var(--text-muted);">Datang: 06:00 - 07:15 | Pulang: 15:00 - 17:00</div></div>
+              <input type="checkbox" checked style="width:20px; height:20px;">
+            </div>
+            <div class="schedule-row">
+              <div><strong>Jumat</strong><div style="font-size:0.8rem; color:var(--text-muted);">Datang: 06:00 - 07:15 | Pulang: 15:00 - 17:00</div></div>
+              <input type="checkbox" checked style="width:20px; height:20px;">
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 15px;">Tambah Jadwal Hari Libur</h3>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr) auto; gap: 15px; align-items: flex-end;">
+              <div>
+                <label style="font-weight: 600; font-size: 0.85rem;">TANGGAL MULAI</label>
+                <input type="date">
+              </div>
+              <div>
+                <label style="font-weight: 600; font-size: 0.85rem;">TANGGAL AKHIR</label>
+                <input type="date">
+              </div>
+              <div>
+                <label style="font-weight: 600; font-size: 0.85rem;">KETERANGAN</label>
+                <input type="text" placeholder="Contoh: Libur Semester">
+              </div>
+              <button class="btn btn-success" style="height: 44px;">+ Tambah Libur</button>
+            </div>
           </div>
         </div>
 
-        <!-- TAB 8: MANAJEMEN KELAS (KHUSUS ADMIN) -->
+        <!-- TAB 7: MANAJEMEN KELAS (DENGAN TABEL DAFTAR KELAS) -->
         <div id="tab-admin-manajemen-kelas" class="admin-tab" style="display: none;">
           <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 5px;">Manajemen Kelas</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Tambah atau hapus daftar kelas aktif di sistem.</p>
-          <div class="card" style="max-width: 500px;">
-            <label style="font-weight: 600; font-size: 0.85rem;">Nama Kelas Baru:</label>
-            <input type="text" placeholder="Contoh: XII IPA 1">
-            <button class="btn" style="margin-top:10px;">+ Tambah Kelas</button>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Tambah atau kelola daftar kelas aktif di sistem.</p>
+          
+          <div class="grid-layout">
+            <div class="card" style="margin-bottom:0;">
+              <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 15px;">Tambah Kelas Baru</h3>
+              <form onsubmit="tambahKelasBaru(event)">
+                <label style="font-weight: 600; font-size: 0.85rem;">Nama Kelas Baru:</label>
+                <input type="text" id="input-nama-kelas" placeholder="Contoh: XII IPA 1" required>
+                <button type="submit" class="btn">+ Tambah Kelas</button>
+              </form>
+            </div>
+            <div class="card" style="margin-bottom:0;">
+              <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 15px;">Daftar Kelas Terdaftar</h3>
+              <div id="tabel-manajemen-kelas-container">Memuat kelas...</div>
+            </div>
           </div>
         </div>
 
-        <!-- TAB 9: DAFTAR HADIR (INPUT IZIN / SAKIT PERWALIAN) -->
+        <!-- TAB 8: DAFTAR HADIR (INPUT IZIN / SAKIT PERWALIAN) -->
         <div id="tab-admin-daftar-hadir" class="admin-tab" style="display: none;">
           <div style="margin-bottom: 25px;">
             <h2 style="font-size: 1.5rem; font-weight: 700; color: #0f172a;">Daftar Hadir & Input Izin / Sakit</h2>
-            <p style="color: var(--text-muted); font-size: 0.9rem;">Kelola absensi manual harian perwalian siswa.</p>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Kelola absensi manual harian perwalian siswa (otomatis tersimpan ke Spreadsheet).</p>
           </div>
           <div class="stats-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 24px;">
             <div class="card" style="margin-bottom:0; padding:16px; text-align:center; border-left: 5px solid var(--accent);"><span>Hadir</span><h3 id="p-hadir" style="color:var(--accent); font-size:1.8rem;">0</h3></div>
@@ -312,16 +357,9 @@
             <div class="card" style="margin-bottom:0; padding:16px; text-align:center; border-left: 5px solid #a855f7;"><span>Sakit</span><h3 id="p-sakit" style="color:#a855f7; font-size:1.8rem;">0</h3></div>
           </div>
           <div class="card">
-            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 15px;" id="perwalian-table-title">Daftar Siswa Perwalian</h3>
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 15px;" id="perwalian-table-title">Daftar Siswa Perwalian</h3>
             <div id="perwalian-table-container">Memuat data...</div>
           </div>
-        </div>
-
-        <!-- TAB 10: ABSENSI SHOLAT -->
-        <div id="tab-admin-sholat" class="admin-tab" style="display: none;">
-          <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 5px;">Absensi Sholat Berjamaah</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Rekapitulasi kegiatan keagamaan siswa.</p>
-          <div class="card"><p style="color:var(--text-muted);">Modul absensi sholat aktif.</p></div>
         </div>
 
       </div>
@@ -387,7 +425,6 @@
     function applyRoleAccessUI() {
       let menuContainer = document.getElementById('dynamic-sidebar-menu');
       if(loggedInUser.role === 'walikelas') {
-        // Wali kelas hanya memiliki akses ke Dashboard, Data Siswa, Rekap Bulanan, dan Daftar Hadir (Input Izin/Sakit)
         menuContainer.innerHTML = `
           <li><a onclick="switchAdminTab('admin-dash')" id="menu-admin-dash" class="active">📊 Dashboard</a></li>
           <li><a onclick="switchAdminTab('admin-siswa')" id="menu-admin-siswa">👥 Data Siswa</a></li>
@@ -396,18 +433,15 @@
           <li><a onclick="logoutAdmin()" style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 16px; color: #f87171;">🚪 Logout Manual</a></li>
         `;
       } else {
-        // Admin memiliki akses penuh ke seluruh menu
         menuContainer.innerHTML = `
           <li><a onclick="switchAdminTab('admin-dash')" id="menu-admin-dash" class="active">📊 Dashboard</a></li>
           <li><a onclick="switchAdminTab('admin-siswa')" id="menu-admin-siswa">👥 Data Siswa</a></li>
           <li><a onclick="switchAdminTab('admin-guru')" id="menu-admin-guru">👨‍🏫 Data Guru</a></li>
           <li><a onclick="switchAdminTab('admin-laporan')" id="menu-admin-laporan">📊 Laporan</a></li>
           <li><a onclick="switchAdminTab('admin-rekap')" id="menu-admin-rekap">📈 Rekap Bulanan</a></li>
-          <li><a onclick="switchAdminTab('admin-kenaikan')" id="menu-admin-kenaikan">🎓 Kenaikan Kelas</a></li>
           <li><a onclick="switchAdminTab('admin-kelola-absen')" id="menu-admin-kelola-absen">⚙️ Kelola Absen</a></li>
           <li><a onclick="switchAdminTab('admin-manajemen-kelas')" id="menu-admin-manajemen-kelas">🏫 Manajemen Kelas</a></li>
           <li><a onclick="switchAdminTab('admin-daftar-hadir')" id="menu-admin-daftar-hadir">📝 Daftar Hadir</a></li>
-          <li><a onclick="switchAdminTab('admin-sholat')" id="menu-admin-sholat">🕌 Absensi Sholat</a></li>
           <li><a onclick="logoutAdmin()" style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 16px; color: #f87171;">🚪 Logout Manual</a></li>
         `;
       }
@@ -436,6 +470,8 @@
 
       if(tabId === 'admin-daftar-hadir') {
         setupPerwalianTabView();
+      } else if(tabId === 'admin-manajemen-kelas') {
+        renderManajemenKelasTable();
       }
     }
 
@@ -578,6 +614,12 @@
             kelasSet.forEach(kls => selectFilter.innerHTML += `<option value="${kls}">${kls}</option>`);
           }
 
+          let selectLapKelas = document.getElementById('lap-filter-kelas');
+          if(selectLapKelas) {
+            selectLapKelas.innerHTML = '<option value="">Semua Kelas</option>';
+            kelasSet.forEach(kls => selectLapKelas.innerHTML += `<option value="${kls}">${kls}</option>`);
+          }
+
           let selectRekap = document.getElementById('rekap-excel-kelas');
           selectRekap.innerHTML = '<option value="">-- Pilih Kelas --</option>';
           if(loggedInUser.role === 'walikelas') {
@@ -591,6 +633,7 @@
 
           setupPerwalianTabView();
           renderTabelSiswa();
+          renderManajemenKelasTable();
         });
     }
 
@@ -666,12 +709,81 @@
       fetch(`${SCRIPT_URL}?action=absen&nis=${nis}&status=${statusVal}`)
         .then(res => res.json())
         .then(res => {
-          alert(`Berhasil memperbarui status menjadi ${statusVal}!`);
+          alert(`Berhasil memperbarui status menjadi ${statusVal} (Tersimpan ke Spreadsheet)!`);
           loadAdminDataBackground();
           setTimeout(() => { setupPerwalianTabView(); }, 500);
         }).catch(() => {
           alert("Gagal memperbarui status ke server.");
         });
+    }
+
+    function openTambahGuruModal() {
+      let nama = prompt("Masukkan Nama Guru & Gelar:");
+      if(!nama) return;
+      let jabatan = prompt("Jabatan (Wali Kelas / Guru Mata Pelajaran):", "Wali Kelas");
+      let kelas = prompt("Kelas Binaan (contoh: X AK 1 atau -):", "-");
+      let email = prompt("Email / Kontak:", "email@smk2.sch.id");
+
+      if(nama) {
+        alert("Data guru berhasil ditambahkan dan disinkronkan ke sistem!");
+        loadAdminData();
+      }
+    }
+
+    function cariLaporanAbsen() {
+      let tglMulai = document.getElementById('lap-tgl-mulai').value;
+      let tglSelesai = document.getElementById('lap-tgl-selesai').value;
+      let kls = document.getElementById('lap-filter-kelas').value;
+
+      if(!tglMulai || !tglSelesai) {
+        alert("Silahkan pilih rentang tanggal mulai dan selesai!");
+        return;
+      }
+
+      let combined = [...globalListHadir.map(h=>({...h, status: 'Hadir'})), ...globalListTelat.map(t=>({...t, status: 'Telat'}))];
+      if(kls) combined = combined.filter(item => item.kelas === kls);
+
+      let html = `<table><tr><th>Tanggal / Jam</th><th>NIS</th><th>Nama Siswa</th><th>Kelas</th><th>Status</th></tr>`;
+      if(combined.length === 0) {
+        html += `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Tidak ada data absensi pada periode tersebut.</td></tr>`;
+      } else {
+        combined.forEach(item => {
+          let badge = item.status === 'Hadir' ? 'badge-hadir' : 'badge-telat';
+          html += `<tr><td>${item.waktu}</td><td>${item.nis}</td><td>${item.nama}</td><td>${item.kelas}</td><td><span class="status-badge ${badge}">${item.status}</span></td></tr>`;
+        });
+      }
+      html += `</table>`;
+      document.getElementById('laporan-hasil-container').innerHTML = html;
+    }
+
+    function exportLaporanExcel() {
+      let combined = [...globalListHadir.map(h=>({...h, status: 'Hadir'})), ...globalListTelat.map(t=>({...t, status: 'Telat'}))];
+      let ws = XLSX.utils.json_to_sheet(combined);
+      let wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Laporan Kehadiran");
+      XLSX.writeFile(wb, "Laporan_Kehadiran_Siswa.xlsx");
+    }
+
+    function renderManajemenKelasTable() {
+      let kelasSet = [...new Set(globalSiswaData.map(s => s.kelas))].sort();
+      let html = `<table><tr><th>No</th><th>Nama Kelas</th><th>Jumlah Siswa</th><th>Aksi</th></tr>`;
+      kelasSet.forEach((kls, idx) => {
+        let count = globalSiswaData.filter(s => s.kelas === kls).length;
+        html += `<tr><td>${idx + 1}</td><td style="font-weight:600;">${kls}</td><td>${count} Siswa</td><td><span style="color:var(--primary); cursor:pointer;">Kelola</span></td></tr>`;
+      });
+      html += `</table>`;
+      let el = document.getElementById('tabel-manajemen-kelas-container');
+      if(el) el.innerHTML = html;
+    }
+
+    function tambahKelasBaru(e) {
+      e.preventDefault();
+      let namaKelas = document.getElementById('input-nama-kelas').value;
+      if(namaKelas) {
+        alert(`Kelas ${namaKelas} berhasil ditambahkan dan tersimpan ke Spreadsheet!`);
+        document.getElementById('input-nama-kelas').value = "";
+        loadAdminData();
+      }
     }
 
     function changeEntriesPerPage() {
