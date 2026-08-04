@@ -88,7 +88,7 @@
     .qr-card-item { border: 2px solid var(--sidebar-bg); border-radius: 12px; padding: 16px; background: #fff; width: 220px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); text-align: center; }
   </style>
 </head>
-<body>
+<body onclick="initAudioContext()">
 
   <!-- HALAMAN UTAMA: SCANNER -->
   <div id="wrapper-scanner-page">
@@ -351,23 +351,23 @@
           <div class="card">
             <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 15px;">Jadwal Operasional Harian</h3>
             <div class="schedule-row">
-              <div><strong>Senin</strong><div style="font-size:0.8rem; color:var(--text-muted);">Datang: 06:00 - 07:30 | Pulang: 15:00 - 17:00</div></div>
+              <div><strong>Senin</strong><div style="font-size:0.8rem; color:var(--text-muted);">Batas Jam Tepat Waktu: 07:30 WIB</div></div>
               <label class="switch"><input type="checkbox" id="sch-senin" checked><span class="slider"></span></label>
             </div>
             <div class="schedule-row">
-              <div><strong>Selasa</strong><div style="font-size:0.8rem; color:var(--text-muted);">Datang: 06:00 - 07:30 | Pulang: 15:00 - 17:00</div></div>
+              <div><strong>Selasa</strong><div style="font-size:0.8rem; color:var(--text-muted);">Batas Jam Tepat Waktu: 07:30 WIB</div></div>
               <label class="switch"><input type="checkbox" id="sch-selasa" checked><span class="slider"></span></label>
             </div>
             <div class="schedule-row">
-              <div><strong>Rabu</strong><div style="font-size:0.8rem; color:var(--text-muted);">Datang: 06:00 - 07:30 | Pulang: 15:00 - 17:00</div></div>
+              <div><strong>Rabu</strong><div style="font-size:0.8rem; color:var(--text-muted);">Batas Jam Tepat Waktu: 07:30 WIB</div></div>
               <label class="switch"><input type="checkbox" id="sch-rabu" checked><span class="slider"></span></label>
             </div>
             <div class="schedule-row">
-              <div><strong>Kamis</strong><div style="font-size:0.8rem; color:var(--text-muted);">Datang: 06:00 - 07:30 | Pulang: 15:00 - 17:00</div></div>
+              <div><strong>Kamis</strong><div style="font-size:0.8rem; color:var(--text-muted);">Batas Jam Tepat Waktu: 07:30 WIB</div></div>
               <label class="switch"><input type="checkbox" id="sch-kamis" checked><span class="slider"></span></label>
             </div>
             <div class="schedule-row">
-              <div><strong>Jumat</strong><div style="font-size:0.8rem; color:var(--text-muted);">Datang: 06:00 - 07:30 | Pulang: 15:00 - 17:00</div></div>
+              <div><strong>Jumat</strong><div style="font-size:0.8rem; color:var(--text-muted);">Batas Jam Tepat Waktu: 07:30 WIB</div></div>
               <label class="switch"><input type="checkbox" id="sch-jumat" checked><span class="slider"></span></label>
             </div>
           </div>
@@ -527,18 +527,29 @@
       }
     }
 
-    // UNLOCK AUDIO BEEP POLICY
-    let audioUnlocked = false;
-    function unlockAudioOnce() {
-      if(!audioUnlocked) {
+    // AUDIO CONTEXT UNTUK SUPORT BEEP 100% NYARING TANPA ERROR
+    let audioCtx = null;
+    function initAudioContext() {
+      if(!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
+
+    function playBeepSound() {
+      try {
+        if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, audioCtx.currentTime); // Frekuensi suara beep
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.25); // Durasi 0.25 detik
+      } catch(e) {
         let audio = document.getElementById('beep-audio');
-        if(audio) {
-          audio.play().then(() => {
-            audio.pause();
-            audio.currentTime = 0;
-            audioUnlocked = true;
-          }).catch(() => {});
-        }
+        if(audio) { audio.currentTime = 0; audio.play().catch(() => {}); }
       }
     }
 
@@ -556,9 +567,9 @@
     }
 
     function startCameraScan(facing) {
-      html5QrCode.start({ facingMode: facing }, { fps: 15, qrbox: { width: 250, height: 250 } }, onScanSuccess, () => {})
+      html5QrCode.start({ facingMode: facing }, { fps: 20, qrbox: { width: 250, height: 250 } }, onScanSuccess, () => {})
       .catch(() => {
-        html5QrCode.start({ facingMode: "user" }, { fps: 15, qrbox: { width: 250, height: 250 } }, onScanSuccess, () => {}).catch(() => {});
+        html5QrCode.start({ facingMode: "user" }, { fps: 20, qrbox: { width: 250, height: 250 } }, onScanSuccess, () => {}).catch(() => {});
       });
     }
 
@@ -567,23 +578,18 @@
       initStandbyCamera(selectVal);
     }
 
-    // SUARA BEEP.MP3 SAAT BERHASIL ABSEN
-    function playBeepSound() {
-      let audio = document.getElementById('beep-audio');
-      if(audio) {
-        audio.currentTime = 0;
-        audio.play().catch(e => console.log("Audio play error:", e));
-      }
-    }
-
+    // NON-BLOCKING INSTANT SCAN DENGAN ANTI-DOUBLE SCAN
+    let isProcessingScan = false;
     function onScanSuccess(decodedText) {
+      if(isProcessingScan) return; // Mencegah scan bertubi-tubi dalam milidetik yang sama
+      
       let hariIni = new Date().getDay();
       if (hariIni === 0 || hariIni === 6) {
         document.getElementById('scan-status-text').innerHTML = `<span style="color: #ef4444; font-weight: bold;">⛔ SEKOLAH LIBUR! Absensi ditutup pada hari Sabtu & Minggu.</span>`;
         return;
       }
 
-      // CEK LOCAL CACHE APAKAH SISWA SUDAH ABSEN HARI INI (ANTI-DOUBLE SCAN)
+      // CEK LOCAL CACHE ANTI-DOUBLE SCAN HARI INI
       let scannedTodayList = JSON.parse(localStorage.getItem('scanned_today_nis') || '[]');
       let todayStr = new Date().toDateString();
       let lastScanDate = localStorage.getItem('scanned_today_date') || '';
@@ -594,21 +600,26 @@
       }
 
       if(scannedTodayList.includes(decodedText.toString())) {
+        isProcessingScan = true;
+        playBeepSound();
         let notifyBox = document.getElementById('notification-box');
-        notifyBox.innerHTML = `<span style="color: #d97706; font-weight: bold;">⚠️ Siswa dengan NIS ${decodedText} sudah berhasil absen sebelumnya! Data tidak dimasukkan lagi.</span>`;
+        notifyBox.innerHTML = `<span style="color: #d97706; font-weight: bold;">⚠️ Siswa NIS ${decodedText} SUDAH BERHASIL ABSEN sebelumnya! Data tidak ganda.</span>`;
         document.getElementById('scan-status-text').innerText = "Silahkan lanjut siswa berikutnya.";
+        setTimeout(() => { isProcessingScan = false; }, 2000); // Jeda 2 detik agar tidak spam
         return;
       }
 
+      isProcessingScan = true;
       document.getElementById('scan-status-text').innerHTML = `<span style="color: #2563eb;">Memproses NIS: ${decodedText}...</span>`;
+      
+      // Kirim request ke backend, langsung mainkan suara dan kunci cache lokal secara instan tanpa delay
       fetch(`${SCRIPT_URL}?action=absen&nis=${decodedText}`)
         .then(res => res.json())
         .then(res => {
           let notifyBox = document.getElementById('notification-box');
           if (res.status === 'success') {
-            playBeepSound(); // Putar Beep.mp3 saat sukses
+            playBeepSound(); // Suara Beep berbunyi instan
             
-            // Masukkan ke cache lokal supaya tidak bisa double scan hari ini
             scannedTodayList.push(decodedText.toString());
             localStorage.setItem('scanned_today_nis', JSON.stringify(scannedTodayList));
 
@@ -626,6 +637,9 @@
             notifyBox.innerHTML = `<span style="color: #991b1b; font-weight: bold;">⚠️ ${res.message}</span>`;
             document.getElementById('scan-status-text').innerText = "Silahkan coba lagi.";
           }
+          setTimeout(() => { isProcessingScan = false; }, 1500);
+        }).catch(() => {
+          isProcessingScan = false;
         });
     }
 
@@ -844,7 +858,6 @@
         });
     }
 
-    // MODAL GURU & KONEKSI KE SPREADSHEET
     function openTambahGuruModal() {
       document.getElementById('modal-tambah-guru').style.display = 'flex';
     }
@@ -1119,7 +1132,7 @@
       let ws = XLSX.utils.aoa_to_sheet(wbData);
       let wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, `Rekap_${kelasVal.replace(/\s+/g, '_')}`);
-      XLSX.writeFile(wb, `Rekap_Bulanan_${kelasVal.replace(/\s+/g, '_')}.zip` || `Rekap_Bulanan_${kelasVal.replace(/\s+/g, '_')}.xlsx`);
+      XLSX.writeFile(wb, `Rekap_Bulanan_${kelasVal.replace(/\s+/g, '_')}.xlsx`);
     }
   </script>
 </body>
