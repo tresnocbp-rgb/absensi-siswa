@@ -541,12 +541,12 @@
         let osc = audioCtx.createOscillator();
         let gain = audioCtx.createGain();
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(800, audioCtx.currentTime); // Frekuensi suara beep
+        osc.frequency.setValueAtTime(800, audioCtx.currentTime);
         gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         osc.start();
-        osc.stop(audioCtx.currentTime + 0.25); // Durasi 0.25 detik
+        osc.stop(audioCtx.currentTime + 0.25);
       } catch(e) {
         let audio = document.getElementById('beep-audio');
         if(audio) { audio.currentTime = 0; audio.play().catch(() => {}); }
@@ -578,10 +578,10 @@
       initStandbyCamera(selectVal);
     }
 
-    // NON-BLOCKING INSTANT SCAN DENGAN ANTI-DOUBLE SCAN
+    // PENGECEKAN BERDASARKAN DATABASE SPREADSHEET (MENDUKUNG HAPUS DATA UNTUK SCAN ULANG)
     let isProcessingScan = false;
     function onScanSuccess(decodedText) {
-      if(isProcessingScan) return; // Mencegah scan bertubi-tubi dalam milidetik yang sama
+      if(isProcessingScan) return;
       
       let hariIni = new Date().getDay();
       if (hariIni === 0 || hariIni === 6) {
@@ -589,58 +589,53 @@
         return;
       }
 
-      // CEK LOCAL CACHE ANTI-DOUBLE SCAN HARI INI
-      let scannedTodayList = JSON.parse(localStorage.getItem('scanned_today_nis') || '[]');
-      let todayStr = new Date().toDateString();
-      let lastScanDate = localStorage.getItem('scanned_today_date') || '';
-
-      if(lastScanDate !== todayStr) {
-        scannedTodayList = [];
-        localStorage.setItem('scanned_today_date', todayStr);
-      }
-
-      if(scannedTodayList.includes(decodedText.toString())) {
-        isProcessingScan = true;
-        playBeepSound();
-        let notifyBox = document.getElementById('notification-box');
-        notifyBox.innerHTML = `<span style="color: #d97706; font-weight: bold;">⚠️ Siswa NIS ${decodedText} SUDAH BERHASIL ABSEN sebelumnya! Data tidak ganda.</span>`;
-        document.getElementById('scan-status-text').innerText = "Silahkan lanjut siswa berikutnya.";
-        setTimeout(() => { isProcessingScan = false; }, 2000); // Jeda 2 detik agar tidak spam
-        return;
-      }
-
       isProcessingScan = true;
       document.getElementById('scan-status-text').innerHTML = `<span style="color: #2563eb;">Memproses NIS: ${decodedText}...</span>`;
       
-      // Kirim request ke backend, langsung mainkan suara dan kunci cache lokal secara instan tanpa delay
-      fetch(`${SCRIPT_URL}?action=absen&nis=${decodedText}`)
+      // Ambil data terbaru langsung dari server Spreadsheet untuk memastikan apakah sudah absen atau sudah dihapus admin
+      fetch(`${SCRIPT_URL}?action=admin_data`)
         .then(res => res.json())
-        .then(res => {
-          let notifyBox = document.getElementById('notification-box');
-          if (res.status === 'success') {
-            playBeepSound(); // Suara Beep berbunyi instan
-            
-            scannedTodayList.push(decodedText.toString());
-            localStorage.setItem('scanned_today_nis', JSON.stringify(scannedTodayList));
+        .then(data => {
+          let listHadir = data.listHadir || [];
+          let listTelat = data.listTelat || [];
+          let allAbsenHariIni = [...listHadir, ...listTelat];
 
-            notifyBox.innerHTML = `<span style="color: #065f46; font-weight: bold;">✅ ${res.message}</span>`;
-            document.getElementById('res-nis').innerText = decodedText;
-            document.getElementById('res-nama').innerText = res.nama;
-            document.getElementById('res-kelas').innerText = res.kelas;
-            document.getElementById('res-tanggal').innerText = new Date().toLocaleDateString('id-ID') + ' (' + res.waktu + ')';
-            let badge = document.getElementById('res-status');
-            badge.className = 'status-badge ' + (res.keterangan === 'Hadir' ? 'badge-hadir' : 'badge-telat');
-            badge.innerText = res.keterangan.toUpperCase();
-            document.getElementById('scan-status-text').innerText = "Scan berhasil! Lanjut siswa berikutnya.";
-            loadAdminDataBackground();
-          } else {
-            notifyBox.innerHTML = `<span style="color: #991b1b; font-weight: bold;">⚠️ ${res.message}</span>`;
-            document.getElementById('scan-status-text').innerText = "Silahkan coba lagi.";
+          // Cek apakah NIS ini sudah ada di rekam absensi server hari ini
+          let sudahAbsen = allAbsenHariIni.some(item => item.nis.toString() === decodedText.toString());
+
+          if(sudahAbsen) {
+            isProcessingScan = false;
+            playBeepSound();
+            let notifyBox = document.getElementById('notification-box');
+            notifyBox.innerHTML = `<span style="color: #d97706; font-weight: bold;">⚠️ Siswa NIS ${decodedText} SUDAH BERHASIL ABSEN sebelumnya hari ini!</span>`;
+            document.getElementById('scan-status-text').innerText = "Silahkan lanjut siswa berikutnya.";
+            return;
           }
-          setTimeout(() => { isProcessingScan = false; }, 1500);
-        }).catch(() => {
-          isProcessingScan = false;
-        });
+
+          // Jika belum ada di spreadsheet (atau sudah dihapus admin), lanjutkan proses absen baru
+          fetch(`${SCRIPT_URL}?action=absen&nis=${decodedText}`)
+            .then(res => res.json())
+            .then(res => {
+              let notifyBox = document.getElementById('notification-box');
+              if (res.status === 'success') {
+                playBeepSound(); // Suara Beep berbunyi instan
+                notifyBox.innerHTML = `<span style="color: #065f46; font-weight: bold;">✅ ${res.message}</span>`;
+                document.getElementById('res-nis').innerText = decodedText;
+                document.getElementById('res-nama').innerText = res.nama;
+                document.getElementById('res-kelas').innerText = res.kelas;
+                document.getElementById('res-tanggal').innerText = new Date().toLocaleDateString('id-ID') + ' (' + res.waktu + ')';
+                let badge = document.getElementById('res-status');
+                badge.className = 'status-badge ' + (res.keterangan === 'Hadir' ? 'badge-hadir' : 'badge-telat');
+                badge.innerText = res.keterangan.toUpperCase();
+                document.getElementById('scan-status-text').innerText = "Scan berhasil! Lanjut siswa berikutnya.";
+                loadAdminDataBackground();
+              } else {
+                notifyBox.innerHTML = `<span style="color: #991b1b; font-weight: bold;">⚠️ ${res.message}</span>`;
+                document.getElementById('scan-status-text').innerText = "Silahkan coba lagi.";
+              }
+              setTimeout(() => { isProcessingScan = false; }, 1000);
+            }).catch(() => { isProcessingScan = false; });
+        }).catch(() => { isProcessingScan = false; });
     }
 
     function handleLoginInstant(e) {
@@ -1131,7 +1126,7 @@
 
       let ws = XLSX.utils.aoa_to_sheet(wbData);
       let wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, `Rekap_${kelasVal.replace(/\s+/g, '_')}`);
+      XLSX.utils.book_append_sheet(wb, ws, `Rekap_${kelas_replace(kelasVal)}`);
       XLSX.writeFile(wb, `Rekap_Bulanan_${kelasVal.replace(/\s+/g, '_')}.xlsx`);
     }
   </script>
