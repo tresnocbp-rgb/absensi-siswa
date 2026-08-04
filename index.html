@@ -90,7 +90,7 @@
     .kartu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; }
     @media(max-width: 900px) { .kartu-grid { grid-template-columns: 1fr; } }
     
-    /* UKURAN KARTU 8.5 CM x 5.5 CM DENGAN QR CODE PRESISI & LABEL NAMA SISWA */
+    /* UKURAN KARTU 8.5 CM x 5.5 CM DENGAN POSISI QR CODE PAS DI TENGAH BINGKAI UNGU */
     .id-card-preview {
       width: 425px;
       height: 275px;
@@ -104,16 +104,16 @@
     }
     .id-card-qr-box {
       position: absolute;
-      left: 31px;   /* Digeser ke kanan agar pas di dalam bingkai putih */
-      top: 102px;   /* Posisi pas di dalam bingkai bawah tulisan SCAN ME */
-      width: 90px;   /* Ukuran QR code pas di dalam bingkai */
-      height: 90px;  /* Tinggi QR code */
+      left: 42px;   /* Digeser agar pas di tengah bingkai putih */
+      top: 90px;    /* Dinaikkan agar pas di bawah teks SCAN ME */
+      width: 82px;   /* Ukuran QR code diperkecil agar pas di dalam kotak */
+      height: 82px;  /* Tinggi QR code */
       background: white;
-      padding: 2px;
+      padding: 1px;
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 4px;
+      border-radius: 3px;
     }
     .id-card-qr-box img, .id-card-qr-box canvas {
       width: 100% !important;
@@ -1215,8 +1215,8 @@
         
         new QRCode(document.getElementById(qrId), {
           text: s.nis.toString(),
-          width: 90,
-          height: 90,
+          width: 82,
+          height: 82,
           correctLevel: QRCode.CorrectLevel.H
         });
 
@@ -1235,8 +1235,8 @@
 
           new QRCode(document.getElementById(printQrId), {
             text: s.nis.toString(),
-            width: 90,
-            height: 90,
+            width: 82,
+            height: 82,
             correctLevel: QRCode.CorrectLevel.H
           });
         }
@@ -1274,7 +1274,7 @@
         tempDiv.style.left = '-9999px';
         tempDiv.innerHTML = `
           <div id="temp-card-${index}" class="id-card-preview" style="width: 425px; height: 275px; background: url('kartu pelajar.png') no-repeat center center; background-size: cover; border-radius: 12px; position: relative;">
-            <div id="temp-code-${index}" class="id-card-qr-box" style="position: absolute; left: 31px; top: 102px; width: 90px; height: 90px; background: white; padding: 2px; display: flex; align-items: center; justify-content: center;"></div>
+            <div id="temp-code-${index}" class="id-card-qr-box" style="position: absolute; left: 42px; top: 90px; width: 82px; height: 82px; background: white; padding: 1px; display: flex; align-items: center; justify-content: center;"></div>
             <div class="id-card-student-info" style="position: absolute; left: 175px; bottom: 22px; font-size: 11px; font-weight: bold; color: #0f172a; line-height: 1.3; background: rgba(255, 255, 255, 0.85); padding: 4px 8px; border-radius: 6px;">
               ${s.nama}<br>
               Kelas: ${s.kelas} | NIS: ${s.nis}
@@ -1285,8 +1285,8 @@
         
         new QRCode(document.getElementById(`temp-code-${index}`), {
           text: s.nis.toString(),
-          width: 90,
-          height: 90,
+          width: 82,
+          height: 82,
           correctLevel: QRCode.CorrectLevel.H
         });
 
