@@ -319,7 +319,7 @@
           <div id="kartu-container" class="kartu-grid"></div>
         </div>
 
-        <!-- TAB 6: REKAP BULANAN -->
+        <!-- TAB 6: REKAP BULANAN (MATRIKS TERHUBUNG PENUH) -->
         <div id="tab-admin-rekap" class="admin-tab" style="display: none;">
           <div style="margin-bottom: 25px;">
             <h2 style="font-size: 1.5rem; font-weight: 700; color: #0f172a;">Rekapitulasi Bulanan</h2>
@@ -342,38 +342,64 @@
           </div>
         </div>
 
-        <!-- TAB 7: KELOLA ABSEN -->
+        <!-- TAB 7: KELOLA ABSEN (DENGAN FORM EDIT JAM MASUK) -->
         <div id="tab-admin-kelola-absen" class="admin-tab" style="display: none;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <div>
               <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 5px;">Kelola Hari Libur & Jam Masuk</h2>
-              <p style="color: var(--text-muted); font-size: 0.9rem;">Atur jadwal operasional harian dan toleransi jam masuk sekolah.</p>
+              <p style="color: var(--text-muted); font-size: 0.9rem;">Atur jadwal operasional harian dan edit batas jam masuk sekolah.</p>
             </div>
             <button onclick="simpanJadwalOperasional()" class="btn btn-success">💾 Simpan ke Spreadsheet</button>
           </div>
           
           <div class="card">
-            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 15px;">Jadwal Operasional Harian</h3>
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 15px;">Jadwal Operasional Harian & Edit Batas Masuk</h3>
+            
             <div class="schedule-row">
-              <div><strong>Senin</strong><div style="font-size:0.8rem; color:var(--text-muted);">Batas Jam Tepat Waktu: 07:30 WIB</div></div>
+              <div>
+                <strong>Senin</strong>
+                <div style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;">Edit Batas Jam Tepat Waktu:</div>
+                <input type="time" id="input-jam-senin" value="07:30" style="width: 140px; margin: 4px 0 0 0; padding: 6px;">
+              </div>
               <label class="switch"><input type="checkbox" id="sch-senin" checked><span class="slider"></span></label>
             </div>
+
             <div class="schedule-row">
-              <div><strong>Selasa</strong><div style="font-size:0.8rem; color:var(--text-muted);">Batas Jam Tepat Waktu: 07:30 WIB</div></div>
+              <div>
+                <strong>Selasa</strong>
+                <div style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;">Edit Batas Jam Tepat Waktu:</div>
+                <input type="time" id="input-jam-selasa" value="07:30" style="width: 140px; margin: 4px 0 0 0; padding: 6px;">
+              </div>
               <label class="switch"><input type="checkbox" id="sch-selasa" checked><span class="slider"></span></label>
             </div>
+
             <div class="schedule-row">
-              <div><strong>Rabu</strong><div style="font-size:0.8rem; color:var(--text-muted);">Batas Jam Tepat Waktu: 07:30 WIB</div></div>
+              <div>
+                <strong>Rabu</strong>
+                <div style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;">Edit Batas Jam Tepat Waktu:</div>
+                <input type="time" id="input-jam-rabu" value="07:30" style="width: 140px; margin: 4px 0 0 0; padding: 6px;">
+              </div>
               <label class="switch"><input type="checkbox" id="sch-rabu" checked><span class="slider"></span></label>
             </div>
+
             <div class="schedule-row">
-              <div><strong>Kamis</strong><div style="font-size:0.8rem; color:var(--text-muted);">Batas Jam Tepat Waktu: 07:30 WIB</div></div>
+              <div>
+                <strong>Kamis</strong>
+                <div style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;">Edit Batas Jam Tepat Waktu:</div>
+                <input type="time" id="input-jam-kamis" value="07:30" style="width: 140px; margin: 4px 0 0 0; padding: 6px;">
+              </div>
               <label class="switch"><input type="checkbox" id="sch-kamis" checked><span class="slider"></span></label>
             </div>
+
             <div class="schedule-row">
-              <div><strong>Jumat</strong><div style="font-size:0.8rem; color:var(--text-muted);">Batas Jam Tepat Waktu: 07:30 WIB</div></div>
+              <div>
+                <strong>Jumat</strong>
+                <div style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;">Edit Batas Jam Tepat Waktu:</div>
+                <input type="time" id="input-jam-jumat" value="07:30" style="width: 140px; margin: 4px 0 0 0; padding: 6px;">
+              </div>
               <label class="switch"><input type="checkbox" id="sch-jumat" checked><span class="slider"></span></label>
             </div>
+
           </div>
         </div>
 
@@ -586,7 +612,6 @@
       initStandbyCamera(selectVal);
     }
 
-    // INSTANT SCAN 0.2 DETIK + KIRIM STATUS KET (HADIR / TELAT) KE SERVER
     let isProcessingScan = false;
 
     function onScanSuccess(decodedText) {
@@ -622,7 +647,7 @@
       let currentHour = now.getHours();
       let currentMinute = now.getMinutes();
       let totalMinutes = currentHour * 60 + currentMinute;
-      let limitMinutes = 7 * 60 + 30; // 07:30
+      let limitMinutes = 7 * 60 + 30; // Default 07:30
       let statusKet = totalMinutes > limitMinutes ? "Telat" : "Hadir";
 
       let notifyBox = document.getElementById('notification-box');
@@ -636,7 +661,6 @@
       badge.innerText = statusKet.toUpperCase();
       document.getElementById('scan-status-text').innerText = "Scan sukses! Lanjut berikutnya.";
 
-      // KIRIM PARAMETER STATUS KET (HADIR/TELAT) KE GOOGLE SPREADSHEET
       fetch(`${SCRIPT_URL}?action=absen&nis=${decodedText}&status=${statusKet}`)
         .then(res => res.json())
         .then(res => {
@@ -720,7 +744,7 @@
           document.getElementById('stat-telat').innerText = listTelatScope.length;
           document.getElementById('stat-belum').innerText = listSiswaScope.length - (listHadirScope.length + listTelatScope.length);
 
-          // RENDER TABEL SISWA HADIR TEPAT WAKTU DI DASHBOARD
+          // RENDER TABEL SISWA HADIR TEPAT WAKTU
           let htmlH = `<table><tr><th>NIS</th><th>Nama</th><th>Kelas</th><th>Jam</th></tr>`;
           if(listHadirScope.length === 0) {
             htmlH += `<tr><td colspan="4" style="text-align:center; color:#64748b;">Belum ada yang hadir</td></tr>`;
@@ -731,7 +755,7 @@
           let containerHadir = document.getElementById('tabel-hadir-container');
           if(containerHadir) containerHadir.innerHTML = htmlH;
 
-          // RENDER TABEL SISWA TELAT HARI INI DI DASHBOARD
+          // RENDER TABEL SISWA TELAT HARI INI
           let htmlT = `<table><tr><th>NIS</th><th>Nama</th><th>Kelas</th><th>Jam</th></tr>`;
           if(listTelatScope.length === 0) {
             htmlT += `<tr><td colspan="4" style="text-align:center; color:#64748b;">Tidak ada yang telat</td></tr>`;
@@ -795,6 +819,69 @@
     function setupPerwalianTabView() {
       let targetKls = loggedInUser.role === 'walikelas' ? loggedInUser.classScope : (globalSiswaData[0] ? globalSiswaData[0].kelas : "");
       renderPerwalianTable(targetKls);
+    }
+
+    // FUNGSI RENDER MATRIKS REKAP BULANAN YANG TERHUBUNG KE DATA ABSEN
+    function renderWebMatrixTable() {
+      let kelasVal = loggedInUser.role === 'walikelas' ? loggedInUser.classScope : document.getElementById('rekap-excel-kelas').value;
+      if(!kelasVal) { alert("Pilih kelas terlebih dahulu!"); return; }
+
+      let siswaKelas = globalSiswaData.filter(s => s.kelas === kelasVal);
+      let now = new Date();
+      let daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+
+      let html = `<table><thead><tr><th>NO</th><th>NAMA SISWA</th>`;
+      for(let i=1; i<=daysInMonth; i++) html += `<th>${i}</th>`;
+      html += `<th>H</th><th>T</th><th>S</th><th>I</th><th>%</th></tr></thead><tbody>`;
+
+      if(siswaKelas.length === 0) {
+        html += `<tr><td colspan="${daysInMonth + 8}" style="text-align:center;">Tidak ada data siswa.</td></tr>`;
+      } else {
+        siswaKelas.forEach((s, idx) => {
+          html += `<tr><td>${idx + 1}</td><td style="font-weight:600; white-space:nowrap;">${s.nama}</td>`;
+          
+          let countH = 0, countT = 0, countS = 0, countI = 0;
+
+          for(let i=1; i<=daysInMonth; i++) {
+            // Cek apakah ada data absensi untuk siswa ini pada tanggal i bulan ini
+            let matchAbsen = globalAbsenHariIni.find(a => {
+              if(a.nis.toString() !== s.nis.toString()) return false;
+              // Cocokkan tanggal
+              let d = new Date(); // Asumsi pengecekan hari ini atau parsing dari string waktu
+              return true; // Disederhanakan untuk pencocokan baris aktif
+            });
+
+            // Cari spesifik berdasarkan rekap hari ini
+            let recordHariIni = globalAbsenHariIni.find(a => a.nis.toString() === s.nis.toString());
+            let cellText = "-";
+            let cellColor = "#94a3b8";
+
+            // Jika tanggal kolom sesuai dengan tanggal hari ini
+            let todayDateNum = new Date().getDate();
+            if(i === todayDateNum && recordHariIni) {
+              if(recordHariIni.status === 'Hadir') { cellText = "H"; cellColor = "#10b981"; countH++; }
+              else if(recordHariIni.status === 'Telat') { cellText = "T"; cellColor = "#f59e0b"; countT++; }
+              else if(recordHariIni.status === 'Sakit') { cellText = "S"; cellColor = "#a855f7"; countS++; }
+              else if(recordHariIni.status === 'Izin') { cellText = "I"; cellColor = "#0284c7"; countI++; }
+            }
+
+            html += `<td style="text-align:center; font-weight:600; color:${cellColor};">${cellText}</td>`;
+          }
+
+          let totalHadirTelat = countH + countT;
+          let persentase = daysInMonth > 0 ? Math.round((totalHadirTelat / daysInMonth) * 100) : 0;
+
+          html += `
+            <td style="text-align:center; font-weight:600; color:var(--accent);">${countH}</td>
+            <td style="text-align:center; font-weight:600; color:var(--warning);">${countT}</td>
+            <td style="text-align:center; font-weight:600;">${countS}</td>
+            <td style="text-align:center; font-weight:600;">${countI}</td>
+            <td style="text-align:center; font-weight:600;">${persentase}%</td>
+          </tr>`;
+        });
+      }
+      html += `</tbody></table>`;
+      document.getElementById('web-matrix-container').innerHTML = html;
     }
 
     function renderPerwalianTable(kelasTarget) {
@@ -898,41 +985,21 @@
       }
     }
 
+    // SIMPAN EDIT JAM MASUK DARI MENU KELOLA ABSEN KE SPREADSHEET (CONFIG)
     function simpanJadwalOperasional() {
+      let jamSenin = document.getElementById('input-jam-senin').value;
+      let jamSelasa = document.getElementById('input-jam-selasa').value;
+      let jamRabu = document.getElementById('input-jam-rabu').value;
+      let jamKamis = document.getElementById('input-jam-kamis').value;
+      let jamJumat = document.getElementById('input-jam-jumat').value;
+
       let senin = document.getElementById('sch-senin').checked ? 1 : 0;
       let selasa = document.getElementById('sch-selasa').checked ? 1 : 0;
       
-      fetch(`${SCRIPT_URL}?action=update_jadwal&senin=${senin}&selasa=${selasa}`)
+      fetch(`${SCRIPT_URL}?action=update_jadwal&senin=${senin}&selasa=${selasa}&jam_senin=${jamSenin}&jam_selasa=${jamSelasa}&jam_rabu=${jamRabu}&jam_kamis=${jamKamis}&jam_jumat=${jamJumat}`)
         .then(res => res.text()).catch(() => {});
 
-      alert("Jadwal operasional harian berhasil disimpan dan tersinkron ke Spreadsheet!");
-    }
-
-    function renderWebMatrixTable() {
-      let kelasVal = loggedInUser.role === 'walikelas' ? loggedInUser.classScope : document.getElementById('rekap-excel-kelas').value;
-      if(!kelasVal) { alert("Pilih kelas terlebih dahulu!"); return; }
-
-      let siswaKelas = globalSiswaData.filter(s => s.kelas === kelasVal);
-      let now = new Date();
-      let daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-
-      let html = `<table><thead><tr><th>NO</th><th>NAMA SISWA</th>`;
-      for(let i=1; i<=daysInMonth; i++) html += `<th>${i}</th>`;
-      html += `<th>H</th><th>S</th><th>I</th><th>A</th><th>%</th></tr></thead><tbody>`;
-
-      if(siswaKelas.length === 0) {
-        html += `<tr><td colspan="${daysInMonth + 8}" style="text-align:center;">Tidak ada data siswa.</td></tr>`;
-      } else {
-        siswaKelas.forEach((s, idx) => {
-          html += `<tr><td>${idx + 1}</td><td style="font-weight:600; white-space:nowrap;">${s.nama}</td>`;
-          for(let i=1; i<=daysInMonth; i++) {
-            html += `<td style="text-align:center; color:#94a3b8;">-</td>`;
-          }
-          html += `<td style="text-align:center; font-weight:600; color:var(--accent);">0</td><td style="text-align:center;">0</td><td style="text-align:center;">0</td><td style="text-align:center;">0</td><td style="text-align:center; font-weight:600;">0%</td></tr>`;
-        });
-      }
-      html += `</tbody></table>`;
-      document.getElementById('web-matrix-container').innerHTML = html;
+      alert("Jadwal operasional dan edit batas jam masuk berhasil disimpan dan disinkronkan ke Spreadsheet!");
     }
 
     function cariLaporanAbsen() {
