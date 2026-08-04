@@ -43,10 +43,6 @@
     .sidebar-footer a { color: #f87171; text-decoration: none; font-size: 0.9rem; display: flex; align-items: center; gap: 12px; cursor: pointer; font-weight: 500; }
 
     .main-admin-wrapper { margin-left: 280px; flex: 1; display: flex; flex-direction: column; min-width: 0; }
-    @media(max-width: 900px) {
-      aside { width: 100%; position: relative; height: auto; }
-      .main-admin-wrapper { margin-left: 0; }
-    }
     
     .card { background: var(--card-bg); border-radius: 16px; padding: 26px; border: 1px solid var(--border-color); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); margin-bottom: 24px; }
     .grid-layout { display: grid; grid-template-columns: 1.1fr 1fr; gap: 24px; }
@@ -537,7 +533,6 @@
       }
     }
 
-    // AUDIO CONTEXT UNTUK BEEP 100% NYARING TANPA ERROR
     let audioCtx = null;
     function initAudioContext() {
       if(!audioCtx) {
@@ -560,7 +555,6 @@
       } catch(e) {}
     }
 
-    // INISIALISASI KAMERA YANG AMAN UNTUK MOBILE & DESKTOP
     function initStandbyCamera(facing = "environment") {
       if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
       let readerEl = document.getElementById('reader');
@@ -574,13 +568,11 @@
     }
 
     function startCameraScan(facing) {
-      let config = { fps: 20, qrbox: { width: 250, height: 250 } };
-      // Gunakan constraints fleksibel agar kompatibel di HP dan Laptop
+      let config = { fps: 25, qrbox: { width: 250, height: 250 } };
       let cameraConfig = { facingMode: facing };
       
       html5QrCode.start(cameraConfig, config, onScanSuccess, () => {})
       .catch((err) => {
-        // Fallback otomatis jika kamera depan/belakang spesifik gagal di HP
         html5QrCode.start({ facingMode: "user" }, config, onScanSuccess, () => {}).catch(() => {});
       });
     }
@@ -590,17 +582,8 @@
       initStandbyCamera(selectVal);
     }
 
-    // LOCAL FAST CHECK 0.2 DETIK TANPA DELAY + CEK BATAS WAKTU (07:30)
+    // INSTANT SCAN 0.2 DETIK + VALIDASI HAPUS BARIS DI SPREADSHEET (MENDUKUNG SCAN ULANG JIKA DIHAPUS)
     let isProcessingScan = false;
-    let localScannedCache = JSON.parse(localStorage.getItem('fast_scanned_nis') || '[]');
-    let lastCacheDate = localStorage.getItem('fast_scanned_date') || '';
-    let todayStr = new Date().toDateString();
-
-    if(lastCacheDate !== todayStr) {
-      localScannedCache = [];
-      localStorage.setItem('fast_scanned_date', todayStr);
-      localStorage.setItem('fast_scanned_nis', JSON.stringify([]));
-    }
 
     function onScanSuccess(decodedText) {
       if(isProcessingScan) return;
@@ -611,8 +594,10 @@
         return;
       }
 
-      // Cek instan dari cache lokal (0.01 detik)
-      if(localScannedCache.includes(decodedText.toString())) {
+      // Cek apakah siswa ini sudah ada di daftar globalAbsenHariIni (berdasarkan data server yang di-load)
+      let sudahAbsenDiServer = globalAbsenHariIni.some(item => item.nis.toString() === decodedText.toString());
+
+      if(sudahAbsenDiServer) {
         isProcessingScan = true;
         playBeepSound();
         let notifyBox = document.getElementById('notification-box');
@@ -623,14 +608,10 @@
       }
 
       isProcessingScan = true;
-      playBeepSound(); // Bunyi beep langsung detik pertama tanpa jeda jaringan!
+      playBeepSound(); // Suara beep berbunyi instan tanpa delay jaringan!
       document.getElementById('scan-status-text').innerHTML = `<span style="color: #2563eb;">Berhasil Scan NIS: ${decodedText}...</span>`;
 
-      // Simpan instan ke cache lokal
-      localScannedCache.push(decodedText.toString());
-      localStorage.setItem('fast_scanned_nis', JSON.stringify(localScannedCache));
-
-      // Cari data siswa dari cache lokal untuk nampilin nama/kelas instan di layar
+      // Cari data siswa dari cache lokal untuk ditampilkan instan di layar
       let foundSiswa = globalSiswaData.find(s => s.nis.toString() === decodedText.toString());
       let namaSiswa = foundSiswa ? foundSiswa.nama : "Siswa SMK";
       let kelasSiswa = foundSiswa ? foundSiswa.kelas : "-";
@@ -643,7 +624,7 @@
       let limitMinutes = 7 * 60 + 30; // 07:30
       let statusKet = totalMinutes > limitMinutes ? "Telat" : "Hadir";
 
-      // Tampilkan langsung di layar seketika (0.1 detik)
+      // Tampilkan instan di layar
       let notifyBox = document.getElementById('notification-box');
       notifyBox.innerHTML = `<span style="color: #065f46; font-weight: bold;">✅ ${namaSiswa} Berhasil Absen (${statusKet})</span>`;
       document.getElementById('res-nis').innerText = decodedText;
@@ -655,12 +636,12 @@
       badge.innerText = statusKet.toUpperCase();
       document.getElementById('scan-status-text').innerText = "Scan sukses! Lanjut berikutnya.";
 
-      // Kirim ke Google Spreadsheet di latar belakang secara asinkronus (Background Sync)
-      fetch(`${SCRIPT_URL}?action=absen&nis=${decodedText}`)
+      // Kirim ke Google Spreadsheet di latar belakang (Background Sync) dengan status yang benar (Hadir/Telat)
+      fetch(`${SCRIPT_URL}?action=absen&nis=${decodedText}&status=${statusKet}`)
         .then(res => res.json())
         .then(res => {
           loadAdminDataBackground();
-          setTimeout(() => { isProcessingScan = false; }, 600);
+          setTimeout(() => { isProcessingScan = false; }, 800);
         }).catch(() => {
           isProcessingScan = false;
         });
@@ -714,7 +695,7 @@
           filteredSiswaData = loggedInUser.role === 'walikelas' ? globalSiswaData.filter(s => s.kelas === loggedInUser.classScope) : globalSiswaData;
           globalListHadir = data.listHadir || [];
           globalListTelat = data.listTelat || [];
-          globalAbsenHariIni = [...globalListHadir.map(h=>({...h, ket: 'Hadir'})), ...globalListTelat.map(t=>({...t, ket: 'Telat'}))];
+          globalAbsenHariIni = [...globalListHadir, ...globalListTelat];
           setupPerwalianTabView();
         }).catch(() => {});
     }
@@ -728,7 +709,7 @@
           filteredSiswaData = loggedInUser.role === 'walikelas' ? globalSiswaData.filter(s => s.kelas === loggedInUser.classScope) : globalSiswaData;
           globalListHadir = data.listHadir || [];
           globalListTelat = data.listTelat || [];
-          globalAbsenHariIni = [...globalListHadir.map(h=>({...h, ket: 'Hadir'})), ...globalListTelat.map(t=>({...t, ket: 'Telat'}))];
+          globalAbsenHariIni = [...globalListHadir, ...globalListTelat];
           
           let listSiswaScope = loggedInUser.role === 'walikelas' ? globalSiswaData.filter(s => s.kelas === loggedInUser.classScope) : globalSiswaData;
           let listHadirScope = loggedInUser.role === 'walikelas' ? globalListHadir.filter(h => h.kelas === loggedInUser.classScope) : globalListHadir;
@@ -819,7 +800,7 @@
       } else {
         siswaList.forEach((s, idx) => {
           let absenRecord = globalAbsenHariIni.find(a => a.nis.toString() === s.nis.toString());
-          let currentStatus = absenRecord ? absenRecord.ket : "Belum Absen";
+          let currentStatus = absenRecord ? absenRecord.status : "Belum Absen";
 
           if(currentStatus === 'Hadir') countHadir++;
           else if(currentStatus === 'Telat') countTelat++;
@@ -951,7 +932,7 @@
 
       if(!tglMulai || !tglSelesai) { alert("Pilih rentang tanggal!"); return; }
 
-      let combined = [...globalListHadir.map(h=>({...h, status: 'Hadir'})), ...globalListTelat.map(t=>({...t, status: 'Telat'}))];
+      let combined = [...globalListHadir, ...globalListTelat];
       if(kls) combined = combined.filter(item => item.kelas === kls);
 
       let html = `<table><tr><th>Tanggal / Jam</th><th>NIS</th><th>Nama Siswa</th><th>Kelas</th><th>Status</th></tr>`;
@@ -968,7 +949,7 @@
     }
 
     function exportLaporanExcel() {
-      let combined = [...globalListHadir.map(h=>({...h, status: 'Hadir'})), ...globalListTelat.map(t=>({...t, status: 'Telat'}))];
+      let combined = [...globalListHadir, ...globalListTelat];
       let ws = XLSX.utils.json_to_sheet(combined);
       let wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Laporan Kehadiran");
@@ -1155,7 +1136,7 @@
       let ws = XLSX.utils.aoa_to_sheet(wbData);
       let wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, `Rekap_${kelasVal.replace(/\s+/g, '_')}`);
-      XLSX.writeFile(wb, `Rekip_Bulanan_${kelasVal.replace(/\s+/g, '_')}.xlsx`);
+      XLSX.writeFile(wb, `Rekap_Bulanan_${kelasVal.replace(/\s+/g, '_')}.xlsx`);
     }
   </script>
 </body>
