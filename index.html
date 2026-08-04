@@ -90,7 +90,7 @@
     .kartu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; }
     @media(max-width: 900px) { .kartu-grid { grid-template-columns: 1fr; } }
     
-    /* UKURAN KARTU PELAJAR 8.5 CM x 5.5 CM DENGAN POSISI QR CODE PRESISI DALAM FRAME */
+    /* UKURAN KARTU PELAJAR 8.5 CM x 5.5 CM DENGAN POSISI QR CODE PAS DI DALAM KOTAK FRAME */
     .id-card-preview {
       width: 425px;
       height: 275px;
@@ -100,15 +100,16 @@
       position: relative;
       box-shadow: 0 10px 20px rgba(0,0,0,0.15);
       border: 1px solid #cbd5e1;
+      overflow: hidden;
     }
     .id-card-qr-box {
       position: absolute;
-      left: 31px;   /* Posisi presisi pas di dalam kotak frame */
-      top: 50px;    /* Posisi vertikal presisi pas di dalam frame */
-      width: 105px;  /* Ukuran lebar QR code pas dalam kotak */
-      height: 105px; /* Ukuran tinggi QR code pas dalam kotak */
+      left: 27px;   /* Posisi X pas di dalam kotak frame kiri */
+      top: 105px;   /* Posisi Y pas di dalam kotak frame bawah label SCAN ME */
+      width: 108px;  /* Ukuran lebar agar tidak keluar kotak */
+      height: 108px; /* Ukuran tinggi agar tidak keluar kotak */
       background: white;
-      padding: 3px;
+      padding: 2px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -119,11 +120,11 @@
       height: 100% !important;
     }
 
-    /* CSS KHUSUS CETAK FORMAT A4 (MASUK BANYAK DALAM SATU LEMBAR) */
+    /* CSS KHUSUS CETAK FORMAT A4 */
     @media print {
       body * { visibility: hidden; }
       #printable-a4-area, #printable-a4-area * { visibility: visible; }
-      #printable-a4-area { position: absolute; left: 0; top: 0; width: 100%; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 15px; }
+      #printable-a4-area { position: absolute; left: 0; top: 0; width: 100%; display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 10px; }
       .id-card-preview { page-break-inside: avoid; margin-bottom: 10px; box-shadow: none; border: 1px solid #94a3b8; }
     }
   </style>
@@ -337,7 +338,7 @@
           </div>
         </div>
 
-        <!-- TAB 5: DOWNLOAD & CETAK KARTU PELAJAR FORMAT A4 -->
+        <!-- TAB 5: DOWNLOAD & CETAK KARTU FORMAT A4 -->
         <div id="tab-admin-cetak" class="admin-tab" style="display: none;">
           <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 5px;">Cetak & Download Kartu Pelajar (A4)</h2>
           <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Pilih kelas untuk mencetak banyak kartu dalam 1 lembar A4 atau download ZIP.</p>
@@ -349,7 +350,7 @@
           <div id="kartu-container" class="kartu-grid"></div>
         </div>
 
-        <!-- AREA KHUSUS CETAK A4 (TERSEMBUNYI KECUALI SAAT PRINT) -->
+        <!-- AREA KHUSUS CETAK A4 -->
         <div id="printable-a4-area" style="display: none;"></div>
 
         <!-- TAB 6: REKAP BULANAN -->
@@ -1181,8 +1182,8 @@
         
         new QRCode(document.getElementById(qrId), {
           text: s.nis.toString(),
-          width: 105,
-          height: 105,
+          width: 100,
+          height: 100,
           correctLevel: QRCode.CorrectLevel.H
         });
 
@@ -1196,8 +1197,8 @@
 
           new QRCode(document.getElementById(printQrId), {
             text: s.nis.toString(),
-            width: 105,
-            height: 105,
+            width: 100,
+            height: 100,
             correctLevel: QRCode.CorrectLevel.H
           });
         }
@@ -1235,15 +1236,15 @@
         tempDiv.style.left = '-9999px';
         tempDiv.innerHTML = `
           <div id="temp-card-${index}" class="id-card-preview" style="width: 425px; height: 275px; background: url('kartu pelajar.png') no-repeat center center; background-size: cover; border-radius: 12px; position: relative;">
-            <div id="temp-code-${index}" class="id-card-qr-box" style="position: absolute; left: 31px; top: 50px; width: 105px; height: 105px; background: white; padding: 3px; display: flex; align-items: center; justify-content: center;"></div>
+            <div id="temp-code-${index}" class="id-card-qr-box" style="position: absolute; left: 27px; top: 105px; width: 108px; height: 108px; background: white; padding: 2px; display: flex; align-items: center; justify-content: center;"></div>
           </div>
         `;
         document.body.appendChild(tempDiv);
         
         new QRCode(document.getElementById(`temp-code-${index}`), {
           text: s.nis.toString(),
-          width: 105,
-          height: 105,
+          width: 100,
+          height: 100,
           correctLevel: QRCode.CorrectLevel.H
         });
 
