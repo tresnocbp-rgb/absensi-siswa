@@ -70,7 +70,6 @@
     th { background-color: #f8fafc; color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px; position: sticky; top: 0; z-index: 10; }
     tr:hover { background-color: #f8fafc; }
 
-    /* KOTAK SCROLL & SHOW ENTRIES DI DASHBOARD */
     .dashboard-table-scroll {
       max-height: 320px;
       overflow-y: auto;
@@ -140,7 +139,7 @@
             </div>
           </div>
           <div id="reader" style="width: 100%; border-radius: 12px; overflow: hidden; background: #000; margin-top: 10px; min-height: 280px;"></div>
-          <p id="scan-status-text" style="margin-top: 16px; font-weight: 600; color: var(--primary);">Kamera Standby (Anti Double Scan Aktif)</p>
+          <p id="scan-status-text" style="margin-top: 16px; font-weight: 600; color: var(--primary);">Kamera Standby (Zero-Delay / Siap 2000 Siswa)</p>
         </div>
         <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
           <div>
@@ -244,7 +243,6 @@
             <p style="color: var(--text-muted); font-size: 0.9rem;" id="dash-sub-title">Pusat kontrol data absensi sekolah.</p>
           </div>
           
-          <!-- KARTU STATISTIK DASHBOARD -->
           <div class="stats-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 25px;">
             <div class="stat-card card" style="margin-bottom:0; height: 110px; display:flex; flex-direction:column; justify-content:space-between;"><span id="label-stat-1" style="color:var(--text-muted); font-size:0.85rem; font-weight:600;">TOTAL SISWA</span><h2 id="stat-total" style="font-size:1.8rem; font-weight:700;">0</h2></div>
             <div class="stat-card card" style="margin-bottom:0; height: 110px; display:flex; flex-direction:column; justify-content:space-between; border-left: 5px solid var(--accent);"><span style="color:var(--text-muted); font-size:0.85rem; font-weight:600;">HADIR TEPAT WAKTU</span><h2 id="stat-hadir" style="color: var(--accent); font-size:1.8rem; font-weight:700;">0</h2></div>
@@ -252,14 +250,13 @@
             <div class="stat-card card" style="margin-bottom:0; height: 110px; display:flex; flex-direction:column; justify-content:space-between; border-left: 5px solid #0284c7;"><span style="color:var(--text-muted); font-size:0.85rem; font-weight:600;">IZIN / SAKIT</span><h2 id="stat-izinsakit" style="color: #0284c7; font-size:1.8rem; font-weight:700;">0</h2></div>
           </div>
 
-          <!-- TABEL RINGKASAN DASHBOARD TERPISAH (HADIR VS TELAT VS IZIN/SAKIT) -->
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
             <div class="card">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                 <h3 style="color: var(--accent); font-size: 1.05rem; font-weight: 600;">✅ Hadir Tepat Waktu</h3>
                 <div>
                   <label style="font-size: 0.75rem; font-weight: 600;">Show:</label>
-                  <select id="show-hadir-count" onchange="loadAdminData()" style="width: 75px; display: inline-block; margin:0; padding: 4px; font-size: 0.8rem;">
+                  <select id="show-hadir-count" onchange="renderDashboardTables()" style="width: 75px; display: inline-block; margin:0; padding: 4px; font-size: 0.8rem;">
                     <option value="5">5</option>
                     <option value="10" selected>10</option>
                     <option value="25">25</option>
@@ -275,7 +272,7 @@
                 <h3 style="color: var(--warning); font-size: 1.05rem; font-weight: 600;">⚠️ Siswa Telat Hari Ini</h3>
                 <div>
                   <label style="font-size: 0.75rem; font-weight: 600;">Show:</label>
-                  <select id="show-telat-count" onchange="loadAdminData()" style="width: 75px; display: inline-block; margin:0; padding: 4px; font-size: 0.8rem;">
+                  <select id="show-telat-count" onchange="renderDashboardTables()" style="width: 75px; display: inline-block; margin:0; padding: 4px; font-size: 0.8rem;">
                     <option value="5">5</option>
                     <option value="10" selected>10</option>
                     <option value="25">25</option>
@@ -287,7 +284,6 @@
             </div>
           </div>
 
-          <!-- TABEL IZIN / SAKIT DI DASHBOARD -->
           <div class="card">
             <h3 style="color: #0284c7; margin-bottom: 12px; font-size: 1.05rem; font-weight: 600;">🏥 Rekap Siswa Izin / Sakit Hari Ini</h3>
             <div class="dashboard-table-scroll" id="tabel-izinsakit-container">Memuat...</div>
@@ -495,12 +491,12 @@
 
     let html5QrCode = null;
     let globalSiswaData = JSON.parse(localStorage.getItem('cache_siswa') || '[]');
-    let globalGuruData = [];
+    let globalGuruData = JSON.parse(localStorage.getItem('cache_guru') || '[]');
     let filteredSiswaData = [];
-    let globalListHadir = [];
-    let globalListTelat = [];
-    let globalListIzinSakit = [];
-    let globalAbsenHariIni = [];
+    let globalListHadir = JSON.parse(localStorage.getItem('cache_hadir') || '[]');
+    let globalListTelat = JSON.parse(localStorage.getItem('cache_telat') || '[]');
+    let globalListIzinSakit = JSON.parse(localStorage.getItem('cache_izinsakit') || '[]');
+    let globalAbsenHariIni = [...globalListHadir, ...globalListTelat, ...globalListIzinSakit];
     let currentLimit = 10;
     let loggedInUser = JSON.parse(localStorage.getItem('admin_user_data') || '{"username":"admin","name":"Admin","role":"admin","classScope":""}');
 
@@ -515,6 +511,12 @@
         switchPage('scanner');
       }
       initStandbyCamera();
+      
+      // Jika ada cache lokal, render langsung tanpa delay
+      if(globalSiswaData.length > 0) {
+        renderFastDashboardInstant();
+      }
+      // Ambil data terbaru di background
       loadAdminDataBackground();
     });
 
@@ -651,7 +653,6 @@
       initStandbyCamera(selectVal);
     }
 
-    // ANTI DOUBLE-SCAN DENGAN COOLDOWN KHUSUS PER NIS (0 DELAY)
     let scannedCooldownMap = {};
 
     function onScanSuccess(decodedText) {
@@ -702,12 +703,18 @@
       let badge = document.getElementById('res-status');
       badge.className = 'status-badge ' + (statusKet === 'Hadir' ? 'badge-hadir' : 'badge-telat');
       badge.innerText = statusKet.toUpperCase();
-      document.getElementById('scan-status-text').innerText = "Kamera Standby (Anti-Delay / Siap 2000 Siswa)";
+      document.getElementById('scan-status-text').innerText = "Kamera Standby (Zero-Delay / Siap 2000 Siswa)";
 
       let newRecord = { nis: nis, nama: namaSiswa, kelas: kelasSiswa, waktu: now.toLocaleTimeString('id-ID'), status: statusKet };
       globalAbsenHariIni.push(newRecord);
-      if(statusKet === 'Telat') globalListTelat.push(newRecord);
-      else globalListHadir.push(newRecord);
+      if(statusKet === 'Telat') {
+        globalListTelat.push(newRecord);
+        localStorage.setItem('cache_telat', JSON.stringify(globalListTelat));
+      } else {
+        globalListHadir.push(newRecord);
+        localStorage.setItem('cache_hadir', JSON.stringify(globalListHadir));
+      }
+      renderDashboardTables();
 
       fetch(`${SCRIPT_URL}?action=absen&nis=${nis}&status=${statusKet}`)
         .then(res => res.json())
@@ -750,8 +757,17 @@
 
     function renderFastDashboardInstant() {
       let listSiswaScope = loggedInUser.role === 'walikelas' ? globalSiswaData.filter(s => s.kelas === loggedInUser.classScope) : globalSiswaData;
+      let listHadirScope = loggedInUser.role === 'walikelas' ? globalListHadir.filter(h => h.kelas === loggedInUser.classScope) : globalListHadir;
+      let listTelatScope = loggedInUser.role === 'walikelas' ? globalListTelat.filter(t => t.kelas === loggedInUser.classScope) : globalListTelat;
+      let listIzinSakitScope = loggedInUser.role === 'walikelas' ? globalListIzinSakit.filter(i => i.kelas === loggedInUser.classScope) : globalListIzinSakit;
+
       document.getElementById('stat-total').innerText = listSiswaScope.length;
-      document.getElementById('stat-belum').innerText = listSiswaScope.length;
+      document.getElementById('stat-hadir').innerText = listHadirScope.length;
+      document.getElementById('stat-telat').innerText = listTelatScope.length;
+      document.getElementById('stat-izinsakit').innerText = listIzinSakitScope.length;
+      document.getElementById('stat-belum').innerText = listSiswaScope.length - (listHadirScope.length + listTelatScope.length + listIzinSakitScope.length);
+
+      renderDashboardTables();
       renderTabelSiswa();
       setupPerwalianTabView();
     }
@@ -763,6 +779,7 @@
           globalSiswaData = data.listSiswa || [];
           globalGuruData = data.listGuru || [];
           localStorage.setItem('cache_siswa', JSON.stringify(globalSiswaData));
+          localStorage.setItem('cache_guru', JSON.stringify(globalGuruData));
           filteredSiswaData = loggedInUser.role === 'walikelas' ? globalSiswaData.filter(s => s.kelas === loggedInUser.classScope) : globalSiswaData;
           
           let rawHadir = data.listHadir || [];
@@ -776,96 +793,17 @@
             return s === 'Izin' || s === 'Sakit';
           });
 
+          localStorage.setItem('cache_hadir', JSON.stringify(globalListHadir));
+          localStorage.setItem('cache_telat', JSON.stringify(globalListTelat));
+          localStorage.setItem('cache_izinsakit', JSON.stringify(globalListIzinSakit));
+
           globalAbsenHariIni = [...rawHadir, ...globalListTelat];
-          setupPerwalianTabView();
-          renderDashboardTables();
+          renderFastDashboardInstant();
         }).catch(() => {});
     }
 
     function loadAdminData() {
-      fetch(`${SCRIPT_URL}?action=admin_data`)
-        .then(res => res.json())
-        .then(data => {
-          globalSiswaData = data.listSiswa || [];
-          globalGuruData = data.listGuru || [];
-          localStorage.setItem('cache_siswa', JSON.stringify(globalSiswaData));
-          filteredSiswaData = loggedInUser.role === 'walikelas' ? globalSiswaData.filter(s => s.kelas === loggedInUser.classScope) : globalSiswaData;
-          
-          let rawHadir = data.listHadir || [];
-          globalListHadir = rawHadir.filter(h => {
-            let s = h.status ? h.status.toString().trim() : "Hadir";
-            return s !== 'Izin' && s !== 'Sakit';
-          });
-          globalListTelat = data.listTelat || [];
-          globalListIzinSakit = rawHadir.filter(h => {
-            let s = h.status ? h.status.toString().trim() : "";
-            return s === 'Izin' || s === 'Sakit';
-          });
-
-          globalAbsenHariIni = [...rawHadir, ...globalListTelat];
-          
-          let listSiswaScope = loggedInUser.role === 'walikelas' ? globalSiswaData.filter(s => s.kelas === loggedInUser.classScope) : globalSiswaData;
-          let listHadirScope = loggedInUser.role === 'walikelas' ? globalListHadir.filter(h => h.kelas === loggedInUser.classScope) : globalListHadir;
-          let listTelatScope = loggedInUser.role === 'walikelas' ? globalListTelat.filter(t => t.kelas === loggedInUser.classScope) : globalListTelat;
-          let listIzinSakitScope = loggedInUser.role === 'walikelas' ? globalListIzinSakit.filter(i => i.kelas === loggedInUser.classScope) : globalListIzinSakit;
-
-          document.getElementById('stat-total').innerText = listSiswaScope.length;
-          document.getElementById('stat-hadir').innerText = listHadirScope.length;
-          document.getElementById('stat-telat').innerText = listTelatScope.length;
-          document.getElementById('stat-izinsakit').innerText = listIzinSakitScope.length;
-          document.getElementById('stat-belum').innerText = listSiswaScope.length - (listHadirScope.length + listTelatScope.length + listIzinSakitScope.length);
-
-          renderDashboardTables();
-
-          let kelasSet = [...new Set(globalSiswaData.map(s => s.kelas))].sort();
-          let selectFilter = document.getElementById('filter-kelas');
-          let filterWrap = document.getElementById('filter-kelas-wrapper');
-          if(loggedInUser.role === 'walikelas') {
-            if(filterWrap) filterWrap.style.display = 'none';
-          } else {
-            if(filterWrap) filterWrap.style.display = 'block';
-            selectFilter.innerHTML = '<option value="">-- Semua Kelas --</option>';
-            kelasSet.forEach(kls => selectFilter.innerHTML += `<option value="${kls}">${kls}</option>`);
-          }
-
-          let selectLapKelas = document.getElementById('lap-filter-kelas');
-          if(selectLapKelas) {
-            selectLapKelas.innerHTML = '<option value="">Semua Kelas</option>';
-            kelasSet.forEach(kls => selectLapKelas.innerHTML += `<option value="${kls}">${kls}</option>`);
-          }
-
-          let selectCetak = document.getElementById('cetak-kelas');
-          if(selectCetak) {
-            selectCetak.innerHTML = '<option value="">-- Pilih Kelas --</option>';
-            if(loggedInUser.role === 'walikelas') {
-              selectCetak.innerHTML = `<option value="${loggedInUser.classScope}">${loggedInUser.classScope}</option>`;
-              selectCetak.value = loggedInUser.classScope;
-              selectCetak.disabled = true;
-              generateQrPreview();
-            } else {
-              kelasSet.forEach(kls => selectCetak.innerHTML += `<option value="${kls}">${kls}</option>`);
-              selectCetak.disabled = false;
-            }
-          }
-
-          let selectRekap = document.getElementById('rekap-excel-kelas');
-          if(selectRekap) {
-            selectRekap.innerHTML = '<option value="">-- Pilih Kelas --</option>';
-            if(loggedInUser.role === 'walikelas') {
-              selectRekap.innerHTML = `<option value="${loggedInUser.classScope}">${loggedInUser.classScope}</option>`;
-              selectRekap.value = loggedInUser.classScope;
-              selectRekap.disabled = true;
-            } else {
-              kelasSet.forEach(kls => selectRekap.innerHTML += `<option value="${kls}">${kls}</option>`);
-              selectRekap.disabled = false;
-            }
-          }
-
-          setupPerwalianTabView();
-          renderTabelSiswa();
-          renderManajemenKelasTable();
-          renderGuruTable();
-        });
+      loadAdminDataBackground();
     }
 
     function renderDashboardTables() {
@@ -873,8 +811,8 @@
       let listTelatScope = loggedInUser.role === 'walikelas' ? globalListTelat.filter(t => t.kelas === loggedInUser.classScope) : globalListTelat;
       let listIzinSakitScope = loggedInUser.role === 'walikelas' ? globalListIzinSakit.filter(i => i.kelas === loggedInUser.classScope) : globalListIzinSakit;
 
-      let showHadirVal = document.getElementById('show-hadir-count').value;
-      let showTelatVal = document.getElementById('show-telat-count').value;
+      let showHadirVal = document.getElementById('show-hadir-count') ? document.getElementById('show-hadir-count').value : '10';
+      let showTelatVal = document.getElementById('show-telat-count') ? document.getElementById('show-telat-count').value : '10';
 
       let limitHadir = showHadirVal === 'all' ? listHadirScope.length : parseInt(showHadirVal);
       let limitTelat = showTelatVal === 'all' ? listTelatScope.length : parseInt(showTelatVal);
@@ -890,7 +828,8 @@
         subHadir.forEach(h => htmlH += `<tr><td>${h.nis}</td><td>${h.nama}</td><td>${h.kelas}</td><td>${h.waktu}</td></tr>`);
       }
       htmlH += `</table>`;
-      document.getElementById('tabel-hadir-container').innerHTML = htmlH;
+      let elH = document.getElementById('tabel-hadir-container');
+      if(elH) elH.innerHTML = htmlH;
 
       // Render Tabel Telat
       let htmlT = `<table><tr><th>NIS</th><th>Nama</th><th>Kelas</th><th>Jam</th></tr>`;
@@ -900,7 +839,8 @@
         subTelat.forEach(t => htmlT += `<tr><td>${t.nis}</td><td>${t.nama}</td><td>${t.kelas}</td><td>${t.waktu}</td></tr>`);
       }
       htmlT += `</table>`;
-      document.getElementById('tabel-telat-container').innerHTML = htmlT;
+      let elT = document.getElementById('tabel-telat-container');
+      if(elT) elT.innerHTML = htmlT;
 
       // Render Tabel Izin / Sakit
       let htmlI = `<table><tr><th>NIS</th><th>Nama</th><th>Kelas</th><th>Status</th><th>Jam / Keterangan</th></tr>`;
@@ -913,7 +853,8 @@
         });
       }
       htmlI += `</table>`;
-      document.getElementById('tabel-izinsakit-container').innerHTML = htmlI;
+      let elI = document.getElementById('tabel-izinsakit-container');
+      if(elI) elI.innerHTML = htmlI;
     }
 
     function renderGuruTable() {
