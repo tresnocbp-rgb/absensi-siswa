@@ -87,29 +87,36 @@
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); display: none; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(4px); }
     .modal-box { background: white; border-radius: 16px; padding: 30px; width: 100%; max-width: 450px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
 
-    .kartu-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
-    @media(max-width: 1200px) { .kartu-grid { grid-template-columns: repeat(2, 1fr); } }
+    .kartu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; }
+    @media(max-width: 900px) { .kartu-grid { grid-template-columns: 1fr; } }
     
+    /* UKURAN KARTU PELAJAR 8.5 CM x 5.5 CM FORMAT LANSKAP DENGAN PRESISI QR CODE */
     .id-card-preview {
-      width: 340px;
-      height: 215px;
+      width: 425px;
+      height: 275px;
       background: url('kartu pelajar.png') no-repeat center center;
       background-size: cover;
       border-radius: 12px;
-      padding: 16px;
       position: relative;
       box-shadow: 0 10px 20px rgba(0,0,0,0.15);
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      align-items: center;
       border: 1px solid #cbd5e1;
     }
     .id-card-qr-box {
+      position: absolute;
+      left: 32px;
+      top: 98px;
+      width: 140px;
+      height: 140px;
       background: white;
-      padding: 6px;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+    }
+    .id-card-qr-box img, .id-card-qr-box canvas {
+      width: 100% !important;
+      height: 100% !important;
     }
   </style>
 </head>
@@ -281,7 +288,7 @@
           </div>
         </div>
 
-        <!-- TAB 3: DATA GURU (DINAMIS DARI SHEET USERS) -->
+        <!-- TAB 3: DATA GURU -->
         <div id="tab-admin-guru" class="admin-tab" style="display: none;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <div>
@@ -328,7 +335,7 @@
           <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Pilih kelas untuk mengunduh QR Code dengan desain kartu pelajar.</p>
           <div class="card" style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
             <select id="cetak-kelas" onchange="generateQrPreview()" style="max-width: 250px; margin: 0;"><option value="">-- Pilih Kelas --</option></select>
-            <button onclick="downloadAllQrZip()" class="btn btn-success" id="btn-download-all" style="display: none;">📦 Download All QR Code (ZIP HD)</button>
+            <button onclick="downloadAllQrZip()" class="btn btn-success" id="btn-download-all" style="display: none;">📦 Download All Kartu (ZIP HD)</button>
           </div>
           <div id="kartu-container" class="kartu-grid"></div>
         </div>
@@ -675,7 +682,6 @@
       let u = document.getElementById('username').value.trim().toLowerCase();
       let p = document.getElementById('password').value.trim();
 
-      // Cek apakah login sebagai admin atau wali kelas dari data guru/users
       let matchedGuru = globalGuruData.find(g => g.username.toLowerCase() === u);
       if (u === 'admin' && p === 'admin123') {
         loggedInUser = { username: 'admin', name: 'Admin', role: 'admin', classScope: '' };
@@ -822,12 +828,12 @@
       let container = document.getElementById('tabel-guru-container');
       if(!container) return;
 
-      let html = `<table><tr><th>No</th><th>Nama Guru / Wali</th><th>Jabatan</th><th>Kelas Binaan</th><th>Email</th></tr>`;
+      let html = `<table><tr><th>No</th><th>Username</th><th>Nama Guru / Wali</th><th>Jabatan</th><th>Kelas Binaan</th><th>Email</th></tr>`;
       if(globalGuruData.length === 0) {
-        html += `<tr><td colspan="5" style="text-align:center;">Tidak ada data guru.</td></tr>`;
+        html += `<tr><td colspan="6" style="text-align:center;">Tidak ada data guru.</td></tr>`;
       } else {
         globalGuruData.forEach((g, idx) => {
-          html += `<tr><td>${idx + 1}</td><td style="font-weight:600;">${g.nama}</td><td>${g.role}</td><td>${g.kelas}</td><td>${g.email}</td></tr>`;
+          html += `<tr><td>${idx + 1}</td><td>${g.username}</td><td style="font-weight:600;">${g.nama}</td><td>${g.role}</td><td>${g.kelas}</td><td>${g.email}</td></tr>`;
         });
       }
       html += `</table>`;
@@ -1150,16 +1156,16 @@
         wrapper.style.marginBottom = "15px";
         wrapper.innerHTML = `
           <div id="${cardId}" class="id-card-preview">
-            <div id="${qrId}" class="id-card-qr-box" style="width: 100px; height: 100px; margin-bottom: 15px;"></div>
+            <div id="${qrId}" class="id-card-qr-box"></div>
           </div>
-          <button onclick="downloadSingleQr('${cardId}', '${s.nama}', '${s.kelas}')" class="btn btn-success" style="margin-top: 8px; padding: 6px 10px; font-size: 0.75rem; width: 340px;">💾 Download Kartu Pelajar (HD)</button>
+          <button onclick="downloadSingleQr('${cardId}', '${s.nama}', '${s.kelas}')" class="btn btn-success" style="margin-top: 8px; padding: 6px 10px; font-size: 0.75rem; width: 425px;">💾 Download Kartu Pelajar (HD)</button>
         `;
         container.appendChild(wrapper);
         
         new QRCode(document.getElementById(qrId), {
           text: s.nis.toString(),
-          width: 100,
-          height: 100,
+          width: 140,
+          height: 140,
           correctLevel: QRCode.CorrectLevel.H
         });
       });
@@ -1195,16 +1201,16 @@
         tempDiv.style.position = 'absolute';
         tempDiv.style.left = '-9999px';
         tempDiv.innerHTML = `
-          <div id="temp-card-${index}" class="id-card-preview" style="width: 340px; height: 215px; background: url('kartu pelajar.png') no-repeat center center; background-size: cover; padding: 16px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center;">
-            <div id="temp-code-${index}" class="id-card-qr-box" style="width: 100px; height: 100px; margin-bottom: 15px; background: white; padding: 6px; border-radius: 8px;"></div>
+          <div id="temp-card-${index}" class="id-card-preview" style="width: 425px; height: 275px; background: url('kartu pelajar.png') no-repeat center center; background-size: cover; border-radius: 12px; position: relative;">
+            <div id="temp-code-${index}" class="id-card-qr-box" style="position: absolute; left: 32px; top: 98px; width: 140px; height: 140px; background: white; padding: 4px; display: flex; align-items: center; justify-content: center;"></div>
           </div>
         `;
         document.body.appendChild(tempDiv);
         
         new QRCode(document.getElementById(`temp-code-${index}`), {
           text: s.nis.toString(),
-          width: 100,
-          height: 100,
+          width: 140,
+          height: 140,
           correctLevel: QRCode.CorrectLevel.H
         });
 
@@ -1221,7 +1227,7 @@
       link.download = `Kartu_Pelajar_${kelasVal.replace(/\s+/g, '_')}.zip`;
       link.click();
 
-      btn.innerText = "📦 Download All QR Code (ZIP HD)";
+      btn.innerText = "📦 Download All Kartu (ZIP HD)";
       btn.disabled = false;
     }
 
