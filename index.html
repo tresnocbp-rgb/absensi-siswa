@@ -132,7 +132,7 @@
             </div>
           </div>
           <div id="reader" style="width: 100%; border-radius: 12px; overflow: hidden; background: #000; margin-top: 10px; min-height: 280px;"></div>
-          <p id="scan-status-text" style="margin-top: 16px; font-weight: 600; color: var(--primary);">Kamera Standby (Anti-Delay / Siap 2000 Siswa)</p>
+          <p id="scan-status-text" style="margin-top: 16px; font-weight: 600; color: var(--primary);">Kamera Standby (Anti Double Scan Aktif)</p>
         </div>
         <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
           <div>
@@ -572,7 +572,7 @@
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         osc.start();
-        osc.stop(audioCtx.currentTime + 0.2);
+        osc.stop(audioCtx.currentTime + 0.15);
       } catch(e) {}
     }
 
@@ -603,43 +603,40 @@
       initStandbyCamera(selectVal);
     }
 
-    // ZERO-DELAY (0 DETIK) & ASYNC QUEUE SUPAYA 2000 SISWA BISA SCAN TANPA ANTREAN
-    let isProcessingScan = false;
-    let lastScannedNIS = "";
+    // ANTI DOUBLE-SCAN DENGAN COOLDOWN KHUSUS PER NIS 3 DETIK (AGAR SISWA YG SAMA TIDAK DOUBLE ABSEN, TAPI SISWA LAIN BISA LANGSUNG SCAN)
+    let scannedCooldownMap = {};
 
     function onScanSuccess(decodedText) {
-      if(isProcessingScan || lastScannedNIS === decodedText.toString()) return;
-      
+      let nis = decodedText.toString().trim();
+      let currentTime = new Date().getTime();
+
+      // Jika NIS yang sama di-scan dalam kurun waktu 3 detik, abaikan (mencegah double scan orang yang sama)
+      if (scannedCooldownMap[nis] && (currentTime - scannedCooldownMap[nis] < 3000)) {
+        return;
+      }
+
       let hariIni = new Date().getDay();
       if (hariIni === 0 || hariIni === 6) {
         document.getElementById('scan-status-text').innerHTML = `<span style="color: #ef4444; font-weight: bold;">⛔ SEKOLAH LIBUR! Absensi ditutup pada hari Sabtu & Minggu.</span>`;
         return;
       }
 
-      let sudahAbsenDiServer = globalAbsenHariIni.some(item => item.nis.toString() === decodedText.toString());
+      let sudahAbsenDiServer = globalAbsenHariIni.some(item => item.nis.toString() === nis);
 
       if(sudahAbsenDiServer) {
-        isProcessingScan = true;
-        lastScannedNIS = decodedText.toString();
+        scannedCooldownMap[nis] = currentTime;
         playBeepSound();
         let notifyBox = document.getElementById('notification-box');
-        notifyBox.innerHTML = `<span style="color: #d97706; font-weight: bold;">⚠️ Siswa NIS ${decodedText} SUDAH BERHASIL ABSEN sebelumnya!</span>`;
+        notifyBox.innerHTML = `<span style="color: #d97706; font-weight: bold;">⚠️ Siswa NIS ${nis} SUDAH BERHASIL ABSEN sebelumnya!</span>`;
         document.getElementById('scan-status-text').innerText = "Sudah Absen! Lanjut siswa berikutnya...";
-        
-        // Langsung buka kunci dalam 0,05 detik
-        setTimeout(() => { 
-          isProcessingScan = false; 
-          lastScannedNIS = "";
-        }, 50);
         return;
       }
 
-      // Kunci sesaat 0,05 detik untuk mencegah double-read fisik kamera
-      isProcessingScan = true;
-      lastScannedNIS = decodedText.toString();
+      // Tandai cooldown untuk NIS ini
+      scannedCooldownMap[nis] = currentTime;
       playBeepSound(); 
 
-      let foundSiswa = globalSiswaData.find(s => s.nis.toString() === decodedText.toString());
+      let foundSiswa = globalSiswaData.find(s => s.nis.toString() === nis);
       let namaSiswa = foundSiswa ? foundSiswa.nama : "Siswa SMK";
       let kelasSiswa = foundSiswa ? foundSiswa.kelas : "-";
 
@@ -650,10 +647,10 @@
       let limitMinutes = 7 * 60 + 30; // Default 07:30
       let statusKet = totalMinutes > limitMinutes ? "Telat" : "Hadir";
 
-      // 1. TAMPILKAN KE LAYAR SECARA INSTAN TANPA MENUNGGU JARINGAN
+      // 1. TAMPILKAN KE LAYAR SECARA INSTAN TANPA MENUNGGU JARINGAN (0 DELAY)
       let notifyBox = document.getElementById('notification-box');
       notifyBox.innerHTML = `<span style="color: #065f46; font-weight: bold;">✅ ${namaSiswa} Berhasil Absen (${statusKet})</span>`;
-      document.getElementById('res-nis').innerText = decodedText;
+      document.getElementById('res-nis').innerText = nis;
       document.getElementById('res-nama').innerText = namaSiswa;
       document.getElementById('res-kelas').innerText = kelasSiswa;
       document.getElementById('res-tanggal').innerText = now.toLocaleDateString('id-ID') + ' (' + now.toLocaleTimeString('id-ID') + ')';
@@ -662,21 +659,15 @@
       badge.innerText = statusKet.toUpperCase();
       document.getElementById('scan-status-text').innerText = "Kamera Standby (Anti-Delay / Siap 2000 Siswa)";
 
-      // 2. MASUKKAN KE CACHE LOKAL AGAR TERDETEKSI SUDAH ABSEN OLEH SISWA ITU SENDIRI
-      globalAbsenHariIni.push({ nis: decodedText.toString(), nama: namaSiswa, kelas: kelasSiswa, waktu: now.toLocaleTimeString('id-ID'), status: statusKet });
+      // 2. MASUKKAN KE CACHE LOKAL AGAR TERDETEKSI LANGSUNG
+      globalAbsenHariIni.push({ nis: nis, nama: namaSiswa, kelas: kelasSiswa, waktu: now.toLocaleTimeString('id-ID'), status: statusKet });
 
-      // 3. KIRIM KE SPREADSHEET DI LATAR BELAKANG (BACKGROUND ASYNC) TANPA MEMBLOKIR SCANNER
-      fetch(`${SCRIPT_URL}?action=absen&nis=${decodedText}&status=${statusKet}`)
+      // 3. KIRIM KE SPREADSHEET DI LATAR BELAKANG (BACKGROUND ASYNC) TANPA MEMBLOKIR SCANNER SAMA SEKALI
+      fetch(`${SCRIPT_URL}?action=absen&nis=${nis}&status=${statusKet}`)
         .then(res => res.json())
         .then(res => {
           loadAdminDataBackground();
         }).catch(() => {});
-
-      // 4. BUKA KUNCI SCANNER SEKETIKA (0,05 DETIK) SUPAYA SISWA BERIKUTNYA BISA LANGSUNG SCAN
-      setTimeout(() => { 
-        isProcessingScan = false; 
-        lastScannedNIS = "";
-      }, 50);
     }
 
     function handleLoginInstant(e) {
