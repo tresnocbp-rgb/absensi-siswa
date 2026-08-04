@@ -90,7 +90,6 @@
     .kartu-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
     @media(max-width: 1200px) { .kartu-grid { grid-template-columns: repeat(2, 1fr); } }
     
-    /* STYLE KARTU STANDAR TANPA TEMPLATE */
     .qr-card-item { 
       border: 2px solid var(--sidebar-bg); 
       border-radius: 12px; 
@@ -334,20 +333,16 @@
           </div>
         </div>
 
-        <!-- TAB 5: DOWNLOAD & CETAK KARTU FORMAT A4 -->
+        <!-- TAB 5: DOWNLOAD QR CODE -->
         <div id="tab-admin-cetak" class="admin-tab" style="display: none;">
-          <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 5px;">Cetak & Download Kartu Pelajar (A4)</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Pilih kelas untuk mencetak banyak kartu dalam 1 lembar A4 atau download ZIP.</p>
+          <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 5px;">Download Kartu QR Code Pelajar</h2>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Pilih kelas untuk mengunduh QR Code beserta nama dan kelas siswa.</p>
           <div class="card" style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
             <select id="cetak-kelas" onchange="generateQrPreview()" style="max-width: 250px; margin: 0;"><option value="">-- Pilih Kelas --</option></select>
-            <button onclick="window.print()" class="btn" id="btn-print-a4" style="display: none; background: #0284c7;">🖨️ Cetak Kartu Format A4</button>
-            <button onclick="downloadAllQrZip()" class="btn btn-success" id="btn-download-all" style="display: none;">📦 Download All Kartu (ZIP HD)</button>
+            <button onclick="downloadAllQrZip()" class="btn btn-success" id="btn-download-all" style="display: none;">📦 Download All QR Code (ZIP HD)</button>
           </div>
           <div id="kartu-container" class="kartu-grid"></div>
         </div>
-
-        <!-- AREA KHUSUS CETAK A4 -->
-        <div id="printable-a4-area" style="display: none;"></div>
 
         <!-- TAB 6: REKAP BULANAN -->
         <div id="tab-admin-rekap" class="admin-tab" style="display: none;">
@@ -527,7 +522,7 @@
         menuContainer.innerHTML = `
           <li><a onclick="switchAdminTab('admin-dash')" id="menu-admin-dash" class="active">📊 Dashboard</a></li>
           <li><a onclick="switchAdminTab('admin-siswa')" id="menu-admin-siswa">👥 Data Siswa</a></li>
-          <li><a onclick="switchAdminTab('admin-cetak')" id="menu-admin-cetak">🖨️ Download Kartu</a></li>
+          <li><a onclick="switchAdminTab('admin-cetak')" id="menu-admin-cetak">🖨️ Download QR Code</a></li>
           <li><a onclick="switchAdminTab('admin-rekap')" id="menu-admin-rekap">📈 Rekap Bulanan</a></li>
           <li><a onclick="switchAdminTab('admin-daftar-hadir')" id="menu-admin-daftar-hadir">📝 Daftar Hadir</a></li>
           <li><a onclick="logoutAdmin()" style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 16px; color: #f87171;">🚪 Logout Manual</a></li>
@@ -538,7 +533,7 @@
           <li><a onclick="switchAdminTab('admin-siswa')" id="menu-admin-siswa">👥 Data Siswa</a></li>
           <li><a onclick="switchAdminTab('admin-guru')" id="menu-admin-guru">👨‍🏫 Data Guru</a></li>
           <li><a onclick="switchAdminTab('admin-laporan')" id="menu-admin-laporan">📊 Laporan</a></li>
-          <li><a onclick="switchAdminTab('admin-cetak')" id="menu-admin-cetak">🖨️ Download Kartu</a></li>
+          <li><a onclick="switchAdminTab('admin-cetak')" id="menu-admin-cetak">🖨️ Download QR Code</a></li>
           <li><a onclick="switchAdminTab('admin-rekap')" id="menu-admin-rekap">📈 Rekap Bulanan</a></li>
           <li><a onclick="switchAdminTab('admin-kelola-absen')" id="menu-admin-kelola-absen">⚙️ Kelola Absen</a></li>
           <li><a onclick="switchAdminTab('admin-manajemen-kelas')" id="menu-admin-manajemen-kelas">🏫 Manajemen Kelas</a></li>
@@ -627,6 +622,7 @@
       initStandbyCamera(selectVal);
     }
 
+    // SCAN OTOMATIS BERIKUTNYA TANPA REFRESH (JEDA 3 DETIK)
     let isProcessingScan = false;
 
     function onScanSuccess(decodedText) {
@@ -645,8 +641,11 @@
         playBeepSound();
         let notifyBox = document.getElementById('notification-box');
         notifyBox.innerHTML = `<span style="color: #d97706; font-weight: bold;">⚠️ Siswa NIS ${decodedText} SUDAH BERHASIL ABSEN sebelumnya!</span>`;
-        document.getElementById('scan-status-text').innerText = "Silahkan lanjut siswa berikutnya.";
-        setTimeout(() => { isProcessingScan = false; }, 1500);
+        document.getElementById('scan-status-text').innerText = "Silahkan lanjut siswa berikutnya (bisa scan lagi dalam 3 detik)...";
+        setTimeout(() => { 
+          isProcessingScan = false; 
+          document.getElementById('scan-status-text').innerText = "Kamera standby, arahkan QR Code kartu ke lensa...";
+        }, 3000);
         return;
       }
 
@@ -674,15 +673,22 @@
       let badge = document.getElementById('res-status');
       badge.className = 'status-badge ' + (statusKet === 'Hadir' ? 'badge-hadir' : 'badge-telat');
       badge.innerText = statusKet.toUpperCase();
-      document.getElementById('scan-status-text').innerText = "Scan sukses! Lanjut berikutnya.";
+      document.getElementById('scan-status-text').innerText = "Scan sukses! Siap untuk siswa berikutnya...";
 
       fetch(`${SCRIPT_URL}?action=absen&nis=${decodedText}&status=${statusKet}`)
         .then(res => res.json())
         .then(res => {
           loadAdminDataBackground();
-          setTimeout(() => { isProcessingScan = false; }, 800);
+          // Jeda 3 detik agar siswa berikutnya bisa langsung scan tanpa refresh halaman
+          setTimeout(() => { 
+            isProcessingScan = false; 
+            document.getElementById('scan-status-text').innerText = "Kamera standby, arahkan QR Code kartu ke lensa...";
+          }, 3000);
         }).catch(() => {
-          isProcessingScan = false;
+          setTimeout(() => { 
+            isProcessingScan = false; 
+            document.getElementById('scan-status-text').innerText = "Kamera standby, arahkan QR Code kartu ke lensa...";
+          }, 3000);
         });
     }
 
@@ -1146,21 +1152,16 @@
     function generateQrPreview() {
       let kelasVal = loggedInUser.role === 'walikelas' ? loggedInUser.classScope : document.getElementById('cetak-kelas').value;
       let container = document.getElementById('kartu-container');
-      let printArea = document.getElementById('printable-a4-area');
       if(!container) return;
       let btnDownloadAll = document.getElementById('btn-download-all');
-      let btnPrintA4 = document.getElementById('btn-print-a4');
       container.innerHTML = "";
-      if(printArea) printArea.innerHTML = "";
       
       if(!kelasVal) {
         if(btnDownloadAll) btnDownloadAll.style.display = 'none';
-        if(btnPrintA4) btnPrintA4.style.display = 'none';
         return;
       }
 
       if(btnDownloadAll) btnDownloadAll.style.display = 'inline-flex';
-      if(btnPrintA4) btnPrintA4.style.display = 'inline-flex';
       let siswaList = globalSiswaData.filter(s => s.kelas === kelasVal);
 
       siswaList.forEach((s, index) => {
@@ -1186,27 +1187,6 @@
           height: 130,
           correctLevel: QRCode.CorrectLevel.H
         });
-
-        if(printArea) {
-          let printCard = document.createElement('div');
-          printCard.className = "qr-card-item";
-          let printQrId = `print-qrcode-${index}`;
-          printCard.innerHTML = `
-            <div style="font-weight: 700; font-size: 0.85rem; color: #0f172a; margin-bottom: 8px;">SMK TARUNA TERPADU 2</div>
-            <div id="${printQrId}" style="width: 130px; height: 130px; margin: 5px auto;"></div>
-            <div style="font-size: 0.85rem; font-weight: 700; color: #0f172a; margin-top: 8px; line-height: 1.3;">
-              ${s.nama}<br><span style="color: #64748b; font-weight: 500; font-size: 0.75rem;">Kelas: ${s.kelas} | NIS: ${s.nis}</span>
-            </div>
-          `;
-          printArea.appendChild(printCard);
-
-          new QRCode(document.getElementById(printQrId), {
-            text: s.nis.toString(),
-            width: 130,
-            height: 130,
-            correctLevel: QRCode.CorrectLevel.H
-          });
-        }
       });
     }
 
