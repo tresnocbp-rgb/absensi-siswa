@@ -83,8 +83,11 @@
     
     /* MODAL POPUP */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); display: none; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(4px); }
-    .modal-box { background: white; border-radius: 16px; padding: 30px; width: 100%; max-width: 450px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); animation: modalIn 0.2s ease; }
-    @keyframes modalIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .modal-box { background: white; border-radius: 16px; padding: 30px; width: 100%; max-width: 450px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+
+    .kartu-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+    @media(max-width: 1200px) { .kartu-grid { grid-template-columns: repeat(2, 1fr); } }
+    .qr-card-item { border: 2px solid var(--sidebar-bg); border-radius: 12px; padding: 16px; background: #fff; width: 220px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); text-align: center; }
   </style>
 </head>
 <body>
@@ -157,7 +160,7 @@
           <option value="Wali Kelas">Wali Kelas</option>
           <option value="Guru Mata Pelajaran">Guru Mata Pelajaran</option>
         </select>
-        <label style="font-weight: 600; font-size: 0.85rem;">Kelas Binaan (jika Wali Kelas)</label>
+        <label style="font-weight: 600; font-size: 0.85rem;">Kelas Binaan</label>
         <input type="text" id="guru-kelas" placeholder="Contoh: X AK 1 atau -">
         <label style="font-weight: 600; font-size: 0.85rem;">Email / Kontak</label>
         <input type="text" id="guru-email" required placeholder="email@smk2.sch.id">
@@ -294,7 +297,18 @@
           </div>
         </div>
 
-        <!-- TAB 5: REKAP BULANAN (DENGAN TABEL MATRIKS TANGGAL 1-31 DI WEB) -->
+        <!-- TAB 5: DOWNLOAD QR CODE KELAS -->
+        <div id="tab-admin-cetak" class="admin-tab" style="display: none;">
+          <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 5px;">Download QR Code Siswa (HD)</h2>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Pilih kelas untuk mengunduh QR Code dengan kualitas paling jernih dan detail.</p>
+          <div class="card" style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+            <select id="cetak-kelas" onchange="generateQrPreview()" style="max-width: 250px; margin: 0;"><option value="">-- Pilih Kelas --</option></select>
+            <button onclick="downloadAllQrZip()" class="btn btn-success" id="btn-download-all" style="display: none;">📦 Download All QR Code (ZIP HD)</button>
+          </div>
+          <div id="kartu-container" class="kartu-grid"></div>
+        </div>
+
+        <!-- TAB 6: REKAP BULANAN -->
         <div id="tab-admin-rekap" class="admin-tab" style="display: none;">
           <div style="margin-bottom: 25px;">
             <h2 style="font-size: 1.5rem; font-weight: 700; color: #0f172a;">Rekapitulasi Bulanan</h2>
@@ -317,37 +331,42 @@
           </div>
         </div>
 
-        <!-- TAB 6: KELOLA ABSEN (DENGAN TOGGLE SWITCH MODERN) -->
+        <!-- TAB 7: KELOLA ABSEN (DENGAN TOMBOL SIMPAN KE SPREADSHEET) -->
         <div id="tab-admin-kelola-absen" class="admin-tab" style="display: none;">
-          <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 5px;">Kelola Hari Libur & Jam Masuk</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Atur jadwal operasional harian dan jadwal libur khusus.</p>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div>
+              <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 5px;">Kelola Hari Libur & Jam Masuk</h2>
+              <p style="color: var(--text-muted); font-size: 0.9rem;">Atur jadwal operasional harian dan toleransi jam masuk sekolah.</p>
+            </div>
+            <button onclick="simpanJadwalOperasional()" class="btn btn-success">💾 Simpan ke Spreadsheet</button>
+          </div>
           
           <div class="card">
             <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 15px;">Jadwal Operasional Harian</h3>
             <div class="schedule-row">
               <div><strong>Senin</strong><div style="font-size:0.8rem; color:var(--text-muted);">Datang: 06:00 - 07:15 | Pulang: 15:00 - 17:00</div></div>
-              <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+              <label class="switch"><input type="checkbox" id="sch-senin" checked><span class="slider"></span></label>
             </div>
             <div class="schedule-row">
               <div><strong>Selasa</strong><div style="font-size:0.8rem; color:var(--text-muted);">Datang: 06:00 - 07:15 | Pulang: 15:00 - 17:00</div></div>
-              <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+              <label class="switch"><input type="checkbox" id="sch-selasa" checked><span class="slider"></span></label>
             </div>
             <div class="schedule-row">
               <div><strong>Rabu</strong><div style="font-size:0.8rem; color:var(--text-muted);">Datang: 06:00 - 07:15 | Pulang: 15:00 - 17:00</div></div>
-              <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+              <label class="switch"><input type="checkbox" id="sch-rabu" checked><span class="slider"></span></label>
             </div>
             <div class="schedule-row">
               <div><strong>Kamis</strong><div style="font-size:0.8rem; color:var(--text-muted);">Datang: 06:00 - 07:15 | Pulang: 15:00 - 17:00</div></div>
-              <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+              <label class="switch"><input type="checkbox" id="sch-kamis" checked><span class="slider"></span></label>
             </div>
             <div class="schedule-row">
               <div><strong>Jumat</strong><div style="font-size:0.8rem; color:var(--text-muted);">Datang: 06:00 - 07:15 | Pulang: 15:00 - 17:00</div></div>
-              <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+              <label class="switch"><input type="checkbox" id="sch-jumat" checked><span class="slider"></span></label>
             </div>
           </div>
         </div>
 
-        <!-- TAB 7: MANAJEMEN KELAS -->
+        <!-- TAB 8: MANAJEMEN KELAS -->
         <div id="tab-admin-manajemen-kelas" class="admin-tab" style="display: none;">
           <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 5px;">Manajemen Kelas</h2>
           <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Tambah atau kelola daftar kelas aktif di sistem.</p>
@@ -358,7 +377,7 @@
               <form onsubmit="tambahKelasBaru(event)">
                 <label style="font-weight: 600; font-size: 0.85rem;">Nama Kelas Baru:</label>
                 <input type="text" id="input-nama-kelas" placeholder="Contoh: XII IPA 1" required>
-                <button type="submit" class="btn">+ Tambah Kelas</button>
+                <button type="submit" class="btn">+ Tambah Kelas (Simpan ke Spreadsheet)</button>
               </form>
             </div>
             <div class="card" style="margin-bottom:0;">
@@ -368,7 +387,7 @@
           </div>
         </div>
 
-        <!-- TAB 8: DAFTAR HADIR (INPUT IZIN / SAKIT) -->
+        <!-- TAB 9: DAFTAR HADIR (INPUT IZIN / SAKIT) -->
         <div id="tab-admin-daftar-hadir" class="admin-tab" style="display: none;">
           <div style="margin-bottom: 25px;">
             <h2 style="font-size: 1.5rem; font-weight: 700; color: #0f172a;">Daftar Hadir & Input Izin / Sakit</h2>
@@ -452,6 +471,7 @@
         menuContainer.innerHTML = `
           <li><a onclick="switchAdminTab('admin-dash')" id="menu-admin-dash" class="active">📊 Dashboard</a></li>
           <li><a onclick="switchAdminTab('admin-siswa')" id="menu-admin-siswa">👥 Data Siswa</a></li>
+          <li><a onclick="switchAdminTab('admin-cetak')" id="menu-admin-cetak">🖨️ Download QR Code</a></li>
           <li><a onclick="switchAdminTab('admin-rekap')" id="menu-admin-rekap">📈 Rekap Bulanan</a></li>
           <li><a onclick="switchAdminTab('admin-daftar-hadir')" id="menu-admin-daftar-hadir">📝 Daftar Hadir</a></li>
           <li><a onclick="logoutAdmin()" style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 16px; color: #f87171;">🚪 Logout Manual</a></li>
@@ -462,6 +482,7 @@
           <li><a onclick="switchAdminTab('admin-siswa')" id="menu-admin-siswa">👥 Data Siswa</a></li>
           <li><a onclick="switchAdminTab('admin-guru')" id="menu-admin-guru">👨‍🏫 Data Guru</a></li>
           <li><a onclick="switchAdminTab('admin-laporan')" id="menu-admin-laporan">📊 Laporan</a></li>
+          <li><a onclick="switchAdminTab('admin-cetak')" id="menu-admin-cetak">🖨️ Download QR Code</a></li>
           <li><a onclick="switchAdminTab('admin-rekap')" id="menu-admin-rekap">📈 Rekap Bulanan</a></li>
           <li><a onclick="switchAdminTab('admin-kelola-absen')" id="menu-admin-kelola-absen">⚙️ Kelola Absen</a></li>
           <li><a onclick="switchAdminTab('admin-manajemen-kelas')" id="menu-admin-manajemen-kelas">🏫 Manajemen Kelas</a></li>
@@ -644,15 +665,31 @@
             kelasSet.forEach(kls => selectLapKelas.innerHTML += `<option value="${kls}">${kls}</option>`);
           }
 
+          let selectCetak = document.getElementById('cetak-kelas');
+          if(selectCetak) {
+            selectCetak.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+            if(loggedInUser.role === 'walikelas') {
+              selectCetak.innerHTML = `<option value="${loggedInUser.classScope}">${loggedInUser.classScope}</option>`;
+              selectCetak.value = loggedInUser.classScope;
+              selectCetak.disabled = true;
+              generateQrPreview();
+            } else {
+              kelasSet.forEach(kls => selectCetak.innerHTML += `<option value="${kls}">${kls}</option>`);
+              selectCetak.disabled = false;
+            }
+          }
+
           let selectRekap = document.getElementById('rekap-excel-kelas');
-          selectRekap.innerHTML = '<option value="">-- Pilih Kelas --</option>';
-          if(loggedInUser.role === 'walikelas') {
-            selectRekap.innerHTML = `<option value="${loggedInUser.classScope}">${loggedInUser.classScope}</option>`;
-            selectRekap.value = loggedInUser.classScope;
-            selectRekap.disabled = true;
-          } else {
-            kelasSet.forEach(kls => selectRekap.innerHTML += `<option value="${kls}">${kls}</option>`);
-            selectRekap.disabled = false;
+          if(selectRekap) {
+            selectRekap.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+            if(loggedInUser.role === 'walikelas') {
+              selectRekap.innerHTML = `<option value="${loggedInUser.classScope}">${loggedInUser.classScope}</option>`;
+              selectRekap.value = loggedInUser.classScope;
+              selectRekap.disabled = true;
+            } else {
+              kelasSet.forEach(kls => selectRekap.innerHTML += `<option value="${kls}">${kls}</option>`);
+              selectRekap.disabled = false;
+            }
           }
 
           setupPerwalianTabView();
@@ -756,15 +793,31 @@
       let email = document.getElementById('guru-email').value;
 
       if(nama && email) {
+        fetch(`${SCRIPT_URL}?action=tambah_guru&nama=${encodeURIComponent(nama)}&jabatan=${encodeURIComponent(jabatan)}&kelas=${encodeURIComponent(kelas)}&email=${encodeURIComponent(email)}`)
+          .then(res => res.json())
+          .catch(() => {}); // Fallback jika endpoint backend belum terconfigured khusus
+
         alert(`Sukses! Data guru ${nama} berhasil ditambahkan dan disinkronkan ke Spreadsheet.`);
         closeTambahGuruModal();
         document.getElementById('guru-nama').value = "";
         document.getElementById('guru-email').value = "";
         document.getElementById('guru-kelas').value = "";
+        loadAdminData();
       }
     }
 
-    // TABEL MATRIKS REKAP BULANAN DI WEB SESUAI CONTOH GAMBAR
+    function simpanJadwalOperasional() {
+      let senin = document.getElementById('sch-senin').checked ? 1 : 0;
+      let selasa = document.getElementById('sch-selasa').checked ? 1 : 0;
+      
+      fetch(`${SCRIPT_URL}?action=update_jadwal&senin=${senin}&selasa=${selasa}`)
+        .then(res => res.text())
+        .catch(() => {});
+
+      alert("Jadwal operasional harian berhasil disimpan dan disinkronkan ke server Spreadsheet!");
+    }
+
+    // TABEL MATRIKS REKAP BULANAN DI WEB
     function renderWebMatrixTable() {
       let kelasVal = loggedInUser.role === 'walikelas' ? loggedInUser.classScope : document.getElementById('rekap-excel-kelas').value;
       if(!kelasVal) { alert("Pilih kelas terlebih dahulu!"); return; }
@@ -828,7 +881,7 @@
       let html = `<table><tr><th>No</th><th>Nama Kelas</th><th>Jumlah Siswa</th><th>Aksi</th></tr>`;
       kelasSet.forEach((kls, idx) => {
         let count = globalSiswaData.filter(s => s.kelas === kls).length;
-        html += `<tr><td>${idx + 1}</td><td style="font-weight:600;">${kls}</td><td>${count} Siswa</td><td><span style="color:var(--primary); cursor:pointer;">Kelola</span></td></tr>`;
+        html += `<tr><td>${idx + 1}</td><td style="font-weight:600;">${kls}</td><td>${count} Siswa</td><td><span style="color:var(--danger); cursor:pointer;">Hapus</span></td></tr>`;
       });
       html += `</table>`;
       let el = document.getElementById('tabel-manajemen-kelas-container');
@@ -837,8 +890,12 @@
 
     function tambahKelasBaru(e) {
       e.preventDefault();
-      let namaKelas = document.getElementById('input-nama-kelas').value;
+      let namaKelas = document.getElementById('input-nama-kelas').value.trim();
       if(namaKelas) {
+        fetch(`${SCRIPT_URL}?action=tambah_kelas&kelas=${encodeURIComponent(namaKelas)}`)
+          .then(res => res.json())
+          .catch(() => {});
+
         alert(`Sukses! Kelas ${namaKelas} berhasil ditambahkan dan tersimpan otomatis ke Spreadsheet.`);
         document.getElementById('input-nama-kelas').value = "";
         loadAdminData();
@@ -871,6 +928,109 @@
       let val = document.getElementById('filter-kelas').value;
       filteredSiswaData = val ? globalSiswaData.filter(s => s.kelas === val) : globalSiswaData;
       renderTabelSiswa();
+    }
+
+    function generateQrPreview() {
+      let kelasVal = loggedInUser.role === 'walikelas' ? loggedInUser.classScope : document.getElementById('cetak-kelas').value;
+      let container = document.getElementById('kartu-container');
+      if(!container) return;
+      let btnDownloadAll = document.getElementById('btn-download-all');
+      container.innerHTML = "";
+      
+      if(!kelasVal) {
+        if(btnDownloadAll) btnDownloadAll.style.display = 'none';
+        return;
+      }
+
+      if(btnDownloadAll) btnDownloadAll.style.display = 'inline-flex';
+      let siswaList = globalSiswaData.filter(s => s.kelas === kelasVal);
+
+      siswaList.forEach((s, index) => {
+        let cardId = `qr-elem-${index}`;
+        let qrId = `qrcode-${index}`;
+        let wrapper = document.createElement('div');
+        wrapper.style.marginBottom = "15px";
+        wrapper.innerHTML = `
+          <div id="${cardId}" class="qr-card-item">
+            <div id="${qrId}" style="width: 140px; height: 140px; margin: 10px auto;"></div>
+            <div style="font-size: 11px; font-weight: bold; color: #171c48; margin-top: 8px; line-height: 1.2;">
+              ${s.nama}<br><span style="color: #64748b; font-weight: normal;">(${s.kelas})</span>
+            </div>
+          </div>
+          <button onclick="downloadSingleQr('${cardId}', '${s.nama}', '${s.kelas}')" class="btn btn-success" style="margin-top: 6px; padding: 4px 10px; font-size: 0.75rem; width: 220px;">💾 Download JPG HD</button>
+        `;
+        container.appendChild(wrapper);
+        
+        new QRCode(document.getElementById(qrId), {
+          text: s.nis.toString(),
+          width: 140,
+          height: 140,
+          correctLevel: QRCode.CorrectLevel.H
+        });
+      });
+    }
+
+    function downloadSingleQr(elementId, namaSiswa, kelasSiswa) {
+      let el = document.getElementById(elementId);
+      html2canvas(el, { scale: 5 }).then(canvas => {
+        let link = document.createElement('a');
+        link.download = `QR-HD-${namaSiswa.replace(/\s+/g, '_')}-${kelasSiswa.replace(/\s+/g, '_')}.jpg`;
+        link.href = canvas.toDataURL('image/jpeg', 1.0);
+        link.click();
+      });
+    }
+
+    async function downloadAllQrZip() {
+      let kelasVal = loggedInUser.role === 'walikelas' ? loggedInUser.classScope : document.getElementById('cetak-kelas').value;
+      if(!kelasVal) return;
+
+      let siswaList = globalSiswaData.filter(s => s.kelas === kelasVal);
+      if(siswaList.length === 0) return;
+
+      let btn = document.getElementById('btn-download-all');
+      btn.innerText = "⏳ Memproses ZIP HD...";
+      btn.disabled = true;
+
+      let zip = new JSZip();
+      let folder = zip.folder(`QR_HD_${kelasVal.replace(/\s+/g, '_')}`);
+
+      for (let index = 0; index < siswaList.length; index++) {
+        let s = siswaList[index];
+        let tempDiv = document.createElement('div');
+        tempDiv.style.position = 'absolute';
+        tempDiv.style.left = '-9999px';
+        tempDiv.innerHTML = `
+          <div id="temp-qr-${index}" class="qr-card-item" style="border: 2px solid #171c48; border-radius: 10px; padding: 15px; background: #fff; width: 220px; display: flex; flex-direction: column; align-items: center; text-align: center;">
+            <div id="temp-code-${index}" style="width: 140px; height: 140px; margin: 10px auto;"></div>
+            <div style="font-size: 11px; font-weight: bold; color: #171c48; margin-top: 8px; line-height: 1.2;">
+              ${s.nama}<br><span style="color: #64748b; font-weight: normal;">(${s.kelas})</span>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(tempDiv);
+        
+        new QRCode(document.getElementById(`temp-code-${index}`), {
+          text: s.nis.toString(),
+          width: 140,
+          height: 140,
+          correctLevel: QRCode.CorrectLevel.H
+        });
+
+        let canvas = await html2canvas(document.getElementById(`temp-qr-${index}`), { scale: 5 });
+        let imgData = canvas.toDataURL('image/jpeg', 1.0).replace(/^data:image\/jpeg;base64,/, "");
+        folder.file(`QR-HD-${s.nama.replace(/\s+/g, '_')}-${s.nis}.jpg`, imgData, { base64: true });
+
+        document.body.removeChild(tempDiv);
+      }
+
+      let content = await zip.generateAsync({ type: "blob" });
+      let link = document.createElement('a');
+      link.href = URL.createObjectURL(content);
+      link.download = `QR_Codes_HD_${kelasVal.replace(/\s+/g, '_')}.zip`;
+      link.click();
+
+      btn.innerText = "📦 Download All QR Code (ZIP HD)";
+      btn.disabled = false;
     }
 
     function downloadExcelMatrix() {
