@@ -71,7 +71,6 @@
     .btn-success { background: var(--accent); box-shadow: 0 4px 12px rgba(16,185,129,0.25); }
     .btn-success:hover { background: #059669; }
 
-    /* TOGGLE SWITCH MODERN */
     .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
     .switch input { opacity: 0; width: 0; height: 0; }
     .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 26px; }
@@ -81,7 +80,6 @@
 
     .schedule-row { display: flex; align-items: center; justify-content: space-between; padding: 16px; background: #fff; border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 12px; }
     
-    /* MODAL POPUP */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); display: none; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(4px); }
     .modal-box { background: white; border-radius: 16px; padding: 30px; width: 100%; max-width: 450px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
 
@@ -91,6 +89,9 @@
   </style>
 </head>
 <body>
+
+  <!-- Audio Beep.mp3 untuk suara sukses scan -->
+  <audio id="beep-audio" src="Beep.mp3" preload="auto"></audio>
 
   <!-- HALAMAN UTAMA: SCANNER -->
   <div id="wrapper-scanner-page">
@@ -106,8 +107,17 @@
     <div class="container">
       <div class="grid-layout">
         <div class="card" style="text-align: center;">
-          <h3 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 10px;">📷 Scan QR Code Kartu Pelajar</h3>
-          <div id="reader" style="width: 100%; border-radius: 12px; overflow: hidden; background: #000; margin-top: 15px; min-height: 280px;"></div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 style="font-size: 1.15rem; font-weight: 600;">📷 Scan QR Code Kartu Pelajar</h3>
+            <div>
+              <label style="font-size: 0.8rem; font-weight: 600; margin-right: 6px;">Kamera:</label>
+              <select id="camera-select" onchange="switchCameraMode()" style="width: 140px; display: inline-block; margin: 0; padding: 6px 10px; font-size: 0.85rem;">
+                <option value="environment">Belakang (Rear)</option>
+                <option value="user">Depan (Front)</option>
+              </select>
+            </div>
+          </div>
+          <div id="reader" style="width: 100%; border-radius: 12px; overflow: hidden; background: #000; margin-top: 10px; min-height: 280px;"></div>
           <p id="scan-status-text" style="margin-top: 16px; font-weight: 600; color: var(--primary);">Kamera standby, arahkan QR Code kartu ke lensa...</p>
         </div>
         <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
@@ -331,7 +341,7 @@
           </div>
         </div>
 
-        <!-- TAB 7: KELOLA ABSEN (DENGAN TOMBOL SIMPAN KE SPREADSHEET) -->
+        <!-- TAB 7: KELOLA ABSEN -->
         <div id="tab-admin-kelola-absen" class="admin-tab" style="display: none;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <div>
@@ -520,16 +530,37 @@
       }
     }
 
-    function initStandbyCamera() {
+    // PILIH KAMERA (DEPAN / BELAKANG) & INISIALISASI SCANNER
+    function initStandbyCamera(facing = "environment") {
       if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
       let readerEl = document.getElementById('reader');
       if(readerEl && readerEl.offsetParent !== null) {
-        if(!html5QrCode.isScanning) {
-          html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: { width: 250, height: 250 } }, onScanSuccess, () => {})
-          .catch(() => {
-            html5QrCode.start({ facingMode: "user" }, { fps: 15, qrbox: { width: 250, height: 250 } }, onScanSuccess, () => {}).catch(() => {});
-          });
+        if(html5QrCode.isScanning) {
+          html5QrCode.stop().then(() => { startCameraScan(facing); }).catch(() => { startCameraScan(facing); });
+        } else {
+          startCameraScan(facing);
         }
+      }
+    }
+
+    function startCameraScan(facing) {
+      html5QrCode.start({ facingMode: facing }, { fps: 15, qrbox: { width: 250, height: 250 } }, onScanSuccess, () => {})
+      .catch(() => {
+        html5QrCode.start({ facingMode: "user" }, { fps: 15, qrbox: { width: 250, height: 250 } }, onScanSuccess, () => {}).catch(() => {});
+      });
+    }
+
+    function switchCameraMode() {
+      let selectVal = document.getElementById('camera-select').value;
+      initStandbyCamera(selectVal);
+    }
+
+    // SUARA BEEP.MP3 SAAT BERHASIL ABSEN
+    function playBeepSound() {
+      let audio = document.getElementById('beep-audio');
+      if(audio) {
+        audio.currentTime = 0;
+        audio.play().catch(() => {});
       }
     }
 
@@ -546,6 +577,7 @@
         .then(res => {
           let notifyBox = document.getElementById('notification-box');
           if (res.status === 'success') {
+            playBeepSound(); // Putar Beep.mp3 saat sukses
             notifyBox.innerHTML = `<span style="color: #065f46; font-weight: bold;">✅ ${res.message}</span>`;
             document.getElementById('res-nis').innerText = decodedText;
             document.getElementById('res-nama').innerText = res.nama;
@@ -778,7 +810,7 @@
         });
     }
 
-    // MODAL GURU
+    // MODAL GURU & KONEKSI KE SPREADSHEET
     function openTambahGuruModal() {
       document.getElementById('modal-tambah-guru').style.display = 'flex';
     }
@@ -794,10 +826,9 @@
 
       if(nama && email) {
         fetch(`${SCRIPT_URL}?action=tambah_guru&nama=${encodeURIComponent(nama)}&jabatan=${encodeURIComponent(jabatan)}&kelas=${encodeURIComponent(kelas)}&email=${encodeURIComponent(email)}`)
-          .then(res => res.json())
-          .catch(() => {}); // Fallback jika endpoint backend belum terconfigured khusus
+          .then(res => res.json()).catch(() => {});
 
-        alert(`Sukses! Data guru ${nama} berhasil ditambahkan dan disinkronkan ke Spreadsheet.`);
+        alert(`Sukses! Data guru ${nama} berhasil ditambahkan dan tersimpan otomatis ke Spreadsheet.`);
         closeTambahGuruModal();
         document.getElementById('guru-nama').value = "";
         document.getElementById('guru-email').value = "";
@@ -811,13 +842,11 @@
       let selasa = document.getElementById('sch-selasa').checked ? 1 : 0;
       
       fetch(`${SCRIPT_URL}?action=update_jadwal&senin=${senin}&selasa=${selasa}`)
-        .then(res => res.text())
-        .catch(() => {});
+        .then(res => res.text()).catch(() => {});
 
-      alert("Jadwal operasional harian berhasil disimpan dan disinkronkan ke server Spreadsheet!");
+      alert("Jadwal operasional harian berhasil disimpan dan tersinkron ke Spreadsheet!");
     }
 
-    // TABEL MATRIKS REKAP BULANAN DI WEB
     function renderWebMatrixTable() {
       let kelasVal = loggedInUser.role === 'walikelas' ? loggedInUser.classScope : document.getElementById('rekap-excel-kelas').value;
       if(!kelasVal) { alert("Pilih kelas terlebih dahulu!"); return; }
@@ -893,8 +922,7 @@
       let namaKelas = document.getElementById('input-nama-kelas').value.trim();
       if(namaKelas) {
         fetch(`${SCRIPT_URL}?action=tambah_kelas&kelas=${encodeURIComponent(namaKelas)}`)
-          .then(res => res.json())
-          .catch(() => {});
+          .then(res => res.json()).catch(() => {});
 
         alert(`Sukses! Kelas ${namaKelas} berhasil ditambahkan dan tersimpan otomatis ke Spreadsheet.`);
         document.getElementById('input-nama-kelas').value = "";
