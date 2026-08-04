@@ -90,7 +90,7 @@
     .kartu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; }
     @media(max-width: 900px) { .kartu-grid { grid-template-columns: 1fr; } }
     
-    /* UKURAN KARTU PELAJAR 8.5 CM x 5.5 CM DENGAN QR CODE PRESISI DALAM KOTAK & AMAN DARI TEKS KETENTUAN */
+    /* UKURAN KARTU 8.5 CM x 5.5 CM DENGAN POSISI QR CODE PRESISI SESUAI REFERENSI */
     .id-card-preview {
       width: 425px;
       height: 275px;
@@ -104,10 +104,10 @@
     }
     .id-card-qr-box {
       position: absolute;
-      left: 17px;   /* Digeser ke kiri agar pas di dalam kotak frame */
-      top: 108px;   /* Posisi vertikal pas di bawah label SCAN ME */
-      width: 95px;   /* Ukuran QR code diperkecil agar aman tidak menabrak teks kanan */
-      height: 95px;  /* Ukuran tinggi QR code */
+      left: 17px;   /* Posisi pas di dalam kotak frame kiri */
+      top: 98px;    /* Posisi vertikal pas di bawah teks SCAN ME */
+      width: 102px;  /* Ukuran presisi agar pas di dalam bingkai putih */
+      height: 102px; /* Ukuran tinggi QR code */
       background: white;
       padding: 2px;
       display: flex;
@@ -366,6 +366,9 @@
           </div>
           <div id="kartu-container" class="kartu-grid"></div>
         </div>
+
+        <!-- AREA KHUSUS CETAK A4 -->
+        <div id="printable-a4-area" style="display: none;"></div>
 
         <!-- TAB 6: REKAP BULANAN -->
         <div id="tab-admin-rekap" class="admin-tab" style="display: none;">
@@ -1201,7 +1204,6 @@
           correctLevel: QRCode.CorrectLevel.H
         });
 
-        // Duplikat untuk Area Cetak A4
         if(printArea) {
           let printCard = document.createElement('div');
           printCard.className = "id-card-preview";
@@ -1250,7 +1252,7 @@
         tempDiv.style.left = '-9999px';
         tempDiv.innerHTML = `
           <div id="temp-card-${index}" class="id-card-preview" style="width: 425px; height: 275px; background: url('kartu pelajar.png') no-repeat center center; background-size: cover; border-radius: 12px; position: relative;">
-            <div id="temp-code-${index}" class="id-card-qr-box" style="position: absolute; left: 17px; top: 108px; width: 95px; height: 95px; background: white; padding: 2px; display: flex; align-items: center; justify-content: center;"></div>
+            <div id="temp-code-${index}" class="id-card-qr-box" style="position: absolute; left: 17px; top: 98px; width: 95px; height: 95px; background: white; padding: 2px; display: flex; align-items: center; justify-content: center;"></div>
           </div>
         `;
         document.body.appendChild(tempDiv);
