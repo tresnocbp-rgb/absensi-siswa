@@ -43,6 +43,10 @@
     .sidebar-footer a { color: #f87171; text-decoration: none; font-size: 0.9rem; display: flex; align-items: center; gap: 12px; cursor: pointer; font-weight: 500; }
 
     .main-admin-wrapper { margin-left: 280px; flex: 1; display: flex; flex-direction: column; min-width: 0; }
+    @media(max-width: 900px) {
+      aside { width: 100%; position: relative; height: auto; }
+      .main-admin-wrapper { margin-left: 0; }
+    }
     
     .card { background: var(--card-bg); border-radius: 16px; padding: 26px; border: 1px solid var(--border-color); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); margin-bottom: 24px; }
     .grid-layout { display: grid; grid-template-columns: 1.1fr 1fr; gap: 24px; }
@@ -582,7 +586,7 @@
       initStandbyCamera(selectVal);
     }
 
-    // INSTANT SCAN 0.2 DETIK + VALIDASI HAPUS BARIS DI SPREADSHEET (MENDUKUNG SCAN ULANG JIKA DIHAPUS)
+    // INSTANT SCAN 0.2 DETIK + KIRIM STATUS KET (HADIR / TELAT) KE SERVER
     let isProcessingScan = false;
 
     function onScanSuccess(decodedText) {
@@ -594,7 +598,6 @@
         return;
       }
 
-      // Cek apakah siswa ini sudah ada di daftar globalAbsenHariIni (berdasarkan data server yang di-load)
       let sudahAbsenDiServer = globalAbsenHariIni.some(item => item.nis.toString() === decodedText.toString());
 
       if(sudahAbsenDiServer) {
@@ -608,15 +611,13 @@
       }
 
       isProcessingScan = true;
-      playBeepSound(); // Suara beep berbunyi instan tanpa delay jaringan!
+      playBeepSound(); 
       document.getElementById('scan-status-text').innerHTML = `<span style="color: #2563eb;">Berhasil Scan NIS: ${decodedText}...</span>`;
 
-      // Cari data siswa dari cache lokal untuk ditampilkan instan di layar
       let foundSiswa = globalSiswaData.find(s => s.nis.toString() === decodedText.toString());
       let namaSiswa = foundSiswa ? foundSiswa.nama : "Siswa SMK";
       let kelasSiswa = foundSiswa ? foundSiswa.kelas : "-";
 
-      // Hitung status jam secara lokal (Batas jam 07:30)
       let now = new Date();
       let currentHour = now.getHours();
       let currentMinute = now.getMinutes();
@@ -624,7 +625,6 @@
       let limitMinutes = 7 * 60 + 30; // 07:30
       let statusKet = totalMinutes > limitMinutes ? "Telat" : "Hadir";
 
-      // Tampilkan instan di layar
       let notifyBox = document.getElementById('notification-box');
       notifyBox.innerHTML = `<span style="color: #065f46; font-weight: bold;">✅ ${namaSiswa} Berhasil Absen (${statusKet})</span>`;
       document.getElementById('res-nis').innerText = decodedText;
@@ -636,7 +636,7 @@
       badge.innerText = statusKet.toUpperCase();
       document.getElementById('scan-status-text').innerText = "Scan sukses! Lanjut berikutnya.";
 
-      // Kirim ke Google Spreadsheet di latar belakang (Background Sync) dengan status yang benar (Hadir/Telat)
+      // KIRIM PARAMETER STATUS KET (HADIR/TELAT) KE GOOGLE SPREADSHEET
       fetch(`${SCRIPT_URL}?action=absen&nis=${decodedText}&status=${statusKet}`)
         .then(res => res.json())
         .then(res => {
@@ -720,17 +720,27 @@
           document.getElementById('stat-telat').innerText = listTelatScope.length;
           document.getElementById('stat-belum').innerText = listSiswaScope.length - (listHadirScope.length + listTelatScope.length);
 
+          // RENDER TABEL SISWA HADIR TEPAT WAKTU DI DASHBOARD
           let htmlH = `<table><tr><th>NIS</th><th>Nama</th><th>Kelas</th><th>Jam</th></tr>`;
-          if(listHadirScope.length === 0) htmlH += `<tr><td colspan="4" style="text-align:center; color:#64748b;">Belum ada yang hadir</td></tr>`;
-          else listHadirScope.forEach(h => htmlH += `<tr><td>${h.nis}</td><td>${h.nama}</td><td>${h.kelas}</td><td>${h.waktu}</td></tr>`);
+          if(listHadirScope.length === 0) {
+            htmlH += `<tr><td colspan="4" style="text-align:center; color:#64748b;">Belum ada yang hadir</td></tr>`;
+          } else {
+            listHadirScope.forEach(h => htmlH += `<tr><td>${h.nis}</td><td>${h.nama}</td><td>${h.kelas}</td><td>${h.waktu}</td></tr>`);
+          }
           htmlH += `</table>`;
-          document.getElementById('tabel-hadir-container').innerHTML = htmlH;
+          let containerHadir = document.getElementById('tabel-hadir-container');
+          if(containerHadir) containerHadir.innerHTML = htmlH;
 
+          // RENDER TABEL SISWA TELAT HARI INI DI DASHBOARD
           let htmlT = `<table><tr><th>NIS</th><th>Nama</th><th>Kelas</th><th>Jam</th></tr>`;
-          if(listTelatScope.length === 0) htmlT += `<tr><td colspan="4" style="text-align:center; color:#64748b;">Tidak ada yang telat</td></tr>`;
-          else listTelatScope.forEach(t => htmlT += `<tr><td>${t.nis}</td><td>${t.nama}</td><td>${t.kelas}</td><td>${t.waktu}</td></tr>`);
+          if(listTelatScope.length === 0) {
+            htmlT += `<tr><td colspan="4" style="text-align:center; color:#64748b;">Tidak ada yang telat</td></tr>`;
+          } else {
+            listTelatScope.forEach(t => htmlT += `<tr><td>${t.nis}</td><td>${t.nama}</td><td>${t.kelas}</td><td>${t.waktu}</td></tr>`);
+          }
           htmlT += `</table>`;
-          document.getElementById('tabel-telat-container').innerHTML = htmlT;
+          let containerTelat = document.getElementById('tabel-telat-container');
+          if(containerTelat) containerTelat.innerHTML = htmlT;
 
           let kelasSet = [...new Set(globalSiswaData.map(s => s.kelas))].sort();
           let selectFilter = document.getElementById('filter-kelas');
