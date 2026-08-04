@@ -603,7 +603,7 @@
       initStandbyCamera(selectVal);
     }
 
-    // JEDA SCAN SUPER CEPAT (0.8 DETIK / 800MS) AGAR TIDAK ADA PENUMPUKAN SISWA
+    // DELAY SUPER CEPAT 0,1 DETIK (100MS) & DETAIL SISWA TETAP TAMPIL PERMANEN
     let isProcessingScan = false;
 
     function onScanSuccess(decodedText) {
@@ -626,7 +626,7 @@
         setTimeout(() => { 
           isProcessingScan = false; 
           document.getElementById('scan-status-text').innerText = "Kamera standby, arahkan QR Code kartu ke lensa...";
-        }, 800);
+        }, 100);
         return;
       }
 
@@ -645,6 +645,7 @@
       let limitMinutes = 7 * 60 + 30; // Default 07:30
       let statusKet = totalMinutes > limitMinutes ? "Telat" : "Hadir";
 
+      // TAMPILKAN DETAIL ABSENSI SISWA SECARA PERMANEN DI PANEL KANAN
       let notifyBox = document.getElementById('notification-box');
       notifyBox.innerHTML = `<span style="color: #065f46; font-weight: bold;">✅ ${namaSiswa} Berhasil Absen (${statusKet})</span>`;
       document.getElementById('res-nis').innerText = decodedText;
@@ -660,16 +661,16 @@
         .then(res => res.json())
         .then(res => {
           loadAdminDataBackground();
-          // Jeda sangat singkat (0.8 detik) agar antrean absen super cepat & lancar
+          // Delay super cepat 0,1 detik (100ms) agar antrean absen sangat lancar
           setTimeout(() => { 
             isProcessingScan = false; 
             document.getElementById('scan-status-text').innerText = "Kamera standby, arahkan QR Code kartu ke lensa...";
-          }, 800);
+          }, 100);
         }).catch(() => {
           setTimeout(() => { 
             isProcessingScan = false; 
             document.getElementById('scan-status-text').innerText = "Kamera standby, arahkan QR Code kartu ke lensa...";
-          }, 800);
+          }, 100);
         });
     }
 
