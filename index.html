@@ -88,7 +88,7 @@
     .qr-card-item { border: 2px solid var(--sidebar-bg); border-radius: 12px; padding: 16px; background: #fff; width: 220px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); text-align: center; }
   </style>
 </head>
-<body>
+<body onclick="unlockAudioOnce()">
 
   <!-- Audio Beep.mp3 untuk suara sukses scan -->
   <audio id="beep-audio" src="Beep.mp3" preload="auto"></audio>
@@ -109,8 +109,8 @@
         <div class="card" style="text-align: center;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <h3 style="font-size: 1.15rem; font-weight: 600;">📷 Scan QR Code Kartu Pelajar</h3>
-            <div>
-              <label style="font-size: 0.8rem; font-weight: 600; margin-right: 6px;">Kamera:</label>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 1.2rem;" title="Ubah Kamera">🔄</span>
               <select id="camera-select" onchange="switchCameraMode()" style="width: 140px; display: inline-block; margin: 0; padding: 6px 10px; font-size: 0.85rem;">
                 <option value="environment">Belakang (Rear)</option>
                 <option value="user">Depan (Front)</option>
@@ -530,6 +530,21 @@
       }
     }
 
+    // UNLOCK AUDIO BEEP POLICY
+    let audioUnlocked = false;
+    function unlockAudioOnce() {
+      if(!audioUnlocked) {
+        let audio = document.getElementById('beep-audio');
+        if(audio) {
+          audio.play().then(() => {
+            audio.pause();
+            audio.currentTime = 0;
+            audioUnlocked = true;
+          }).catch(() => {});
+        }
+      }
+    }
+
     // PILIH KAMERA (DEPAN / BELAKANG) & INISIALISASI SCANNER
     function initStandbyCamera(facing = "environment") {
       if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
@@ -560,7 +575,7 @@
       let audio = document.getElementById('beep-audio');
       if(audio) {
         audio.currentTime = 0;
-        audio.play().catch(() => {});
+        audio.play().catch(e => console.log("Audio play error:", e));
       }
     }
 
@@ -571,6 +586,23 @@
         return;
       }
 
+      // CEK LOCAL CACHE APAKAH SISWA SUDAH ABSEN HARI INI (ANTI-DOUBLE SCAN)
+      let scannedTodayList = JSON.parse(localStorage.getItem('scanned_today_nis') || '[]');
+      let todayStr = new Date().toDateString();
+      let lastScanDate = localStorage.getItem('scanned_today_date') || '';
+
+      if(lastScanDate !== todayStr) {
+        scannedTodayList = [];
+        localStorage.setItem('scanned_today_date', todayStr);
+      }
+
+      if(scannedTodayList.includes(decodedText.toString())) {
+        let notifyBox = document.getElementById('notification-box');
+        notifyBox.innerHTML = `<span style="color: #d97706; font-weight: bold;">⚠️ Siswa dengan NIS ${decodedText} sudah berhasil absen sebelumnya! Data tidak dimasukkan lagi.</span>`;
+        document.getElementById('scan-status-text').innerText = "Silahkan lanjut siswa berikutnya.";
+        return;
+      }
+
       document.getElementById('scan-status-text').innerHTML = `<span style="color: #2563eb;">Memproses NIS: ${decodedText}...</span>`;
       fetch(`${SCRIPT_URL}?action=absen&nis=${decodedText}`)
         .then(res => res.json())
@@ -578,6 +610,11 @@
           let notifyBox = document.getElementById('notification-box');
           if (res.status === 'success') {
             playBeepSound(); // Putar Beep.mp3 saat sukses
+            
+            // Masukkan ke cache lokal supaya tidak bisa double scan hari ini
+            scannedTodayList.push(decodedText.toString());
+            localStorage.setItem('scanned_today_nis', JSON.stringify(scannedTodayList));
+
             notifyBox.innerHTML = `<span style="color: #065f46; font-weight: bold;">✅ ${res.message}</span>`;
             document.getElementById('res-nis').innerText = decodedText;
             document.getElementById('res-nama').innerText = res.nama;
