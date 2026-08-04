@@ -88,10 +88,7 @@
     .qr-card-item { border: 2px solid var(--sidebar-bg); border-radius: 12px; padding: 16px; background: #fff; width: 220px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); text-align: center; }
   </style>
 </head>
-<body onclick="unlockAudioOnce()">
-
-  <!-- Audio Beep.mp3 untuk suara sukses scan -->
-  <audio id="beep-audio" src="Beep.mp3" preload="auto"></audio>
+<body>
 
   <!-- HALAMAN UTAMA: SCANNER -->
   <div id="wrapper-scanner-page">
@@ -354,23 +351,23 @@
           <div class="card">
             <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 15px;">Jadwal Operasional Harian</h3>
             <div class="schedule-row">
-              <div><strong>Senin</strong><div style="font-size:0.8rem; color:var(--text-muted);">Datang: 06:00 - 07:15 | Pulang: 15:00 - 17:00</div></div>
+              <div><strong>Senin</strong><div style="font-size:0.8rem; color:var(--text-muted);">Datang: 06:00 - 07:30 | Pulang: 15:00 - 17:00</div></div>
               <label class="switch"><input type="checkbox" id="sch-senin" checked><span class="slider"></span></label>
             </div>
             <div class="schedule-row">
-              <div><strong>Selasa</strong><div style="font-size:0.8rem; color:var(--text-muted);">Datang: 06:00 - 07:15 | Pulang: 15:00 - 17:00</div></div>
+              <div><strong>Selasa</strong><div style="font-size:0.8rem; color:var(--text-muted);">Datang: 06:00 - 07:30 | Pulang: 15:00 - 17:00</div></div>
               <label class="switch"><input type="checkbox" id="sch-selasa" checked><span class="slider"></span></label>
             </div>
             <div class="schedule-row">
-              <div><strong>Rabu</strong><div style="font-size:0.8rem; color:var(--text-muted);">Datang: 06:00 - 07:15 | Pulang: 15:00 - 17:00</div></div>
+              <div><strong>Rabu</strong><div style="font-size:0.8rem; color:var(--text-muted);">Datang: 06:00 - 07:30 | Pulang: 15:00 - 17:00</div></div>
               <label class="switch"><input type="checkbox" id="sch-rabu" checked><span class="slider"></span></label>
             </div>
             <div class="schedule-row">
-              <div><strong>Kamis</strong><div style="font-size:0.8rem; color:var(--text-muted);">Datang: 06:00 - 07:15 | Pulang: 15:00 - 17:00</div></div>
+              <div><strong>Kamis</strong><div style="font-size:0.8rem; color:var(--text-muted);">Datang: 06:00 - 07:30 | Pulang: 15:00 - 17:00</div></div>
               <label class="switch"><input type="checkbox" id="sch-kamis" checked><span class="slider"></span></label>
             </div>
             <div class="schedule-row">
-              <div><strong>Jumat</strong><div style="font-size:0.8rem; color:var(--text-muted);">Datang: 06:00 - 07:15 | Pulang: 15:00 - 17:00</div></div>
+              <div><strong>Jumat</strong><div style="font-size:0.8rem; color:var(--text-muted);">Datang: 06:00 - 07:30 | Pulang: 15:00 - 17:00</div></div>
               <label class="switch"><input type="checkbox" id="sch-jumat" checked><span class="slider"></span></label>
             </div>
           </div>
@@ -1122,7 +1119,7 @@
       let ws = XLSX.utils.aoa_to_sheet(wbData);
       let wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, `Rekap_${kelasVal.replace(/\s+/g, '_')}`);
-      XLSX.writeFile(wb, `Rekap_Bulanan_${kelasVal.replace(/\s+/g, '_')}.xlsx`);
+      XLSX.writeFile(wb, `Rekap_Bulanan_${kelasVal.replace(/\s+/g, '_')}.zip` || `Rekap_Bulanan_${kelasVal.replace(/\s+/g, '_')}.xlsx`);
     }
   </script>
 </body>
