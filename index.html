@@ -460,8 +460,14 @@
       document.getElementById('wrapper-login-page').style.display = 'none';
       document.getElementById('wrapper-admin-page').style.display = 'none';
 
-      if (html5QrCode && html5QrCode.isScanning) html5QrCode.stop().catch(() => {});
+      if (html5QrCode && html5QrCode.isScanning) {
+        html5QrCode.stop().catch(() => {}).finally(() => { startCameraInit(page); });
+      } else {
+        startCameraInit(page);
+      }
+    }
 
+    function startCameraInit(page) {
       if(page === 'scanner') {
         document.getElementById('wrapper-scanner-page').style.display = 'block';
         initStandbyCamera();
@@ -554,7 +560,7 @@
       } catch(e) {}
     }
 
-    // INISIALISASI KAMERA
+    // INISIALISASI KAMERA YANG AMAN UNTUK MOBILE & DESKTOP
     function initStandbyCamera(facing = "environment") {
       if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
       let readerEl = document.getElementById('reader');
@@ -568,9 +574,14 @@
     }
 
     function startCameraScan(facing) {
-      html5QrCode.start({ facingMode: facing }, { fps: 25, qrbox: { width: 250, height: 250 } }, onScanSuccess, () => {})
-      .catch(() => {
-        html5QrCode.start({ facingMode: "user" }, { fps: 25, qrbox: { width: 250, height: 250 } }, onScanSuccess, () => {}).catch(() => {});
+      let config = { fps: 20, qrbox: { width: 250, height: 250 } };
+      // Gunakan constraints fleksibel agar kompatibel di HP dan Laptop
+      let cameraConfig = { facingMode: facing };
+      
+      html5QrCode.start(cameraConfig, config, onScanSuccess, () => {})
+      .catch((err) => {
+        // Fallback otomatis jika kamera depan/belakang spesifik gagal di HP
+        html5QrCode.start({ facingMode: "user" }, config, onScanSuccess, () => {}).catch(() => {});
       });
     }
 
@@ -1121,7 +1132,7 @@
     }
 
     function downloadExcelMatrix() {
-      let kelasVal = loggedInUser.role === 'walikelas' ? loggedInUser.classScope : document.getElementById('rekap-excel-kelas`.value;
+      let kelasVal = loggedInUser.role === 'walikelas' ? loggedInUser.classScope : document.getElementById('rekap-excel-kelas').value;
       if(!kelasVal) { alert("Pilih kelas terlebih dahulu!"); return; }
 
       let siswaKelas = globalSiswaData.filter(s => s.kelas === kelasVal);
@@ -1144,7 +1155,7 @@
       let ws = XLSX.utils.aoa_to_sheet(wbData);
       let wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, `Rekap_${kelasVal.replace(/\s+/g, '_')}`);
-      XLSX.writeFile(wb, `Rekap_Bulanan_${kelasVal.replace(/\s+/g, '_')}.xlsx`);
+      XLSX.writeFile(wb, `Rekip_Bulanan_${kelasVal.replace(/\s+/g, '_')}.xlsx`);
     }
   </script>
 </body>
