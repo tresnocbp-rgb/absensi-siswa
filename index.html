@@ -132,7 +132,7 @@
             </div>
           </div>
           <div id="reader" style="width: 100%; border-radius: 12px; overflow: hidden; background: #000; margin-top: 10px; min-height: 280px;"></div>
-          <p id="scan-status-text" style="margin-top: 16px; font-weight: 600; color: var(--primary);">Kamera standby, arahkan QR Code kartu ke lensa...</p>
+          <p id="scan-status-text" style="margin-top: 16px; font-weight: 600; color: var(--primary);">Kamera Standby (Siap Scan Super Cepat)</p>
         </div>
         <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
           <div>
@@ -603,11 +603,12 @@
       initStandbyCamera(selectVal);
     }
 
-    // DELAY SUPER CEPAT 0,1 DETIK (100MS) & DETAIL SISWA TETAP TAMPIL PERMANEN
+    // LOGIKA MULTI-STUDENT ABSENSI INSTAN (TANPA DELAY / NON-BLOCKING BACKGROUND SYNC)
     let isProcessingScan = false;
+    let lastScannedNIS = "";
 
     function onScanSuccess(decodedText) {
-      if(isProcessingScan) return;
+      if(isProcessingScan || lastScannedNIS === decodedText.toString()) return;
       
       let hariIni = new Date().getDay();
       if (hariIni === 0 || hariIni === 6) {
@@ -619,20 +620,24 @@
 
       if(sudahAbsenDiServer) {
         isProcessingScan = true;
+        lastScannedNIS = decodedText.toString();
         playBeepSound();
         let notifyBox = document.getElementById('notification-box');
         notifyBox.innerHTML = `<span style="color: #d97706; font-weight: bold;">⚠️ Siswa NIS ${decodedText} SUDAH BERHASIL ABSEN sebelumnya!</span>`;
-        document.getElementById('scan-status-text').innerText = "Siswa sudah absen. Lanjut berikutnya...";
+        document.getElementById('scan-status-text').innerText = "Sudah Absen! Lanjut siswa berikutnya...";
+        
+        // Reset ketersediaan scan dalam 0,1 detik
         setTimeout(() => { 
           isProcessingScan = false; 
-          document.getElementById('scan-status-text').innerText = "Kamera standby, arahkan QR Code kartu ke lensa...";
+          lastScannedNIS = "";
         }, 100);
         return;
       }
 
+      // Kunci sementara (0,1 detik) agar tidak terjadi double-read pada QR code yang sama
       isProcessingScan = true;
+      lastScannedNIS = decodedText.toString();
       playBeepSound(); 
-      document.getElementById('scan-status-text').innerHTML = `<span style="color: #2563eb;">Berhasil Scan NIS: ${decodedText}...</span>`;
 
       let foundSiswa = globalSiswaData.find(s => s.nis.toString() === decodedText.toString());
       let namaSiswa = foundSiswa ? foundSiswa.nama : "Siswa SMK";
@@ -645,7 +650,7 @@
       let limitMinutes = 7 * 60 + 30; // Default 07:30
       let statusKet = totalMinutes > limitMinutes ? "Telat" : "Hadir";
 
-      // TAMPILKAN DETAIL ABSENSI SISWA SECARA PERMANEN DI PANEL KANAN
+      // 1. TAMPILKAN DETAIL SISWA SECARA INSTAN TANPA MENUNGGU KONEKSI SERVER
       let notifyBox = document.getElementById('notification-box');
       notifyBox.innerHTML = `<span style="color: #065f46; font-weight: bold;">✅ ${namaSiswa} Berhasil Absen (${statusKet})</span>`;
       document.getElementById('res-nis').innerText = decodedText;
@@ -655,23 +660,24 @@
       let badge = document.getElementById('res-status');
       badge.className = 'status-badge ' + (statusKet === 'Hadir' ? 'badge-hadir' : 'badge-telat');
       badge.innerText = statusKet.toUpperCase();
-      document.getElementById('scan-status-text').innerText = "Scan sukses! Siap siswa berikutnya.";
+      document.getElementById('scan-status-text').innerText = "Siap scan siswa berikutnya...";
 
+      // 2. SIMPAN KE LOKAL MEMORY UNTUK PENCEGAHAN DOUBLE SCAN
+      globalAbsenHariIni.push({ nis: decodedText.toString(), nama: namaSiswa, kelas: kelasSiswa, waktu: now.toLocaleTimeString('id-ID'), status: statusKet });
+
+      // 3. PROSES PENGIRIMAN KE SPREADSHEET DI LATAR BELAKANG (ASYNC BACKGROUND FETCH)
       fetch(`${SCRIPT_URL}?action=absen&nis=${decodedText}&status=${statusKet}`)
         .then(res => res.json())
         .then(res => {
           loadAdminDataBackground();
-          // Delay super cepat 0,1 detik (100ms) agar antrean absen sangat lancar
-          setTimeout(() => { 
-            isProcessingScan = false; 
-            document.getElementById('scan-status-text').innerText = "Kamera standby, arahkan QR Code kartu ke lensa...";
-          }, 100);
-        }).catch(() => {
-          setTimeout(() => { 
-            isProcessingScan = false; 
-            document.getElementById('scan-status-text').innerText = "Kamera standby, arahkan QR Code kartu ke lensa...";
-          }, 100);
-        });
+        }).catch(() => {});
+
+      // 4. BUKA BINGKAI SCANNER KEMBALI SECARA SEKETIKA (0,1 DETIK / 100MS)
+      setTimeout(() => { 
+        isProcessingScan = false; 
+        lastScannedNIS = "";
+        document.getElementById('scan-status-text').innerText = "Kamera Standby (Siap Scan Super Cepat)";
+      }, 100);
     }
 
     function handleLoginInstant(e) {
