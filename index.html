@@ -1117,13 +1117,11 @@
       const hariArr = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
 
       let html = `<table><thead>`;
-      
-      // Baris 1: Judul Kategori Kolom Tanggal
       html += `<tr><th colspan="4" style="text-align:center; background:#f1f5f9;">DATA SISWA</th>`;
       html += `<th colspan="${daysInMonth}" style="text-align:center; background:#e2e8f0; color:#0f172a; font-weight:700;">TANGGAL (1 s.d. ${daysInMonth})</th>`;
       html += `<th colspan="5" style="text-align:center; background:#f1f5f9;">REKAP</th></tr>`;
 
-      // Baris 2: Nama Hari (Min, Sen, Sel, dst)
+      // Baris Hari (Min, Sen, Sel, dst)
       html += `<tr><th>NO</th><th>NAMA SISWA</th><th>NIS</th><th>KELAS</th>`;
       for(let i=1; i<=daysInMonth; i++) {
         let d = new Date(year, month, i);
@@ -1133,7 +1131,7 @@
       }
       html += `<th>H</th><th>T</th><th>S</th><th>I</th><th>%</th></tr>`;
 
-      // Baris 3: Angka Tanggal (1 s.d. 31)
+      // Baris Angka Tanggal (1 s.d. 31)
       html += `<tr><th></th><th></th><th></th><th></th>`;
       for(let i=1; i<=daysInMonth; i++) {
         let d = new Date(year, month, i);
@@ -1216,11 +1214,35 @@
       }
       wbData.push(dayRow);
 
-      // Baris 2: Tanggal (1 s.d. 31)
+      // Baris 2: Angka Tanggal (1 s.d. 31)
       let headerRow = ["No.", "NIS", "Nama Siswa", "Kelas"];
       for(let i=1; i<=daysInMonth; i++) headerRow.push(i);
       headerRow.push("Hadir (H)", "Telat (T)", "S", "I", "Total %");
       wbData.push(headerRow);
+
+      let merges = [];
+      // Menggabungkan (merge) sel hari yang sama (misal Sabtu & Minggu jika berurutan, atau per sel libur)
+      let startLiburCol = null;
+      for(let i=1; i<=daysInMonth; i++) {
+        let d = new Date(year, month, i);
+        let dayOfWeek = d.getDay();
+        let isLibur = (dayOfWeek === 0 || dayOfWeek === 6);
+        let colIdx = 3 + i; // Kolom ke-0 adalah No, 1=NIS, 2=Nama, 3=Kelas, jadi tanggal mulai di col 4 (index 4)
+
+        if(isLibur) {
+          if(startLiburCol === null) startLiburCol = colIdx;
+        } else {
+          if(startLiburCol !== null) {
+            if(colIdx - 1 > startLiburCol) {
+              merges.push({ s: { r: 0, c: startLiburCol }, e: { r: 0, c: colIdx - 1 } });
+            }
+            startLiburCol = null;
+          }
+        }
+      }
+      if(startLiburCol !== null && (3 + daysInMonth) > startLiburCol) {
+        merges.push({ s: { r: 0, c: startLiburCol }, e: { r: 0, c: 3 + daysInMonth } });
+      }
 
       siswaKelas.forEach((s, idx) => {
         let row = [idx + 1, s.nis, s.nama, s.kelas];
@@ -1255,10 +1277,8 @@
       });
 
       let ws = XLSX.utils.aoa_to_sheet(wbData);
+      if(merges.length > 0) ws['!merges'] = merges;
 
-      // Konfigurasi Merge Cells (Menggabungkan baris hari libur / Sabtu & Minggu jika bersebelahan atau per baris)
-      if(!ws['!merges']) ws['!merges'] = [];
-      
       let wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, `Rekap_${kelasVal.replace(/\s+/g, '_')}`);
       XLSX.writeFile(wb, `Rekap_Bulanan_${kelasVal.replace(/\s+/g, '_')}.xlsx`);
