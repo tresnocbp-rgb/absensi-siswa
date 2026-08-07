@@ -67,8 +67,15 @@
     table { width: 100%; border-collapse: collapse; margin-top: 15px; border-radius: 10px; overflow: hidden; }
     table, th, td { border: 1px solid var(--border-color); }
     th, td { padding: 12px 14px; text-align: left; font-size: 0.85rem; }
-    th { background-color: #f8fafc; color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px; }
+    th { background-color: #f8fafc; color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px; position: sticky; top: 0; z-index: 10; }
     tr:hover { background-color: #f8fafc; }
+
+    .dashboard-table-scroll {
+      max-height: 320px;
+      overflow-y: auto;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+    }
     
     .btn { display: inline-flex; align-items: center; justify-content: center; padding: 11px 22px; background: var(--primary); color: white; border: none; border-radius: 10px; cursor: pointer; text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: all 0.2s; box-shadow: 0 4px 12px rgba(99,102,241,0.25); }
     .btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
@@ -132,7 +139,7 @@
             </div>
           </div>
           <div id="reader" style="width: 100%; border-radius: 12px; overflow: hidden; background: #000; margin-top: 10px; min-height: 280px;"></div>
-          <p id="scan-status-text" style="margin-top: 16px; font-weight: 600; color: var(--primary);">Kamera Standby (Anti-Delay / Siap 2000 Siswa)</p>
+          <p id="scan-status-text" style="margin-top: 16px; font-weight: 600; color: var(--primary);">Kamera Standby (Zero-Delay / Siap 2000 Siswa)</p>
         </div>
         <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
           <div>
@@ -235,15 +242,51 @@
             <h2 style="font-size: 1.5rem; font-weight: 700; color: #0f172a;" id="dash-main-title">Dashboard</h2>
             <p style="color: var(--text-muted); font-size: 0.9rem;" id="dash-sub-title">Pusat kontrol data absensi sekolah.</p>
           </div>
+          
           <div class="stats-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 25px;">
             <div class="stat-card card" style="margin-bottom:0; height: 110px; display:flex; flex-direction:column; justify-content:space-between;"><span id="label-stat-1" style="color:var(--text-muted); font-size:0.85rem; font-weight:600;">TOTAL SISWA</span><h2 id="stat-total" style="font-size:1.8rem; font-weight:700;">0</h2></div>
             <div class="stat-card card" style="margin-bottom:0; height: 110px; display:flex; flex-direction:column; justify-content:space-between; border-left: 5px solid var(--accent);"><span style="color:var(--text-muted); font-size:0.85rem; font-weight:600;">HADIR TEPAT WAKTU</span><h2 id="stat-hadir" style="color: var(--accent); font-size:1.8rem; font-weight:700;">0</h2></div>
             <div class="stat-card card" style="margin-bottom:0; height: 110px; display:flex; flex-direction:column; justify-content:space-between; border-left: 5px solid var(--warning);"><span style="color:var(--text-muted); font-size:0.85rem; font-weight:600;">SISWA TELAT</span><h2 id="stat-telat" style="color: var(--warning); font-size:1.8rem; font-weight:700;">0</h2></div>
-            <div class="stat-card card" style="margin-bottom:0; height: 110px; display:flex; flex-direction:column; justify-content:space-between; border-left: 5px solid var(--primary);"><span style="color:var(--text-muted); font-size:0.85rem; font-weight:600;">BELUM ABSEN</span><h2 id="stat-belum" style="color: var(--primary); font-size:1.8rem; font-weight:700;">0</h2></div>
+            <div class="stat-card card" style="margin-bottom:0; height: 110px; display:flex; flex-direction:column; justify-content:space-between; border-left: 5px solid #0284c7;"><span style="color:var(--text-muted); font-size:0.85rem; font-weight:600;">IZIN / SAKIT</span><h2 id="stat-izinsakit" style="color: #0284c7; font-size:1.8rem; font-weight:700;">0</h2></div>
           </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
-            <div class="card"><h3 style="color: var(--accent); margin-bottom: 15px; font-size: 1.05rem; font-weight: 600;">✅ Siswa Hadir Tepat Waktu</h3><div id="tabel-hadir-container">Memuat...</div></div>
-            <div class="card"><h3 style="color: var(--warning); margin-bottom: 15px; font-size: 1.05rem; font-weight: 600;">⚠️ Siswa Telat Hari Ini</h3><div id="tabel-telat-container">Memuat...</div></div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+            <div class="card">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h3 style="color: var(--accent); font-size: 1.05rem; font-weight: 600;">✅ Hadir Tepat Waktu</h3>
+                <div>
+                  <label style="font-size: 0.75rem; font-weight: 600;">Show:</label>
+                  <select id="show-hadir-count" onchange="renderDashboardTables()" style="width: 75px; display: inline-block; margin:0; padding: 4px; font-size: 0.8rem;">
+                    <option value="5">5</option>
+                    <option value="10" selected>10</option>
+                    <option value="25">25</option>
+                    <option value="all">Semua</option>
+                  </select>
+                </div>
+              </div>
+              <div class="dashboard-table-scroll" id="tabel-hadir-container">Memuat...</div>
+            </div>
+
+            <div class="card">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h3 style="color: var(--warning); font-size: 1.05rem; font-weight: 600;">⚠️ Siswa Telat Hari Ini</h3>
+                <div>
+                  <label style="font-size: 0.75rem; font-weight: 600;">Show:</label>
+                  <select id="show-telat-count" onchange="renderDashboardTables()" style="width: 75px; display: inline-block; margin:0; padding: 4px; font-size: 0.8rem;">
+                    <option value="5">5</option>
+                    <option value="10" selected>10</option>
+                    <option value="25">25</option>
+                    <option value="all">Semua</option>
+                  </select>
+                </div>
+              </div>
+              <div class="dashboard-table-scroll" id="tabel-telat-container">Memuat...</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 style="color: #0284c7; margin-bottom: 12px; font-size: 1.05rem; font-weight: 600;">🏥 Rekap Siswa Izin / Sakit Hari Ini</h3>
+            <div class="dashboard-table-scroll" id="tabel-izinsakit-container">Memuat...</div>
           </div>
         </div>
 
@@ -448,11 +491,12 @@
 
     let html5QrCode = null;
     let globalSiswaData = JSON.parse(localStorage.getItem('cache_siswa') || '[]');
-    let globalGuruData = [];
+    let globalGuruData = JSON.parse(localStorage.getItem('cache_guru') || '[]');
     let filteredSiswaData = [];
-    let globalListHadir = [];
-    let globalListTelat = [];
-    let globalAbsenHariIni = [];
+    let globalListHadir = JSON.parse(localStorage.getItem('cache_hadir') || '[]');
+    let globalListTelat = JSON.parse(localStorage.getItem('cache_telat') || '[]');
+    let globalListIzinSakit = JSON.parse(localStorage.getItem('cache_izinsakit') || '[]');
+    let globalAbsenHariIni = [...globalListHadir, ...globalListTelat, ...globalListIzinSakit];
     let currentLimit = 10;
     let loggedInUser = JSON.parse(localStorage.getItem('admin_user_data') || '{"username":"admin","name":"Admin","role":"admin","classScope":""}');
 
@@ -467,13 +511,21 @@
         switchPage('scanner');
       }
       initStandbyCamera();
+      
+      if(globalSiswaData.length > 0) {
+        renderFastDashboardInstant();
+      }
       loadAdminDataBackground();
     });
 
     function switchPage(page) {
-      document.getElementById('wrapper-scanner-page').style.display = 'none';
-      document.getElementById('wrapper-login-page').style.display = 'none';
-      document.getElementById('wrapper-admin-page').style.display = 'none';
+      let scanPage = document.getElementById('wrapper-scanner-page');
+      let loginPage = document.getElementById('wrapper-login-page');
+      let adminPage = document.getElementById('wrapper-admin-page');
+
+      if(scanPage) scanPage.style.display = 'none';
+      if(loginPage) loginPage.style.display = 'none';
+      if(adminPage) adminPage.style.display = 'none';
 
       if (html5QrCode && html5QrCode.isScanning) {
         html5QrCode.stop().catch(() => {}).finally(() => { startCameraInit(page); });
@@ -484,12 +536,15 @@
 
     function startCameraInit(page) {
       if(page === 'scanner') {
-        document.getElementById('wrapper-scanner-page').style.display = 'block';
+        let scanPage = document.getElementById('wrapper-scanner-page');
+        if(scanPage) scanPage.style.display = 'block';
         initStandbyCamera();
       } else if(page === 'login') {
-        document.getElementById('wrapper-login-page').style.display = 'block';
+        let loginPage = document.getElementById('wrapper-login-page');
+        if(loginPage) loginPage.style.display = 'block';
       } else if(page === 'admin') {
-        document.getElementById('wrapper-admin-page').style.display = 'flex';
+        let adminPage = document.getElementById('wrapper-admin-page');
+        if(adminPage) adminPage.style.display = 'flex';
         applyRoleAccessUI();
         updateHeaderUserInfo();
         if(globalSiswaData.length > 0) renderFastDashboardInstant();
@@ -499,6 +554,8 @@
 
     function applyRoleAccessUI() {
       let menuContainer = document.getElementById('dynamic-sidebar-menu');
+      if(!menuContainer) return;
+
       if(loggedInUser.role === 'walikelas') {
         menuContainer.innerHTML = `
           <li><a onclick="switchAdminTab('admin-dash')" id="menu-admin-dash" class="active">📊 Dashboard</a></li>
@@ -572,7 +629,7 @@
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         osc.start();
-        osc.stop(audioCtx.currentTime + 0.2);
+        osc.stop(audioCtx.currentTime + 0.15);
       } catch(e) {}
     }
 
@@ -603,43 +660,39 @@
       initStandbyCamera(selectVal);
     }
 
-    // ZERO-DELAY (0 DETIK) & ASYNC QUEUE SUPAYA 2000 SISWA BISA SCAN TANPA ANTREAN
-    let isProcessingScan = false;
-    let lastScannedNIS = "";
+    let scannedCooldownMap = {};
 
     function onScanSuccess(decodedText) {
-      if(isProcessingScan || lastScannedNIS === decodedText.toString()) return;
-      
+      let nis = decodedText.toString().trim();
+      let currentTime = new Date().getTime();
+
+      if (scannedCooldownMap[nis] && (currentTime - scannedCooldownMap[nis] < 3000)) {
+        return;
+      }
+
       let hariIni = new Date().getDay();
       if (hariIni === 0 || hariIni === 6) {
-        document.getElementById('scan-status-text').innerHTML = `<span style="color: #ef4444; font-weight: bold;">⛔ SEKOLAH LIBUR! Absensi ditutup pada hari Sabtu & Minggu.</span>`;
+        let statusText = document.getElementById('scan-status-text');
+        if(statusText) statusText.innerHTML = `<span style="color: #ef4444; font-weight: bold;">⛔ SEKOLAH LIBUR! Absensi ditutup pada hari Sabtu & Minggu.</span>`;
         return;
       }
 
-      let sudahAbsenDiServer = globalAbsenHariIni.some(item => item.nis.toString() === decodedText.toString());
+      let sudahAbsenDiServer = globalAbsenHariIni.some(item => item.nis.toString() === nis);
 
       if(sudahAbsenDiServer) {
-        isProcessingScan = true;
-        lastScannedNIS = decodedText.toString();
+        scannedCooldownMap[nis] = currentTime;
         playBeepSound();
         let notifyBox = document.getElementById('notification-box');
-        notifyBox.innerHTML = `<span style="color: #d97706; font-weight: bold;">⚠️ Siswa NIS ${decodedText} SUDAH BERHASIL ABSEN sebelumnya!</span>`;
-        document.getElementById('scan-status-text').innerText = "Sudah Absen! Lanjut siswa berikutnya...";
-        
-        // Langsung buka kunci dalam 0,05 detik
-        setTimeout(() => { 
-          isProcessingScan = false; 
-          lastScannedNIS = "";
-        }, 50);
+        if(notifyBox) notifyBox.innerHTML = `<span style="color: #d97706; font-weight: bold;">⚠️ Siswa NIS ${nis} SUDAH BERHASIL ABSEN sebelumnya!</span>`;
+        let statusText = document.getElementById('scan-status-text');
+        if(statusText) statusText.innerText = "Sudah Absen! Lanjut siswa berikutnya...";
         return;
       }
 
-      // Kunci sesaat 0,05 detik untuk mencegah double-read fisik kamera
-      isProcessingScan = true;
-      lastScannedNIS = decodedText.toString();
+      scannedCooldownMap[nis] = currentTime;
       playBeepSound(); 
 
-      let foundSiswa = globalSiswaData.find(s => s.nis.toString() === decodedText.toString());
+      let foundSiswa = globalSiswaData.find(s => s.nis.toString() === nis);
       let namaSiswa = foundSiswa ? foundSiswa.nama : "Siswa SMK";
       let kelasSiswa = foundSiswa ? foundSiswa.kelas : "-";
 
@@ -650,33 +703,42 @@
       let limitMinutes = 7 * 60 + 30; // Default 07:30
       let statusKet = totalMinutes > limitMinutes ? "Telat" : "Hadir";
 
-      // 1. TAMPILKAN KE LAYAR SECARA INSTAN TANPA MENUNGGU JARINGAN
       let notifyBox = document.getElementById('notification-box');
-      notifyBox.innerHTML = `<span style="color: #065f46; font-weight: bold;">✅ ${namaSiswa} Berhasil Absen (${statusKet})</span>`;
-      document.getElementById('res-nis').innerText = decodedText;
-      document.getElementById('res-nama').innerText = namaSiswa;
-      document.getElementById('res-kelas').innerText = kelasSiswa;
-      document.getElementById('res-tanggal').innerText = now.toLocaleDateString('id-ID') + ' (' + now.toLocaleTimeString('id-ID') + ')';
-      let badge = document.getElementById('res-status');
-      badge.className = 'status-badge ' + (statusKet === 'Hadir' ? 'badge-hadir' : 'badge-telat');
-      badge.innerText = statusKet.toUpperCase();
-      document.getElementById('scan-status-text').innerText = "Kamera Standby (Anti-Delay / Siap 2000 Siswa)";
+      if(notifyBox) notifyBox.innerHTML = `<span style="color: #065f46; font-weight: bold;">✅ ${namaSiswa} Berhasil Absen (${statusKet})</span>`;
+      
+      let rNis = document.getElementById('res-nis');
+      let rNama = document.getElementById('res-nama');
+      let rKelas = document.getElementById('res-kelas');
+      let rTgl = document.getElementById('res-tanggal');
+      let rStatus = document.getElementById('res-status');
+      let statusText = document.getElementById('scan-status-text');
 
-      // 2. MASUKKAN KE CACHE LOKAL AGAR TERDETEKSI SUDAH ABSEN OLEH SISWA ITU SENDIRI
-      globalAbsenHariIni.push({ nis: decodedText.toString(), nama: namaSiswa, kelas: kelasSiswa, waktu: now.toLocaleTimeString('id-ID'), status: statusKet });
+      if(rNis) rNis.innerText = nis;
+      if(rNama) rNama.innerText = namaSiswa;
+      if(rKelas) rKelas.innerText = kelasSiswa;
+      if(rTgl) rTgl.innerText = now.toLocaleDateString('id-ID') + ' (' + now.toLocaleTimeString('id-ID') + ')';
+      if(rStatus) {
+        rStatus.className = 'status-badge ' + (statusKet === 'Hadir' ? 'badge-hadir' : 'badge-telat');
+        rStatus.innerText = statusKet.toUpperCase();
+      }
+      if(statusText) statusText.innerText = "Kamera Standby (Zero-Delay / Siap 2000 Siswa)";
 
-      // 3. KIRIM KE SPREADSHEET DI LATAR BELAKANG (BACKGROUND ASYNC) TANPA MEMBLOKIR SCANNER
-      fetch(`${SCRIPT_URL}?action=absen&nis=${decodedText}&status=${statusKet}`)
+      let newRecord = { nis: nis, nama: namaSiswa, kelas: kelasSiswa, waktu: now.toLocaleTimeString('id-ID'), status: statusKet };
+      globalAbsenHariIni.push(newRecord);
+      if(statusKet === 'Telat') {
+        globalListTelat.push(newRecord);
+        localStorage.setItem('cache_telat', JSON.stringify(globalListTelat));
+      } else {
+        globalListHadir.push(newRecord);
+        localStorage.setItem('cache_hadir', JSON.stringify(globalListHadir));
+      }
+      renderDashboardTables();
+
+      fetch(`${SCRIPT_URL}?action=absen&nis=${nis}&status=${statusKet}`)
         .then(res => res.json())
         .then(res => {
           loadAdminDataBackground();
         }).catch(() => {});
-
-      // 4. BUKA KUNCI SCANNER SEKETIKA (0,05 DETIK) SUPAYA SISWA BERIKUTNYA BISA LANGSUNG SCAN
-      setTimeout(() => { 
-        isProcessingScan = false; 
-        lastScannedNIS = "";
-      }, 50);
     }
 
     function handleLoginInstant(e) {
@@ -692,7 +754,8 @@
       } else if (u === 'budi' || p === 'wali123') {
         loggedInUser = { username: 'budi', name: 'Dwi Juliani, SKM', role: 'walikelas', classScope: 'X-AK-1' };
       } else {
-        document.getElementById('error-msg').innerText = "Username atau password salah!";
+        let errEl = document.getElementById('error-msg');
+        if(errEl) errEl.innerText = "Username atau password salah!";
         return;
       }
 
@@ -713,8 +776,23 @@
 
     function renderFastDashboardInstant() {
       let listSiswaScope = loggedInUser.role === 'walikelas' ? globalSiswaData.filter(s => s.kelas === loggedInUser.classScope) : globalSiswaData;
-      document.getElementById('stat-total').innerText = listSiswaScope.length;
-      document.getElementById('stat-belum').innerText = listSiswaScope.length;
+      let listHadirScope = loggedInUser.role === 'walikelas' ? globalListHadir.filter(h => h.kelas === loggedInUser.classScope) : globalListHadir;
+      let listTelatScope = loggedInUser.role === 'walikelas' ? globalListTelat.filter(t => t.kelas === loggedInUser.classScope) : globalListTelat;
+      let listIzinSakitScope = loggedInUser.role === 'walikelas' ? globalListIzinSakit.filter(i => i.kelas === loggedInUser.classScope) : globalListIzinSakit;
+
+      let sTotal = document.getElementById('stat-total');
+      let sHadir = document.getElementById('stat-hadir');
+      let sTelat = document.getElementById('stat-telat');
+      let sIzinSakit = document.getElementById('stat-izinsakit');
+      let sBelum = document.getElementById('stat-belum');
+
+      if(sTotal) sTotal.innerText = listSiswaScope.length;
+      if(sHadir) sHadir.innerText = listHadirScope.length;
+      if(sTelat) sTelat.innerText = listTelatScope.length;
+      if(sIzinSakit) sIzinSakit.innerText = listIzinSakitScope.length;
+      if(sBelum) sBelum.innerText = listSiswaScope.length - (listHadirScope.length + listTelatScope.length + listIzinSakitScope.length);
+
+      renderDashboardTables();
       renderTabelSiswa();
       setupPerwalianTabView();
     }
@@ -726,104 +804,82 @@
           globalSiswaData = data.listSiswa || [];
           globalGuruData = data.listGuru || [];
           localStorage.setItem('cache_siswa', JSON.stringify(globalSiswaData));
+          localStorage.setItem('cache_guru', JSON.stringify(globalGuruData));
           filteredSiswaData = loggedInUser.role === 'walikelas' ? globalSiswaData.filter(s => s.kelas === loggedInUser.classScope) : globalSiswaData;
-          globalListHadir = data.listHadir || [];
+          
+          let rawHadir = data.listHadir || [];
+          globalListHadir = rawHadir.filter(h => {
+            let s = h.status ? h.status.toString().trim() : "Hadir";
+            return s !== 'Izin' && s !== 'Sakit';
+          });
           globalListTelat = data.listTelat || [];
-          globalAbsenHariIni = [...globalListHadir, ...globalListTelat];
-          setupPerwalianTabView();
+          globalListIzinSakit = rawHadir.filter(h => {
+            let s = h.status ? h.status.toString().trim() : "";
+            return s === 'Izin' || s === 'Sakit';
+          });
+
+          localStorage.setItem('cache_hadir', JSON.stringify(globalListHadir));
+          localStorage.setItem('cache_telat', JSON.stringify(globalListTelat));
+          localStorage.setItem('cache_izinsakit', JSON.stringify(globalListIzinSakit));
+
+          globalAbsenHariIni = [...rawHadir, ...globalListTelat];
+          renderFastDashboardInstant();
         }).catch(() => {});
     }
 
     function loadAdminData() {
-      fetch(`${SCRIPT_URL}?action=admin_data`)
-        .then(res => res.json())
-        .then(data => {
-          globalSiswaData = data.listSiswa || [];
-          globalGuruData = data.listGuru || [];
-          localStorage.setItem('cache_siswa', JSON.stringify(globalSiswaData));
-          filteredSiswaData = loggedInUser.role === 'walikelas' ? globalSiswaData.filter(s => s.kelas === loggedInUser.classScope) : globalSiswaData;
-          globalListHadir = data.listHadir || [];
-          globalListTelat = data.listTelat || [];
-          globalAbsenHariIni = [...globalListHadir, ...globalListTelat];
-          
-          let listSiswaScope = loggedInUser.role === 'walikelas' ? globalSiswaData.filter(s => s.kelas === loggedInUser.classScope) : globalSiswaData;
-          let listHadirScope = loggedInUser.role === 'walikelas' ? globalListHadir.filter(h => h.kelas === loggedInUser.classScope) : globalListHadir;
-          let listTelatScope = loggedInUser.role === 'walikelas' ? globalListTelat.filter(t => t.kelas === loggedInUser.classScope) : globalListTelat;
+      loadAdminDataBackground();
+    }
 
-          document.getElementById('stat-total').innerText = listSiswaScope.length;
-          document.getElementById('stat-hadir').innerText = listHadirScope.length;
-          document.getElementById('stat-telat').innerText = listTelatScope.length;
-          document.getElementById('stat-belum').innerText = listSiswaScope.length - (listHadirScope.length + listTelatScope.length);
+    function renderDashboardTables() {
+      let listHadirScope = loggedInUser.role === 'walikelas' ? globalListHadir.filter(h => h.kelas === loggedInUser.classScope) : globalListHadir;
+      let listTelatScope = loggedInUser.role === 'walikelas' ? globalListTelat.filter(t => t.kelas === loggedInUser.classScope) : globalListTelat;
+      let listIzinSakitScope = loggedInUser.role === 'walikelas' ? globalListIzinSakit.filter(i => i.kelas === loggedInUser.classScope) : globalListIzinSakit;
 
-          let htmlH = `<table><tr><th>NIS</th><th>Nama</th><th>Kelas</th><th>Jam</th></tr>`;
-          if(listHadirScope.length === 0) {
-            htmlH += `<tr><td colspan="4" style="text-align:center; color:#64748b;">Belum ada yang hadir</td></tr>`;
-          } else {
-            listHadirScope.forEach(h => htmlH += `<tr><td>${h.nis}</td><td>${h.nama}</td><td>${h.kelas}</td><td>${h.waktu}</td></tr>`);
-          }
-          htmlH += `</table>`;
-          let containerHadir = document.getElementById('tabel-hadir-container');
-          if(containerHadir) containerHadir.innerHTML = htmlH;
+      let showHadirVal = document.getElementById('show-hadir-count') ? document.getElementById('show-hadir-count').value : '10';
+      let showTelatVal = document.getElementById('show-telat-count') ? document.getElementById('show-telat-count').value : '10';
 
-          let htmlT = `<table><tr><th>NIS</th><th>Nama</th><th>Kelas</th><th>Jam</th></tr>`;
-          if(listTelatScope.length === 0) {
-            htmlT += `<tr><td colspan="4" style="text-align:center; color:#64748b;">Tidak ada yang telat</td></tr>`;
-          } else {
-            listTelatScope.forEach(t => htmlT += `<tr><td>${t.nis}</td><td>${t.nama}</td><td>${t.kelas}</td><td>${t.waktu}</td></tr>`);
-          }
-          htmlT += `</table>`;
-          let containerTelat = document.getElementById('tabel-telat-container');
-          if(containerTelat) containerTelat.innerHTML = htmlT;
+      let limitHadir = showHadirVal === 'all' ? listHadirScope.length : parseInt(showHadirVal);
+      let limitTelat = showTelatVal === 'all' ? listTelatScope.length : parseInt(showTelatVal);
 
-          let kelasSet = [...new Set(globalSiswaData.map(s => s.kelas))].sort();
-          let selectFilter = document.getElementById('filter-kelas');
-          let filterWrap = document.getElementById('filter-kelas-wrapper');
-          if(loggedInUser.role === 'walikelas') {
-            if(filterWrap) filterWrap.style.display = 'none';
-          } else {
-            if(filterWrap) filterWrap.style.display = 'block';
-            selectFilter.innerHTML = '<option value="">-- Semua Kelas --</option>';
-            kelasSet.forEach(kls => selectFilter.innerHTML += `<option value="${kls}">${kls}</option>`);
-          }
+      let subHadir = listHadirScope.slice(0, limitHadir);
+      let subTelat = listTelatScope.slice(0, limitTelat);
 
-          let selectLapKelas = document.getElementById('lap-filter-kelas');
-          if(selectLapKelas) {
-            selectLapKelas.innerHTML = '<option value="">Semua Kelas</option>';
-            kelasSet.forEach(kls => selectLapKelas.innerHTML += `<option value="${kls}">${kls}</option>`);
-          }
+      // Render Tabel Hadir
+      let htmlH = `<table><tr><th>NIS</th><th>Nama</th><th>Kelas</th><th>Jam</th></tr>`;
+      if(subHadir.length === 0) {
+        htmlH += `<tr><td colspan="4" style="text-align:center; color:#64748b;">Belum ada yang hadir tepat waktu</td></tr>`;
+      } else {
+        subHadir.forEach(h => htmlH += `<tr><td>${h.nis}</td><td>${h.nama}</td><td>${h.kelas}</td><td>${h.waktu}</td></tr>`);
+      }
+      htmlH += `</table>`;
+      let elH = document.getElementById('tabel-hadir-container');
+      if(elH) elH.innerHTML = htmlH;
 
-          let selectCetak = document.getElementById('cetak-kelas');
-          if(selectCetak) {
-            selectCetak.innerHTML = '<option value="">-- Pilih Kelas --</option>';
-            if(loggedInUser.role === 'walikelas') {
-              selectCetak.innerHTML = `<option value="${loggedInUser.classScope}">${loggedInUser.classScope}</option>`;
-              selectCetak.value = loggedInUser.classScope;
-              selectCetak.disabled = true;
-              generateQrPreview();
-            } else {
-              kelasSet.forEach(kls => selectCetak.innerHTML += `<option value="${kls}">${kls}</option>`);
-              selectCetak.disabled = false;
-            }
-          }
+      // Render Tabel Telat
+      let htmlT = `<table><tr><th>NIS</th><th>Nama</th><th>Kelas</th><th>Jam</th></tr>`;
+      if(subTelat.length === 0) {
+        htmlT += `<tr><td colspan="4" style="text-align:center; color:#64748b;">Tidak ada siswa telat</td></tr>`;
+      } else {
+        subTelat.forEach(t => htmlT += `<tr><td>${t.nis}</td><td>${t.nama}</td><td>${t.kelas}</td><td>${t.waktu}</td></tr>`);
+      }
+      htmlT += `</table>`;
+      let elT = document.getElementById('tabel-telat-container');
+      if(elT) elT.innerHTML = htmlT;
 
-          let selectRekap = document.getElementById('rekap-excel-kelas');
-          if(selectRekap) {
-            selectRekap.innerHTML = '<option value="">-- Pilih Kelas --</option>';
-            if(loggedInUser.role === 'walikelas') {
-              selectRekap.innerHTML = `<option value="${loggedInUser.classScope}">${loggedInUser.classScope}</option>`;
-              selectRekap.value = loggedInUser.classScope;
-              selectRekap.disabled = true;
-            } else {
-              kelasSet.forEach(kls => selectRekap.innerHTML += `<option value="${kls}">${kls}</option>`);
-              selectRekap.disabled = false;
-            }
-          }
-
-          setupPerwalianTabView();
-          renderTabelSiswa();
-          renderManajemenKelasTable();
-          renderGuruTable();
+      // Render Tabel Izin / Sakit
+      let htmlI = `<table><tr><th>NIS</th><th>Nama</th><th>Kelas</th><th>Status</th><th>Jam / Keterangan</th></tr>`;
+      if(listIzinSakitScope.length === 0) {
+        htmlI += `<tr><td colspan="5" style="text-align:center; color:#64748b;">Tidak ada siswa izin atau sakit hari ini</td></tr>`;
+      } else {
+        listIzinSakitScope.forEach(i => {
+          let badgeSt = i.status === 'Sakit' ? 'badge-sakit' : 'badge-izin';
+          htmlI += `<tr><td>${i.nis}</td><td>${i.nama}</td><td>${i.kelas}</td><td><span class="status-badge ${badgeSt}">${i.status}</span></td><td>${i.waktu}</td></tr>`;
         });
+      }
+      htmlI += `</table>`;
+      let elI = document.getElementById('tabel-izinsakit-container');
+      if(elI) elI.innerHTML = htmlI;
     }
 
     function renderGuruTable() {
@@ -959,10 +1015,12 @@
     }
 
     function openTambahGuruModal() {
-      document.getElementById('modal-tambah-guru').style.display = 'flex';
+      let modal = document.getElementById('modal-tambah-guru');
+      if(modal) modal.style.display = 'flex';
     }
     function closeTambahGuruModal() {
-      document.getElementById('modal-tambah-guru').style.display = 'none';
+      let modal = document.getElementById('modal-tambah-guru');
+      if(modal) modal.style.display = 'none';
     }
     function submitTambahGuru(e) {
       e.preventDefault();
@@ -1006,34 +1064,57 @@
 
       let siswaKelas = globalSiswaData.filter(s => s.kelas === kelasVal);
       let now = new Date();
-      let daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      let year = now.getFullYear();
+      let month = now.getMonth();
+      let daysInMonth = new Date(year, month + 1, 0).getDate();
 
-      let html = `<table><thead><tr><th>NO</th><th>NAMA SISWA</th>`;
-      for(let i=1; i<=daysInMonth; i++) html += `<th>${i}</th>`;
+      let html = `<table><thead>`;
+      // Baris Judul Tanggal di atas angka 1-31
+      html += `<tr><th colspan="4" style="text-align:center; background:#f1f5f9;">DATA SISWA</th>`;
+      html += `<th colspan="${daysInMonth}" style="text-align:center; background:#e2e8f0; color:#0f172a; font-weight:700;">TANGGAL (1 s.d. ${daysInMonth})</th>`;
+      html += `<th colspan="5" style="text-align:center; background:#f1f5f9;">REKAP</th></tr>`;
+
+      html += `<tr><th>NO</th><th>NAMA SISWA</th><th>NIS</th><th>KELAS</th>`;
+      for(let i=1; i<=daysInMonth; i++) {
+        let d = new Date(year, month, i);
+        let dayOfWeek = d.getDay();
+        let isLibur = (dayOfWeek === 0 || dayOfWeek === 6);
+        html += `<th style="${isLibur ? 'background:#fee2e2; color:#991b1b;' : ''}">${i}</th>`;
+      }
       html += `<th>H</th><th>T</th><th>S</th><th>I</th><th>%</th></tr></thead><tbody>`;
 
       if(siswaKelas.length === 0) {
-        html += `<tr><td colspan="${daysInMonth + 8}" style="text-align:center;">Tidak ada data siswa.</td></tr>`;
+        html += `<tr><td colspan="${daysInMonth + 9}" style="text-align:center;">Tidak ada data siswa.</td></tr>`;
       } else {
         siswaKelas.forEach((s, idx) => {
-          html += `<tr><td>${idx + 1}</td><td style="font-weight:600; white-space:nowrap;">${s.nama}</td>`;
+          html += `<tr><td>${idx + 1}</td><td style="font-weight:600; white-space:nowrap;">${s.nama}</td><td>${s.nis}</td><td>${s.kelas}</td>`;
           
           let countH = 0, countT = 0, countS = 0, countI = 0;
 
           for(let i=1; i<=daysInMonth; i++) {
-            let recordHariIni = globalAbsenHariIni.find(a => a.nis.toString() === s.nis.toString());
+            let d = new Date(year, month, i);
+            let dayOfWeek = d.getDay();
+            let isLibur = (dayOfWeek === 0 || dayOfWeek === 6);
+
             let cellText = "-";
             let cellColor = "#94a3b8";
 
-            let todayDateNum = new Date().getDate();
-            if(i === todayDateNum && recordHariIni) {
-              if(recordHariIni.status === 'Hadir') { cellText = "H"; cellColor = "#10b981"; countH++; }
-              else if(recordHariIni.status === 'Telat') { cellText = "T"; cellColor = "#f59e0b"; countT++; }
-              else if(recordHariIni.status === 'Sakit') { cellText = "S"; cellColor = "#a855f7"; countS++; }
-              else if(recordHariIni.status === 'Izin') { cellText = "I"; cellColor = "#0284c7"; countI++; }
+            if (isLibur) {
+              cellText = "L";
+              cellColor = "#ef4444";
+            } else {
+              let record = globalAbsenHariIni.find(a => a.nis.toString() === s.nis.toString());
+              let todayNum = new Date().getDate();
+
+              if(i === todayNum && record) {
+                if(record.status === 'Hadir') { cellText = "H"; cellColor = "#10b981"; countH++; }
+                else if(record.status === 'Telat') { cellText = "T"; cellColor = "#f59e0b"; countT++; }
+                else if(record.status === 'Sakit') { cellText = "S"; cellColor = "#a855f7"; countS++; }
+                else if(record.status === 'Izin') { cellText = "I"; cellColor = "#0284c7"; countI++; }
+              }
             }
 
-            html += `<td style="text-align:center; font-weight:600; color:${cellColor};">${cellText}</td>`;
+            html += `<td style="text-align:center; font-weight:600; color:${cellColor}; ${isLibur ? 'background:#fef2f2;' : ''}">${cellText}</td>`;
           }
 
           let totalHadirTelat = countH + countT;
@@ -1049,7 +1130,68 @@
         });
       }
       html += `</tbody></table>`;
-      document.getElementById('web-matrix-container').innerHTML = html;
+      let elMatrix = document.getElementById('web-matrix-container');
+      if(elMatrix) elMatrix.innerHTML = html;
+    }
+
+    function downloadExcelMatrix() {
+      let kelasVal = loggedInUser.role === 'walikelas' ? loggedInUser.classScope : document.getElementById('rekap-excel-kelas').value;
+      if(!kelasVal) { alert("Pilih kelas terlebih dahulu!"); return; }
+
+      let siswaKelas = globalSiswaData.filter(s => s.kelas === kelasVal);
+      let now = new Date();
+      let year = now.getFullYear();
+      let month = now.getMonth();
+      let daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      let wbData = [];
+      
+      // Baris 1: Judul Keterangan Tanggal di atas angka 1-31
+      let titleRow = ["REKAPITULASI KEHADIRAN BULANAN - KELAS " + kelasVal, "", "", "TANGGAL:"];
+      for(let i=1; i<=daysInMonth; i++) titleRow.push("");
+      wbData.push(titleRow);
+
+      // Baris 2: Header Kolom
+      let headerRow = ["No.", "NIS", "Nama Siswa", "Kelas"];
+      for(let i=1; i<=daysInMonth; i++) headerRow.push(i);
+      headerRow.push("Hadir (H)", "Telat (T)", "S", "I", "Total %");
+      wbData.push(headerRow);
+
+      siswaKelas.forEach((s, idx) => {
+        let row = [idx + 1, s.nis, s.nama, s.kelas];
+        let countH = 0, countT = 0, countS = 0, countI = 0;
+
+        for(let i=1; i<=daysInMonth; i++) {
+          let d = new Date(year, month, i);
+          let dayOfWeek = d.getDay();
+          let isLibur = (dayOfWeek === 0 || dayOfWeek === 6);
+
+          if (isLibur) {
+            row.push("L");
+          } else {
+            let record = globalAbsenHariIni.find(a => a.nis.toString() === s.nis.toString());
+            let todayNum = new Date().getDate();
+            let val = "-";
+            if(i === todayNum && record) {
+              if(record.status === 'Hadir') { val = "H"; countH++; }
+              else if(record.status === 'Telat') { val = "T"; countT++; }
+              else if(record.status === 'Sakit') { val = "S"; countS++; }
+              else if(record.status === 'Izin') { val = "I"; countI++; }
+            }
+            row.push(val);
+          }
+        }
+        let totalHadirTelat = countH + countT;
+        let persentase = Math.round((totalHadirTelat / daysInMonth) * 100) + "%";
+        
+        row.push(countH, countT, countS, countI, persentase);
+        wbData.push(row);
+      });
+
+      let ws = XLSX.utils.aoa_to_sheet(wbData);
+      let wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, `Rekap_${kelasVal.replace(/\s+/g, '_')}`);
+      XLSX.writeFile(wb, `Rekap_Bulanan_${kelasVal.replace(/\s+/g, '_')}.xlsx`);
     }
 
     function cariLaporanAbsen() {
@@ -1059,7 +1201,7 @@
 
       if(!tglMulai || !tglSelesai) { alert("Pilih rentang tanggal!"); return; }
 
-      let combined = [...globalListHadir, ...globalListTelat];
+      let combined = [...globalListHadir, ...globalListTelat, ...globalListIzinSakit];
       if(kls) combined = combined.filter(item => item.kelas === kls);
 
       let html = `<table><tr><th>Tanggal / Jam</th><th>NIS</th><th>Nama Siswa</th><th>Kelas</th><th>Status</th></tr>`;
@@ -1067,16 +1209,17 @@
         html += `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Tidak ada data absensi.</td></tr>`;
       } else {
         combined.forEach(item => {
-          let badge = item.status === 'Hadir' ? 'badge-hadir' : 'badge-telat';
+          let badge = item.status === 'Hadir' ? 'badge-hadir' : (item.status === 'Telat' ? 'badge-telat' : (item.status === 'Sakit' ? 'badge-sakit' : 'badge-izin'));
           html += `<tr><td>${item.waktu}</td><td>${item.nis}</td><td>${item.nama}</td><td>${item.kelas}</td><td><span class="status-badge ${badge}">${item.status}</span></td></tr>`;
         });
       }
       html += `</table>`;
-      document.getElementById('laporan-hasil-container').innerHTML = html;
+      let elLap = document.getElementById('laporan-hasil-container');
+      if(elLap) elLap.innerHTML = html;
     }
 
     function exportLaporanExcel() {
-      let combined = [...globalListHadir, ...globalListTelat];
+      let combined = [...globalListHadir, ...globalListTelat, ...globalListIzinSakit];
       let ws = XLSX.utils.json_to_sheet(combined);
       let wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Laporan Kehadiran");
@@ -1126,8 +1269,10 @@
         displayList.forEach(s => html += `<tr><td>${s.nis}</td><td>${s.nama}</td><td>${s.kelas}</td><td>${s.wali}</td></tr>`);
       }
       html += `</table>`;
-      document.getElementById('tabel-siswa-area').innerHTML = html;
-      document.getElementById('pagination-info').innerText = totalData === 0 ? "Menampilkan 0 dari 0 data" : `Menampilkan 1 sampai ${displayList.length} dari ${totalData} data siswa`;
+      let el = document.getElementById('tabel-siswa-area');
+      if(el) el.innerHTML = html;
+      let pInfo = document.getElementById('pagination-info');
+      if(pInfo) pInfo.innerText = totalData === 0 ? "Menampilkan 0 dari 0 data" : `Menampilkan 1 sampai ${displayList.length} dari ${totalData} data siswa`;
     }
 
     function filterSiswaByKelas() {
@@ -1239,33 +1384,6 @@
 
       btn.innerText = "📦 Download All Kartu (ZIP HD)";
       btn.disabled = false;
-    }
-
-    function downloadExcelMatrix() {
-      let kelasVal = loggedInUser.role === 'walikelas' ? loggedInUser.classScope : document.getElementById('rekap-excel-kelas').value;
-      if(!kelasVal) { alert("Pilih kelas terlebih dahulu!"); return; }
-
-      let siswaKelas = globalSiswaData.filter(s => s.kelas === kelasVal);
-      let now = new Date();
-      let daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-
-      let wbData = [];
-      let headerRow = ["No.", "NIS", "Nama Siswa", "L/P"];
-      for(let i=1; i<=daysInMonth; i++) headerRow.push(i);
-      headerRow.push("Hadir (H)", "Telat (T)", "S", "I", "A");
-      wbData.push(headerRow);
-
-      siswaKelas.forEach((s, idx) => {
-        let row = [idx + 1, s.nis, s.nama, "P"];
-        for(let i=1; i<=daysInMonth; i++) row.push(""); 
-        row.push(0, 0, 0, 0, 0); 
-        wbData.push(row);
-      });
-
-      let ws = XLSX.utils.aoa_to_sheet(wbData);
-      let wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, `Rekap_${kelasVal.replace(/\s+/g, '_')}`);
-      XLSX.writeFile(wb, `Rekap_Bulanan_${kelasVal.replace(/\s+/g, '_')}.xlsx`);
     }
   </script>
 </body>
