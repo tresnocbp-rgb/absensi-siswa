@@ -792,10 +792,10 @@
       if(sIzinSakit) sIzinSakit.innerText = listIzinSakitScope.length;
       if(sBelum) sBelum.innerText = listSiswaScope.length - (listHadirScope.length + listTelatScope.length + listIzinSakitScope.length);
 
-      // Populate Dropdown Kelas Rekap Bulanan
+      // Populate Dropdown Kelas Rekap Bulanan & Filter Lainnya
       let kelasSet = [...new Set(globalSiswaData.map(s => s.kelas))].sort();
       let selectRekap = document.getElementById('rekap-excel-kelas');
-      if(selectRekap && selectRekap.options.length <= 1) {
+      if(selectRekap) {
         selectRekap.innerHTML = '<option value="">-- Pilih Kelas --</option>';
         if(loggedInUser.role === 'walikelas') {
           selectRekap.innerHTML = `<option value="${loggedInUser.classScope}">${loggedInUser.classScope}</option>`;
@@ -804,6 +804,38 @@
         } else {
           kelasSet.forEach(kls => selectRekap.innerHTML += `<option value="${kls}">${kls}</option>`);
           selectRekap.disabled = false;
+        }
+      }
+
+      let selectFilter = document.getElementById('filter-kelas');
+      let filterWrap = document.getElementById('filter-kelas-wrapper');
+      if(loggedInUser.role === 'walikelas') {
+        if(filterWrap) filterWrap.style.display = 'none';
+      } else {
+        if(filterWrap) filterWrap.style.display = 'block';
+        if(selectFilter && selectFilter.options.length <= 1) {
+          selectFilter.innerHTML = '<option value="">-- Semua Kelas --</option>';
+          kelasSet.forEach(kls => selectFilter.innerHTML += `<option value="${kls}">${kls}</option>`);
+        }
+      }
+
+      let selectLapKelas = document.getElementById('lap-filter-kelas');
+      if(selectLapKelas && selectLapKelas.options.length <= 1) {
+        selectLapKelas.innerHTML = '<option value="">Semua Kelas</option>';
+        kelasSet.forEach(kls => selectLapKelas.innerHTML += `<option value="${kls}">${kls}</option>`);
+      }
+
+      let selectCetak = document.getElementById('cetak-kelas');
+      if(selectCetak && selectCetak.options.length <= 1) {
+        selectCetak.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+        if(loggedInUser.role === 'walikelas') {
+          selectCetak.innerHTML = `<option value="${loggedInUser.classScope}">${loggedInUser.classScope}</option>`;
+          selectCetak.value = loggedInUser.classScope;
+          selectCetak.disabled = true;
+          generateQrPreview();
+        } else {
+          kelasSet.forEach(kls => selectCetak.innerHTML += `<option value="${kls}">${kls}</option>`);
+          selectCetak.disabled = false;
         }
       }
 
@@ -1117,16 +1149,15 @@
               cellText = "L";
               cellColor = "#ef4444";
             } else {
-              // Cocokkan dengan data absen hari ini atau riwayat
               let record = globalAbsenHariIni.find(a => a.nis.toString() === s.nis.toString());
-              
-              // Cek tanggal hari ini (jika tanggal iterasi sama dengan tanggal sekarang)
               let todayNum = new Date().getDate();
+
               if(i === todayNum && record) {
-                if(record.status === 'Hadir') { cellText = "H"; cellColor = "#10b981"; countH++; }
-                else if(record.status === 'Telat') { cellText = "T"; cellColor = "#f59e0b"; countT++; }
-                else if(record.status === 'Sakit') { cellText = "S"; cellColor = "#a855f7"; countS++; }
-                else if(record.status === 'Izin') { cellText = "I"; cellColor = "#0284c7"; countI++; }
+                let st = record.status ? record.status.toString().trim() : "";
+                if(st === 'Hadir') { cellText = "H"; cellColor = "#10b981"; countH++; }
+                else if(st === 'Telat') { cellText = "T"; cellColor = "#f59e0b"; countT++; }
+                else if(st === 'Sakit') { cellText = "S"; cellColor = "#a855f7"; countS++; }
+                else if(st === 'Izin') { cellText = "I"; cellColor = "#0284c7"; countI++; }
               }
             }
 
@@ -1187,10 +1218,11 @@
             let todayNum = new Date().getDate();
             let val = "-";
             if(i === todayNum && record) {
-              if(record.status === 'Hadir') { val = "H"; countH++; }
-              else if(record.status === 'Telat') { val = "T"; countT++; }
-              else if(record.status === 'Sakit') { val = "S"; countS++; }
-              else if(record.status === 'Izin') { val = "I"; countI++; }
+              let st = record.status ? record.status.toString().trim() : "";
+              if(st === 'Hadir') { val = "H"; countH++; }
+              else if(st === 'Telat') { val = "T"; countT++; }
+              else if(st === 'Sakit') { val = "S"; countS++; }
+              else if(st === 'Izin') { val = "I"; countI++; }
             }
             row.push(val);
           }
