@@ -792,6 +792,21 @@
       if(sIzinSakit) sIzinSakit.innerText = listIzinSakitScope.length;
       if(sBelum) sBelum.innerText = listSiswaScope.length - (listHadirScope.length + listTelatScope.length + listIzinSakitScope.length);
 
+      // Populate Dropdown Kelas Rekap Bulanan
+      let kelasSet = [...new Set(globalSiswaData.map(s => s.kelas))].sort();
+      let selectRekap = document.getElementById('rekap-excel-kelas');
+      if(selectRekap && selectRekap.options.length <= 1) {
+        selectRekap.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+        if(loggedInUser.role === 'walikelas') {
+          selectRekap.innerHTML = `<option value="${loggedInUser.classScope}">${loggedInUser.classScope}</option>`;
+          selectRekap.value = loggedInUser.classScope;
+          selectRekap.disabled = true;
+        } else {
+          kelasSet.forEach(kls => selectRekap.innerHTML += `<option value="${kls}">${kls}</option>`);
+          selectRekap.disabled = false;
+        }
+      }
+
       renderDashboardTables();
       renderTabelSiswa();
       setupPerwalianTabView();
@@ -1069,7 +1084,6 @@
       let daysInMonth = new Date(year, month + 1, 0).getDate();
 
       let html = `<table><thead>`;
-      // Baris Judul Tanggal di atas angka 1-31
       html += `<tr><th colspan="4" style="text-align:center; background:#f1f5f9;">DATA SISWA</th>`;
       html += `<th colspan="${daysInMonth}" style="text-align:center; background:#e2e8f0; color:#0f172a; font-weight:700;">TANGGAL (1 s.d. ${daysInMonth})</th>`;
       html += `<th colspan="5" style="text-align:center; background:#f1f5f9;">REKAP</th></tr>`;
@@ -1103,9 +1117,11 @@
               cellText = "L";
               cellColor = "#ef4444";
             } else {
+              // Cocokkan dengan data absen hari ini atau riwayat
               let record = globalAbsenHariIni.find(a => a.nis.toString() === s.nis.toString());
+              
+              // Cek tanggal hari ini (jika tanggal iterasi sama dengan tanggal sekarang)
               let todayNum = new Date().getDate();
-
               if(i === todayNum && record) {
                 if(record.status === 'Hadir') { cellText = "H"; cellColor = "#10b981"; countH++; }
                 else if(record.status === 'Telat') { cellText = "T"; cellColor = "#f59e0b"; countT++; }
@@ -1146,12 +1162,10 @@
 
       let wbData = [];
       
-      // Baris 1: Judul Keterangan Tanggal di atas angka 1-31
       let titleRow = ["REKAPITULASI KEHADIRAN BULANAN - KELAS " + kelasVal, "", "", "TANGGAL:"];
       for(let i=1; i<=daysInMonth; i++) titleRow.push("");
       wbData.push(titleRow);
 
-      // Baris 2: Header Kolom
       let headerRow = ["No.", "NIS", "Nama Siswa", "Kelas"];
       for(let i=1; i<=daysInMonth; i++) headerRow.push(i);
       headerRow.push("Hadir (H)", "Telat (T)", "S", "I", "Total %");
