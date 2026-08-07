@@ -792,7 +792,7 @@
       if(sIzinSakit) sIzinSakit.innerText = listIzinSakitScope.length;
       if(sBelum) sBelum.innerText = listSiswaScope.length - (listHadirScope.length + listTelatScope.length + listIzinSakitScope.length);
 
-      // Populate Dropdown Kelas Rekap Bulanan & Filter Lainnya
+      // Populate Dropdown Kelas Rekap Bulanan
       let kelasSet = [...new Set(globalSiswaData.map(s => s.kelas))].sort();
       let selectRekap = document.getElementById('rekap-excel-kelas');
       if(selectRekap) {
@@ -1114,20 +1114,34 @@
       let year = now.getFullYear();
       let month = now.getMonth();
       let daysInMonth = new Date(year, month + 1, 0).getDate();
+      const hariArr = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
 
       let html = `<table><thead>`;
+      
+      // Baris 1: Judul Kategori Kolom Tanggal
       html += `<tr><th colspan="4" style="text-align:center; background:#f1f5f9;">DATA SISWA</th>`;
       html += `<th colspan="${daysInMonth}" style="text-align:center; background:#e2e8f0; color:#0f172a; font-weight:700;">TANGGAL (1 s.d. ${daysInMonth})</th>`;
       html += `<th colspan="5" style="text-align:center; background:#f1f5f9;">REKAP</th></tr>`;
 
+      // Baris 2: Nama Hari (Min, Sen, Sel, dst)
       html += `<tr><th>NO</th><th>NAMA SISWA</th><th>NIS</th><th>KELAS</th>`;
       for(let i=1; i<=daysInMonth; i++) {
         let d = new Date(year, month, i);
         let dayOfWeek = d.getDay();
         let isLibur = (dayOfWeek === 0 || dayOfWeek === 6);
-        html += `<th style="${isLibur ? 'background:#fee2e2; color:#991b1b;' : ''}">${i}</th>`;
+        html += `<th style="text-align:center; font-size:0.65rem; ${isLibur ? 'background:#fee2e2; color:#991b1b;' : 'color:#64748b;'}">${hariArr[dayOfWeek]}</th>`;
       }
-      html += `<th>H</th><th>T</th><th>S</th><th>I</th><th>%</th></tr></thead><tbody>`;
+      html += `<th>H</th><th>T</th><th>S</th><th>I</th><th>%</th></tr>`;
+
+      // Baris 3: Angka Tanggal (1 s.d. 31)
+      html += `<tr><th></th><th></th><th></th><th></th>`;
+      for(let i=1; i<=daysInMonth; i++) {
+        let d = new Date(year, month, i);
+        let dayOfWeek = d.getDay();
+        let isLibur = (dayOfWeek === 0 || dayOfWeek === 6);
+        html += `<th style="text-align:center; ${isLibur ? 'background:#fee2e2; color:#991b1b;' : ''}">${i}</th>`;
+      }
+      html += `<th></th><th></th><th></th><th></th><th></th></tr></thead><tbody>`;
 
       if(siswaKelas.length === 0) {
         html += `<tr><td colspan="${daysInMonth + 9}" style="text-align:center;">Tidak ada data siswa.</td></tr>`;
@@ -1190,13 +1204,19 @@
       let year = now.getFullYear();
       let month = now.getMonth();
       let daysInMonth = new Date(year, month + 1, 0).getDate();
+      const hariArr = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
 
       let wbData = [];
       
-      let titleRow = ["REKAPITULASI KEHADIRAN BULANAN - KELAS " + kelasVal, "", "", "TANGGAL:"];
-      for(let i=1; i<=daysInMonth; i++) titleRow.push("");
-      wbData.push(titleRow);
+      // Baris 1: Hari (Min, Sen, Sel, dst)
+      let dayRow = ["", "", "", "HARI:"];
+      for(let i=1; i<=daysInMonth; i++) {
+        let d = new Date(year, month, i);
+        dayRow.push(hariArr[d.getDay()]);
+      }
+      wbData.push(dayRow);
 
+      // Baris 2: Tanggal (1 s.d. 31)
       let headerRow = ["No.", "NIS", "Nama Siswa", "Kelas"];
       for(let i=1; i<=daysInMonth; i++) headerRow.push(i);
       headerRow.push("Hadir (H)", "Telat (T)", "S", "I", "Total %");
@@ -1235,6 +1255,10 @@
       });
 
       let ws = XLSX.utils.aoa_to_sheet(wbData);
+
+      // Konfigurasi Merge Cells (Menggabungkan baris hari libur / Sabtu & Minggu jika bersebelahan atau per baris)
+      if(!ws['!merges']) ws['!merges'] = [];
+      
       let wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, `Rekap_${kelasVal.replace(/\s+/g, '_')}`);
       XLSX.writeFile(wb, `Rekap_Bulanan_${kelasVal.replace(/\s+/g, '_')}.xlsx`);
