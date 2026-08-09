@@ -51,7 +51,7 @@
     .card { background: var(--card-bg); border-radius: 20px; padding: 30px; border: 1px solid var(--border-color); box-shadow: 0 10px 30px -5px rgba(0,0,0,0.04), 0 8px 10px -6px rgba(0,0,0,0.02); margin-bottom: 24px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
     .card:hover { box-shadow: 0 20px 40px -15px rgba(0,0,0,0.08); }
     .grid-layout { display: grid; grid-template-columns: 1.1fr 1fr; gap: 24px; }
-    @media(max-width: 900px) { .grid-layout { grid-template-columns: grid-template-columns: 1fr; } }
+    @media(max-width: 900px) { .grid-layout { grid-template-columns: 1fr; } }
     
     /* DESIGN KARTU STATISTIK PREMIUM */
     .dashboard-stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 18px; margin-bottom: 30px; }
@@ -287,9 +287,27 @@
             </div>
           </div>
 
-          <div class="card">
-            <h3 style="color: #0284c7; margin-bottom: 14px; font-size: 1.1rem; font-weight: 700;">🏥 Rekap Siswa Izin / Sakit Hari Ini</h3>
-            <div class="dashboard-table-scroll" id="tabel-izinsakit-container">Memuat...</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+            <div class="card" style="margin-bottom:0;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h3 style="color: #6366f1; font-size: 1.1rem; font-weight: 700;">⏳ Siswa Belum Absen Hari Ini</h3>
+                <div>
+                  <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">SHOW:</label>
+                  <select id="show-belum-count" onchange="renderDashboardTables()" style="width: 75px; display: inline-block; margin:0; padding: 6px; font-size: 0.85rem;">
+                    <option value="5">5</option>
+                    <option value="10" selected>10</option>
+                    <option value="25">25</option>
+                    <option value="all">Semua</option>
+                  </select>
+                </div>
+              </div>
+              <div class="dashboard-table-scroll" id="tabel-belum-container">Memuat...</div>
+            </div>
+
+            <div class="card" style="margin-bottom:0;">
+              <h3 style="color: #0284c7; margin-bottom: 16px; font-size: 1.1rem; font-weight: 700;">🏥 Rekap Siswa Izin / Sakit Hari Ini</h3>
+              <div class="dashboard-table-scroll" id="tabel-izinsakit-container">Memuat...</div>
+            </div>
           </div>
         </div>
 
@@ -897,25 +915,33 @@
     }
 
     function renderDashboardTables() {
+      let listSiswaScope = loggedInUser.role === 'walikelas' ? globalSiswaData.filter(s => s.kelas === loggedInUser.classScope) : globalSiswaData;
       let listHadirScope = loggedInUser.role === 'walikelas' ? globalListHadir.filter(h => h.kelas === loggedInUser.classScope) : globalListHadir;
       let listTelatScope = loggedInUser.role === 'walikelas' ? globalListTelat.filter(t => t.kelas === loggedInUser.classScope) : globalListTelat;
       let listIzinSakitScope = loggedInUser.role === 'walikelas' ? globalListIzinSakit.filter(i => i.kelas === loggedInUser.classScope) : globalListIzinSakit;
 
+      // Filter Siswa yang belum absen hari ini
+      let absentNISSet = new Set(globalAbsenHariIni.map(a => a.nis.toString()));
+      let listBelumAbsenScope = listSiswaScope.filter(s => !absentNISSet.has(s.nis.toString()));
+
       let showHadirVal = document.getElementById('show-hadir-count') ? document.getElementById('show-hadir-count').value : '10';
       let showTelatVal = document.getElementById('show-telat-count') ? document.getElementById('show-telat-count').value : '10';
+      let showBelumVal = document.getElementById('show-belum-count') ? document.getElementById('show-belum-count').value : '10';
 
       let limitHadir = showHadirVal === 'all' ? listHadirScope.length : parseInt(showHadirVal);
       let limitTelat = showTelatVal === 'all' ? listTelatScope.length : parseInt(showTelatVal);
+      let limitBelum = showBelumVal === 'all' ? listBelumAbsenScope.length : parseInt(showBelumVal);
 
       let subHadir = listHadirScope.slice(0, limitHadir);
       let subTelat = listTelatScope.slice(0, limitTelat);
+      let subBelum = listBelumAbsenScope.slice(0, limitBelum);
 
       // Render Tabel Hadir
       let htmlH = `<table><tr><th>NIS</th><th>Nama</th><th>Kelas</th><th>Jam</th></tr>`;
       if(subHadir.length === 0) {
-        htmlH += `<tr><td colspan="4" style="text-align:center; color:#64748b;">Belum ada yang hadir tepat waktu</td></tr>`;
+        htmlH += `<tr><td colspan="4" style="text-align:center; color:#64748b;">Belum ada yang hadir tepat waktu hari ini</td></tr>`;
       } else {
-        subHadir.forEach(h => htmlH += `<tr><td>${h.nis}</td><td>${h.nama}</td><td>${h.kelas}</td><td>${h.waktu}</td></tr>`);
+        subHadir.forEach(h => htmlH += `<tr><td>${h.nis}</td><td style="font-weight:600;">${h.nama}</td><td>${h.kelas}</td><td>${h.waktu}</td></tr>`);
       }
       htmlH += `</table>`;
       let elH = document.getElementById('tabel-hadir-container');
@@ -924,13 +950,24 @@
       // Render Tabel Telat
       let htmlT = `<table><tr><th>NIS</th><th>Nama</th><th>Kelas</th><th>Jam</th></tr>`;
       if(subTelat.length === 0) {
-        htmlT += `<tr><td colspan="4" style="text-align:center; color:#64748b;">Tidak ada siswa telat</td></tr>`;
+        htmlT += `<tr><td colspan="4" style="text-align:center; color:#64748b;">Tidak ada siswa telat hari ini</td></tr>`;
       } else {
-        subTelat.forEach(t => htmlT += `<tr><td>${t.nis}</td><td>${t.nama}</td><td>${t.kelas}</td><td>${t.waktu}</td></tr>`);
+        subTelat.forEach(t => htmlT += `<tr><td>${t.nis}</td><td style="font-weight:600;">${t.nama}</td><td>${t.kelas}</td><td>${t.waktu}</td></tr>`);
       }
       htmlT += `</table>`;
       let elT = document.getElementById('tabel-telat-container');
       if(elT) elT.innerHTML = htmlT;
+
+      // Render Tabel Belum Absen
+      let htmlB = `<table><tr><th>NIS</th><th>Nama Siswa</th><th>Kelas</th><th>Status</th></tr>`;
+      if(subBelum.length === 0) {
+        htmlB += `<tr><td colspan="4" style="text-align:center; color:#10b981; font-weight:700;">🎉 Luar biasa! Seluruh siswa sudah absen hari ini.</td></tr>`;
+      } else {
+        subBelum.forEach(b => htmlB += `<tr><td>${b.nis}</td><td style="font-weight:600;">${b.nama}</td><td>${b.kelas}</td><td><span class="status-badge badge-none">Belum Absen</span></td></tr>`);
+      }
+      htmlB += `</table>`;
+      let elB = document.getElementById('tabel-belum-container');
+      if(elB) elB.innerHTML = htmlB;
 
       // Render Tabel Izin / Sakit
       let htmlI = `<table><tr><th>NIS</th><th>Nama</th><th>Kelas</th><th>Status</th><th>Jam / Keterangan</th></tr>`;
@@ -939,7 +976,7 @@
       } else {
         listIzinSakitScope.forEach(i => {
           let badgeSt = i.status === 'Sakit' ? 'badge-sakit' : 'badge-izin';
-          htmlI += `<tr><td>${i.nis}</td><td>${i.nama}</td><td>${i.kelas}</td><td><span class="status-badge ${badgeSt}">${i.status}</span></td><td>${i.waktu}</td></tr>`;
+          htmlI += `<tr><td>${i.nis}</td><td style="font-weight:600;">${i.nama}</td><td>${i.kelas}</td><td><span class="status-badge ${badgeSt}">${i.status}</span></td><td>${i.waktu}</td></tr>`;
         });
       }
       htmlI += `</table>`;
