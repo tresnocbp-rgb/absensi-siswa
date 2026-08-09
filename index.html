@@ -1284,23 +1284,60 @@
       XLSX.writeFile(wb, `Rekap_Bulanan_${kelasVal.replace(/\s+/g, '_')}.xlsx`);
     }
 
-    function cariLaporanAbsen() {
+function cariLaporanAbsen() {
       let tglMulai = document.getElementById('lap-tgl-mulai').value;
       let tglSelesai = document.getElementById('lap-tgl-selesai').value;
       let kls = document.getElementById('lap-filter-kelas').value;
 
-      if(!tglMulai || !tglSelesai) { alert("Pilih rentang tanggal!"); return; }
+      if(!tglMulai || !tglSelesai) { alert("Pilih rentang tanggal terlebih dahulu!"); return; }
 
-      let combined = [...globalListHadir, ...globalListTelat, ...globalListIzinSakit];
-      if(kls) combined = combined.filter(item => item.kelas === kls);
+      // Ubah format string tanggal input (yyyy-mm-dd) menjadi objek Date untuk perbandingan akurat
+      let startDate = new Date(tglMulai);
+      startDate.setHours(0, 0, 0, 0);
+      let endDate = new Date(tglSelesai);
+      endDate.setHours(23, 59, 59, 999);
+
+      // Ambil seluruh data riwayat absen dari server/cache globalAbsenHariIni
+      let combined = [...globalAbsenHariIni];
+
+      // Filter berdasarkan kelas jika dipilih
+      if(kls && kls !== "") {
+        combined = combined.filter(item => item.kelas === kls);
+      }
+
+      // Filter berdasarkan rentang tanggal (Dari Tanggal s.d Sampai Tanggal)
+      let filteredResult = combined.filter(item => {
+        if (!item.waktu) return false;
+        // Cek format waktu (mendukung format dd/mm/yyyy atau yyyy-mm-dd)
+        let itemDate = null;
+        if (item.waktu.includes("/")) {
+          let parts = item.waktu.split(" ")[0].split("/");
+          if (parts.length === 3) {
+            // format dd/mm/yyyy
+            itemDate = new Date(parts[2], parts[1] - 1, parts[0]);
+          }
+        } else if (item.waktu.includes("-")) {
+          itemDate = new Date(item.waktu.split(" ")[0]);
+        }
+        
+        // Jika item memiliki properti tanggal khusus
+        if (item.tanggal) {
+          itemDate = new Date(item.tanggal);
+        }
+
+        if (!itemDate || isNaN(itemDate)) return true; // Jika format tanggal tidak terbaca, tampilkan untuk keamanan data
+        itemDate.setHours(12, 0, 0, 0); // Set tengah hari agar aman dari selisih zona waktu
+        return itemDate >= startDate && itemDate <= endDate;
+      });
 
       let html = `<table><tr><th>Tanggal / Jam</th><th>NIS</th><th>Nama Siswa</th><th>Kelas</th><th>Status</th></tr>`;
-      if(combined.length === 0) {
-        html += `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Tidak ada data absensi.</td></tr>`;
+      if(filteredResult.length === 0) {
+        html += `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Tidak ada data absensi pada rentang tanggal tersebut.</td></tr>`;
       } else {
-        combined.forEach(item => {
-          let badge = item.status === 'Hadir' ? 'badge-hadir' : (item.status === 'Telat' ? 'badge-telat' : (item.status === 'Sakit' ? 'badge-sakit' : 'badge-izin'));
-          html += `<tr><td>${item.waktu}</td><td>${item.nis}</td><td>${item.nama}</td><td>${item.kelas}</td><td><span class="status-badge ${badge}">${item.status}</span></td></tr>`;
+        filteredResult.forEach(item => {
+          let st = item.status ? item.status.toString().trim() : "Hadir";
+          let badge = st === 'Hadir' ? 'badge-hadir' : (st === 'Telat' ? 'badge-telat' : (st === 'Sakit' ? 'badge-sakit' : 'badge-izin'));
+          html += `<tr><td>${item.waktu}</td><td>${item.nis}</td><td>${item.nama}</td><td>${item.kelas}</td><td><span class="status-badge ${badge}">${st}</span></td></tr>`;
         });
       }
       html += `</table>`;
@@ -1309,11 +1346,242 @@
     }
 
     function exportLaporanExcel() {
-      let combined = [...globalListHadir, ...globalListTelat, ...globalListIzinSakit];
+      let tglMulai = document.getElementById('lap-tgl-mulai').value;
+      let tglSelesai = document.getElementById('lap-tgl-selesai').value;
+      let kls = document.getElementById('lap-filter-kelas').value;
+
+      let combined = [...globalAbsenHariIni];
+      if(kls && kls !== "") {
+        combined = combined.filter(item => item.kelas === kls);
+      }
+
+      if(tglMulai && tglSelesai) {
+        let startDate = new Date(tglMulai);
+        startDate.setHours(0, 0, 0, 0);
+        let endDate = new Date(tglSelesai);
+        endDate.setHours(23, 59, 59, 999);
+
+        combined = combined.filter(item => {
+          if (!item.waktu) return true;
+          let itemDate = null;
+          if (item.waktu.includes("/")) {
+            let parts = item.waktu.split(" ")[0].split("/");
+            if (parts.length === 3) itemDate = new Date(parts[2], parts[1] - 1, parts[0]);
+          } else if (item.waktu.includes("-")) {
+            itemDate = new Date(item.waktu.split(" ")[0]);
+          }
+          if (!itemDate || isNaN(itemDate)) return true;
+          itemDate.setHours(12, 0, 0, 0);
+          return itemDate >= startDate && itemDate <= endDate;
+        });
+      }
+
       let ws = XLSX.utils.json_to_sheet(combined);
       let wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Laporan Kehadiran");
-      XLSX.writeFile(wb, "Laporan_Kehadiran_Siswa.xlsx");
+      XLSX.writeFile(wb, "Laporan_Kehadiran_Periode.xlsx");
+    }
+
+    function renderWebMatrixTable() {
+      let kelasVal = loggedInUser.role === 'walikelas' ? loggedInUser.classScope : document.getElementById('rekap-excel-kelas').value;
+      if(!kelasVal) { alert("Pilih kelas terlebih dahulu!"); return; }
+
+      let siswaKelas = globalSiswaData.filter(s => s.kelas === kelasVal);
+      let now = new Date();
+      let year = now.getFullYear();
+      let month = now.getMonth();
+      let daysInMonth = new Date(year, month + 1, 0).getDate();
+      const hariArr = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+
+      let html = `<table><thead>`;
+      html += `<tr><th colspan="4" style="text-align:center; background:#f1f5f9;">DATA SISWA</th>`;
+      html += `<th colspan="${daysInMonth}" style="text-align:center; background:#e2e8f0; color:#0f172a; font-weight:700;">TANGGAL (1 s.d. ${daysInMonth})</th>`;
+      html += `<th colspan="5" style="text-align:center; background:#f1f5f9;">REKAP</th></tr>`;
+
+      // Baris Hari
+      html += `<tr><th>NO</th><th>NAMA SISWA</th><th>NIS</th><th>KELAS</th>`;
+      for(let i=1; i<=daysInMonth; i++) {
+        let d = new Date(year, month, i);
+        let dayOfWeek = d.getDay();
+        let isLibur = (dayOfWeek === 0 || dayOfWeek === 6);
+        html += `<th style="text-align:center; font-size:0.65rem; ${isLibur ? 'background:#fee2e2; color:#991b1b;' : 'color:#64748b;'}">${hariArr[dayOfWeek]}</th>`;
+      }
+      html += `<th>H</th><th>T</th><th>S</th><th>I</th><th>%</th></tr>`;
+
+      // Baris Tanggal
+      html += `<tr><th></th><th></th><th></th><th></th>`;
+      for(let i=1; i<=daysInMonth; i++) {
+        let d = new Date(year, month, i);
+        let dayOfWeek = d.getDay();
+        let isLibur = (dayOfWeek === 0 || dayOfWeek === 6);
+        html += `<th style="text-align:center; ${isLibur ? 'background:#fee2e2; color:#991b1b;' : ''}">${i}</th>`;
+      }
+      html += `<th></th><th></th><th></th><th></th><th></th></tr></thead><tbody>`;
+
+      if(siswaKelas.length === 0) {
+        html += `<tr><td colspan="${daysInMonth + 9}" style="text-align:center;">Tidak ada data siswa.</td></tr>`;
+      } else {
+        siswaKelas.forEach((s, idx) => {
+          html += `<tr><td>${idx + 1}</td><td style="font-weight:600; white-space:nowrap;">${s.nama}</td><td>${s.nis}</td><td>${s.kelas}</td>`;
+          
+          let countH = 0, countT = 0, countS = 0, countI = 0;
+
+          for(let i=1; i<=daysInMonth; i++) {
+            let d = new Date(year, month, i);
+            let dayOfWeek = d.getDay();
+            let isLibur = (dayOfWeek === 0 || dayOfWeek === 6);
+
+            let cellText = "-";
+            let cellColor = "#94a3b8";
+
+            if (isLibur) {
+              cellText = "L";
+              cellColor = "#ef4444";
+            } else {
+              // PERBAIKAN: Memeriksa seluruh riwayat absensi yang tersimpan untuk mencocokkan tanggal ke-i bulan ini
+              let record = globalAbsenHariIni.find(a => {
+                if (a.nis.toString() !== s.nis.toString()) return false;
+                if (a.waktu && a.waktu.includes("/")) {
+                  let parts = a.waktu.split(" ")[0].split("/");
+                  if (parts.length === 3) {
+                    return parseInt(parts[0]) === i;
+                  }
+                }
+                if (a.tanggal) {
+                  let tParts = a.tanggal.split("-");
+                  if (tParts.length === 3) {
+                    return parseInt(tParts[2]) === i;
+                  }
+                }
+                return false;
+              });
+
+              if(record) {
+                let st = record.status ? record.status.toString().trim() : "";
+                if(st === 'Hadir') { cellText = "H"; cellColor = "#10b981"; countH++; }
+                else if(st === 'Telat') { cellText = "T"; cellColor = "#f59e0b"; countT++; }
+                else if(st === 'Sakit') { cellText = "S"; cellColor = "#a855f7"; countS++; }
+                else if(st === 'Izin') { cellText = "I"; cellColor = "#0284c7"; countI++; }
+              }
+            }
+
+            html += `<td style="text-align:center; font-weight:600; color:${cellColor}; ${isLibur ? 'background:#fef2f2;' : ''}">${cellText}</td>`;
+          }
+
+          let totalHadirTelat = countH + countT;
+          let persentase = daysInMonth > 0 ? Math.round((totalHadirTelat / daysInMonth) * 100) : 0;
+
+          html += `
+            <td style="text-align:center; font-weight:600; color:var(--accent);">${countH}</td>
+            <td style="text-align:center; font-weight:600; color:var(--warning);">${countT}</td>
+            <td style="text-align:center; font-weight:600;">${countS}</td>
+            <td style="text-align:center; font-weight:600;">${countI}</td>
+            <td style="text-align:center; font-weight:600;">${persentase}%</td>
+          </tr>`;
+        });
+      }
+      html += `</tbody></table>`;
+      let elMatrix = document.getElementById('web-matrix-container');
+      if(elMatrix) elMatrix.innerHTML = html;
+    }
+
+    function downloadExcelMatrix() {
+      let kelasVal = loggedInUser.role === 'walikelas' ? loggedInUser.classScope : document.getElementById('rekap-excel-kelas').value;
+      if(!kelasVal) { alert("Pilih kelas terlebih dahulu!"); return; }
+
+      let siswaKelas = globalSiswaData.filter(s => s.kelas === kelasVal);
+      let now = new Date();
+      let year = now.getFullYear();
+      let month = now.getMonth();
+      let daysInMonth = new Date(year, month + 1, 0).getDate();
+      const hariArr = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+
+      let wbData = [];
+      
+      let dayRow = ["", "", "", "HARI:"];
+      for(let i=1; i<=daysInMonth; i++) {
+        let d = new Date(year, month, i);
+        dayRow.push(hariArr[d.getDay()]);
+      }
+      wbData.push(dayRow);
+
+      let headerRow = ["No.", "NIS", "Nama Siswa", "Kelas"];
+      for(let i=1; i<=daysInMonth; i++) headerRow.push(i);
+      headerRow.push("Hadir (H)", "Telat (T)", "S", "I", "Total %");
+      wbData.push(headerRow);
+
+      let merges = [];
+      let startLiburCol = null;
+      for(let i=1; i<=daysInMonth; i++) {
+        let d = new Date(year, month, i);
+        let dayOfWeek = d.getDay();
+        let isLibur = (dayOfWeek === 0 || dayOfWeek === 6);
+        let colIdx = 3 + i;
+
+        if(isLibur) {
+          if(startLiburCol === null) startLiburCol = colIdx;
+        } else {
+          if(startLiburCol !== null) {
+            if(colIdx - 1 > startLiburCol) {
+              merges.push({ s: { r: 0, c: startLiburCol }, e: { r: 0, c: colIdx - 1 } });
+            }
+            startLiburCol = null;
+          }
+        }
+      }
+      if(startLiburCol !== null && (3 + daysInMonth) > startLiburCol) {
+        merges.push({ s: { r: 0, c: startLiburCol }, e: { r: 0, c: 3 + daysInMonth } });
+      }
+
+      siswaKelas.forEach((s, idx) => {
+        let row = [idx + 1, s.nis, s.nama, s.kelas];
+        let countH = 0, countT = 0, countS = 0, countI = 0;
+
+        for(let i=1; i<=daysInMonth; i++) {
+          let d = new Date(year, month, i);
+          let dayOfWeek = d.getDay();
+          let isLibur = (dayOfWeek === 0 || dayOfWeek === 6);
+
+          if (isLibur) {
+            row.push("L");
+          } else {
+            let val = "-";
+            let record = globalAbsenHariIni.find(a => {
+              if (a.nis.toString() !== s.nis.toString()) return false;
+              if (a.waktu && a.waktu.includes("/")) {
+                let parts = a.waktu.split(" ")[0].split("/");
+                if (parts.length === 3) return parseInt(parts[0]) === i;
+              }
+              if (a.tanggal) {
+                let tParts = a.tanggal.split("-");
+                if (tParts.length === 3) return parseInt(tParts[2]) === i;
+              }
+              return false;
+            });
+
+            if(record) {
+              let st = record.status ? record.status.toString().trim() : "";
+              if(st === 'Hadir') { val = "H"; countH++; }
+              else if(st === 'Telat') { val = "T"; countT++; }
+              else if(st === 'Sakit') { val = "S"; countS++; }
+              else if(st === 'Izin') { val = "I"; countI++; }
+            }
+            row.push(val);
+          }
+        }
+        let totalHadirTelat = countH + countT;
+        let persentase = Math.round((totalHadirTelat / daysInMonth) * 100) + "%";
+        
+        row.push(countH, countT, countS, countI, persentase);
+        wbData.push(row);
+      });
+
+      let ws = XLSX.utils.aoa_to_sheet(wbData);
+      if(merges.length > 0) ws['!merges'] = merges;
+
+      let wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, `Rekap_${kelasVal.replace(/\s+/g, '_')}`);
+      XLSX.writeFile(wb, `Rekap_Bulanan_${kelasVal.replace(/\s+/g, '_')}.xlsx`);
     }
 
     function renderManajemenKelasTable() {
