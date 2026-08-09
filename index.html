@@ -375,7 +375,6 @@
             <p style="color: var(--text-muted); font-size: 0.9rem;">Matriks kehadiran siswa per bulan dengan filter rentang tanggal.</p>
           </div>
 
-          <!-- FORM FILTER: DARI TANGGAL, SAMPAI TANGGAL, DAN FILTER KELAS -->
           <div class="card" style="display: grid; grid-template-columns: repeat(3, 1fr) auto auto; gap: 15px; align-items: flex-end; margin-bottom: 20px;">
             <div>
               <label style="font-weight: 600; font-size: 0.85rem;">DARI TANGGAL</label>
@@ -387,7 +386,7 @@
             </div>
             <div>
               <label style="font-weight: 600; font-size: 0.85rem;">FILTER KELAS</label>
-              <select id="rekap-excel-kelas"><option value="">-- Semua Kelas --</option></select>
+              <select id="rekap-excel-kelas"><option value="">-- Pilih Kelas --</option></select>
             </div>
             <button onclick="renderWebMatrixTable()" class="btn" style="height: 44px;">Tampilkan Matriks</button>
             <button onclick="downloadExcelMatrix()" class="btn btn-success" style="height: 44px;">📥 Download Excel</button>
@@ -1175,7 +1174,6 @@
             let cellText = "-";
             let cellColor = "#94a3b8";
 
-            // Cek apakah tanggal berada dalam rentang filter
             let isInRange = d >= startDate && d <= endDate;
 
             if (isLibur) {
@@ -1185,18 +1183,24 @@
               cellText = "-";
               cellColor = "#cbd5e1";
             } else {
-              // Cocokkan dengan data absen yang sudah masuk di server / cache (globalAbsenHariIni)
+              // PERBAIKAN: Mencocokkan data absensi historis dari server/cache berdasarkan NIS dan tanggal ke-i
               let record = globalAbsenHariIni.find(a => {
                 if (a.nis.toString() !== s.nis.toString()) return false;
-                if (a.waktu && a.waktu.includes("/")) {
-                  let parts = a.waktu.split(" ")[0].split("/");
-                  if (parts.length === 3) return parseInt(parts[0]) === i;
-                }
+                
+                // Cek kesesuaian tanggal dari waktu atau properti tanggal
                 if (a.tanggal) {
                   let tParts = a.tanggal.split("-");
-                  if (tParts.length === 3) return parseInt(tParts[2]) === i;
+                  if (tParts.length === 3 && parseInt(tParts[2]) === i && parseInt(tParts[1]) === (month + 1)) {
+                    return true;
+                  }
                 }
-                return i === new Date().getDate();
+                if (a.waktu && a.waktu.includes("/")) {
+                  let parts = a.waktu.split(" ")[0].split("/");
+                  if (parts.length === 3 && parseInt(parts[0]) === i) {
+                    return true;
+                  }
+                }
+                return false;
               });
 
               if(record) {
