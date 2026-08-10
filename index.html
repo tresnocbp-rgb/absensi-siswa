@@ -140,7 +140,7 @@
             </div>
           </div>
           <div id="reader" style="width: 100%; border-radius: 14px; overflow: hidden; background: #000; margin-top: 10px; min-height: 280px;"></div>
-          <p id="scan-status-text" style="margin-top: 18px; font-weight: 600; color: var(--primary);">Kamera Standby (Anti-Delay / Siap 2000 Siswa)</p>
+          <p id="scan-status-text" style="margin-top: 18px; font-weight: 600; color: var(--primary);">Kamera Standby (Zero-Delay / Siap 2000 Siswa)</p>
         </div>
         <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
           <div>
@@ -406,7 +406,7 @@
             </div>
             <div>
               <label style="font-weight: 700; font-size: 0.85rem; color: var(--text-muted);">FILTER KELAS</label>
-              <select id="rekap-excel-kelas"><option value="">-- Pilih Kelas --</option></select>
+              <select id="rekap-excel-kelas"><option value="">-- Semua Kelas --</option></select>
             </div>
             <button onclick="renderWebMatrixTable()" class="btn" style="height: 48px;">Tampilkan Matriks</button>
             <button onclick="downloadExcelMatrix()" class="btn btn-success" style="height: 48px;">📥 Download Excel</button>
@@ -529,6 +529,20 @@
     let loggedInUser = JSON.parse(localStorage.getItem('admin_user_data') || '{"username":"admin","name":"Admin","role":"admin","classScope":""}');
 
     window.addEventListener('DOMContentLoaded', () => {
+      // RESET CACHE OTOMATIS JIKA BERGANTI HARI BARU
+      let todayStr = new Date().toISOString().split('T')[0];
+      let lastSavedDate = localStorage.getItem('app_last_date');
+      if (lastSavedDate !== todayStr) {
+        localStorage.removeItem('cache_hadir');
+        localStorage.removeItem('cache_telat');
+        localStorage.removeItem('cache_izinsakit');
+        localStorage.setItem('app_last_date', todayStr);
+        globalListHadir = [];
+        globalListTelat = [];
+        globalListIzinSakit = [];
+        globalAbsenHariIni = [];
+      }
+
       let sessionTime = localStorage.getItem('admin_session_time');
       let currentTime = new Date().getTime();
       if (sessionTime && (currentTime - sessionTime < 10 * 60 * 1000)) {
@@ -823,16 +837,22 @@
 
     function renderFastDashboardInstant() {
       let listSiswaScope = loggedInUser.role === 'walikelas' ? globalSiswaData.filter(s => s.kelas === loggedInUser.classScope) : globalSiswaData;
-      let listHadirScope = loggedInUser.role === 'walikelas' ? globalListHadir.filter(h => h.kelas === loggedInUser.classScope) : globalListHadir;
-      let listTelatScope = loggedInUser.role === 'walikelas' ? globalListTelat.filter(t => t.kelas === loggedInUser.classScope) : globalListTelat;
-      let listIzinSakitScope = loggedInUser.role === 'walikelas' ? globalListIzinSakit.filter(i => i.kelas === loggedInUser.classScope) : globalListIzinSakit;
+      let todayDateStr = new Date().toISOString().split('T')[0];
+      
+      let absenHariIniOnly = globalAbsenHariIni.filter(item => {
+        return item.tanggal ? item.tanggal === todayDateStr : true;
+      });
+
+      let listHadirScope = loggedInUser.role === 'walikelas' ? absenHariIniOnly.filter(h => h.kelas === loggedInUser.classScope && h.status !== 'Izin' && h.status !== 'Sakit' && h.status !== 'Telat') : absenHariIniOnly.filter(h => h.status !== 'Izin' && h.status !== 'Sakit' && h.status !== 'Telat');
+      let listTelatScope = loggedInUser.role === 'walikelas' ? absenHariIniOnly.filter(t => t.kelas === loggedInUser.classScope && t.status === 'Telat') : absenHariIniOnly.filter(t => t.status === 'Telat');
+      let listIzinSakitScope = loggedInUser.role === 'walikelas' ? absenHariIniOnly.filter(i => i.kelas === loggedInUser.classScope && (i.status === 'Izin' || i.status === 'Sakit')) : absenHariIniOnly.filter(i => i.status === 'Izin' || i.status === 'Sakit');
 
       let totalSiswaCount = listSiswaScope.length;
       let hadirCount = listHadirScope.length;
       let telatCount = listTelatScope.length;
       let izinSakitCount = listIzinSakitScope.length;
       
-      let absentNISSet = new Set(globalAbsenHariIni.map(a => a.nis.toString()));
+      let absentNISSet = new Set(absenHariIniOnly.map(a => a.nis.toString()));
       let belumAbsenCount = listSiswaScope.filter(s => !absentNISSet.has(s.nis.toString())).length;
       if(belumAbsenCount < 0) belumAbsenCount = 0;
 
@@ -899,7 +919,7 @@
       setupPerwalianTabView();
     }
 
-function loadAdminDataBackground() {
+    function loadAdminDataBackground() {
       fetch(`${SCRIPT_URL}?action=admin_data`)
         .then(res => res.json())
         .then(data => {
@@ -911,25 +931,16 @@ function loadAdminDataBackground() {
           
           let rawHadir = data.listHadir || [];
           let rawTelat = data.listTelat || [];
-          
-          // SIMPAN SELURUH RIWAYAT ABSENSI UNTUK REKAP BULANAN & LAPORAN
           globalAbsenHariIni = [...rawHadir, ...rawTelat];
-          
-          // Filter khusus untuk tampilan Dashboard hari ini
+
           let todayDateStr = new Date().toISOString().split('T')[0];
           let absenHariIniOnly = globalAbsenHariIni.filter(item => {
             return item.tanggal ? item.tanggal === todayDateStr : true;
           });
 
-          globalListHadir = absenHariIniOnly.filter(h => {
-            let s = h.status ? h.status.toString().trim() : "Hadir";
-            return s !== 'Izin' && s !== 'Sakit';
-          });
-          globalListTelat = absenHariIniOnly.filter(t => t.status && t.status.toString().trim() === 'Telat');
-          globalListIzinSakit = absenHariIniOnly.filter(h => {
-            let s = h.status ? h.status.toString().trim() : "";
-            return s === 'Izin' || s === 'Sakit';
-          });
+          globalListHadir = absenHariIniOnly.filter(h => h.status !== 'Izin' && h.status !== 'Sakit' && h.status !== 'Telat');
+          globalListTelat = absenHariIniOnly.filter(t => t.status === 'Telat');
+          globalListIzinSakit = absenHariIniOnly.filter(i => i.status === 'Izin' || i.status === 'Sakit');
 
           localStorage.setItem('cache_hadir', JSON.stringify(globalListHadir));
           localStorage.setItem('cache_telat', JSON.stringify(globalListTelat));
@@ -945,11 +956,14 @@ function loadAdminDataBackground() {
 
     function renderDashboardTables() {
       let listSiswaScope = loggedInUser.role === 'walikelas' ? globalSiswaData.filter(s => s.kelas === loggedInUser.classScope) : globalSiswaData;
-      let listHadirScope = loggedInUser.role === 'walikelas' ? globalListHadir.filter(h => h.kelas === loggedInUser.classScope) : globalListHadir;
-      let listTelatScope = loggedInUser.role === 'walikelas' ? globalListTelat.filter(t => t.kelas === loggedInUser.classScope) : globalListTelat;
-      let listIzinSakitScope = loggedInUser.role === 'walikelas' ? globalListIzinSakit.filter(i => i.kelas === loggedInUser.classScope) : globalListIzinSakit;
+      let todayDateStr = new Date().toISOString().split('T')[0];
+      let absenHariIniOnly = globalAbsenHariIni.filter(item => item.tanggal ? item.tanggal === todayDateStr : true);
 
-      let absentNISSet = new Set(globalAbsenHariIni.map(a => a.nis.toString()));
+      let listHadirScope = loggedInUser.role === 'walikelas' ? absenHariIniOnly.filter(h => h.kelas === loggedInUser.classScope && h.status !== 'Izin' && h.status !== 'Sakit' && h.status !== 'Telat') : absenHariIniOnly.filter(h => h.status !== 'Izin' && h.status !== 'Sakit' && h.status !== 'Telat');
+      let listTelatScope = loggedInUser.role === 'walikelas' ? absenHariIniOnly.filter(t => t.kelas === loggedInUser.classScope && t.status === 'Telat') : absenHariIniOnly.filter(t => t.status === 'Telat');
+      let listIzinSakitScope = loggedInUser.role === 'walikelas' ? absenHariIniOnly.filter(i => i.kelas === loggedInUser.classScope && (i.status === 'Izin' || i.status === 'Sakit')) : absenHariIniOnly.filter(i => i.status === 'Izin' || i.status === 'Sakit');
+
+      let absentNISSet = new Set(absenHariIniOnly.map(a => a.nis.toString()));
       let listBelumAbsenScope = listSiswaScope.filter(s => !absentNISSet.has(s.nis.toString()));
 
       let showHadirVal = document.getElementById('show-hadir-count') ? document.getElementById('show-hadir-count').value : '10';
@@ -1052,6 +1066,9 @@ function loadAdminDataBackground() {
 
     function renderPerwalianTable(kelasTarget) {
       let siswaList = [];
+      let todayDateStr = new Date().toISOString().split('T')[0];
+      let absenHariIniOnly = globalAbsenHariIni.filter(item => item.tanggal ? item.tanggal === todayDateStr : true);
+
       if(loggedInUser.role === 'admin') {
         if(kelasTarget === "ALL" || !kelasTarget) {
           siswaList = globalSiswaData;
@@ -1069,7 +1086,7 @@ function loadAdminDataBackground() {
         html += `<tr><td colspan="6" style="text-align:center;">Tidak ada data siswa.</td></tr>`;
       } else {
         siswaList.forEach((s, idx) => {
-          let absenRecord = globalAbsenHariIni.find(a => a.nis.toString() === s.nis.toString());
+          let absenRecord = absenHariIniOnly.find(a => a.nis.toString() === s.nis.toString());
           let currentStatus = absenRecord ? absenRecord.status : "Belum Absen";
 
           if(currentStatus === 'Hadir') countHadir++;
