@@ -410,7 +410,7 @@
           <div class="card" style="display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 16px; align-items: flex-end; margin-bottom: 24px;">
             <div>
               <label style="font-weight: 700; font-size: 0.85rem; color: var(--text-muted);">PILIH BULAN</label>
-              <select id="rekap-pilih-bulan" onchange="onSelectBulanRekap()">
+              <select id="rekap-pilih-bulan">
                 <option value="0">Januari</option><option value="1">Februari</option><option value="2">Maret</option>
                 <option value="3">April</option><option value="4">Mei</option><option value="5">Juni</option>
                 <option value="6">Juli</option><option value="7" selected>Agustus</option><option value="8">September</option>
@@ -575,10 +575,6 @@
       }
       loadAdminDataBackground();
     });
-
-    function onSelectBulanRekap() {
-      // Fungsi penyeleksi bulan otomatis (Agustus, dll)
-    }
 
     function switchPage(page) {
       let scanPage = document.getElementById('wrapper-scanner-page');
@@ -1225,12 +1221,7 @@
       let bulanIndex = parseInt(document.getElementById('rekap-pilih-bulan').value);
       let year = new Date().getFullYear();
 
-      let startDate = new Date(year, bulanIndex, 1);
-      startDate.setHours(0,0,0,0);
-      let endDate = new Date(year, bulanIndex + 1, 0);
-      endDate.setHours(23,59,59,999);
-
-      let daysInMonth = endDate.getDate();
+      let daysInMonth = new Date(year, bulanIndex + 1, 0).getDate();
       const hariArr = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
 
       let siswaKelas = globalSiswaData.filter(s => s.kelas === kelasVal);
@@ -1278,15 +1269,19 @@
 
             if (isLibur) {
               cellText = "";
-              cellBg = "#fef2f2"; // BLOK MERAH LEMBUT (LIBUR) TANPA TEKS BERANTAKAN
+              cellBg = "#fef2f2"; // BLOK MERAH LEMBUT UNTUK LIBUR
             } else {
-              // SINKRONISASI 100% SAMA DENGAN DATA GLOBAL ABSEN (HADIR, TELAT, IZIN, SAKIT)
+              // PENCARIAN DATA ABSENSI BERDASARKAN TAHUN, BULAN, DAN TANGGAL YANG 100% AKURAT
               let record = globalAbsenHariIni.find(a => {
                 if (a.nis.toString() !== s.nis.toString()) return false;
                 if (a.tanggal) {
-                  let aDate = new Date(a.tanggal);
-                  aDate.setHours(12,0,0,0);
-                  if (aDate.getTime() === d.getTime()) return true;
+                  let parts = a.tanggal.split("-");
+                  if (parts.length === 3) {
+                    let aY = parseInt(parts[0]);
+                    let aM = parseInt(parts[1]) - 1;
+                    let aD = parseInt(parts[2]);
+                    if (aY === year && aM === bulanIndex && aD === i) return true;
+                  }
                 }
                 return false;
               });
@@ -1296,22 +1291,22 @@
                 if(st === 'hadir') { 
                   cellText = "H"; 
                   cellColor = "#065f46"; 
-                  cellBg = "#d1fae5"; // HIJAU UNTUK HADIR
+                  cellBg = "#d1fae5"; // HIJAU
                   countH++; 
                 } else if(st === 'telat') { 
                   cellText = "T"; 
                   cellColor = "#92400e"; 
-                  cellBg = "#fef3c7"; // KUNING UNTUK TELAT
+                  cellBg = "#fef3c7"; // KUNING
                   countT++; 
                 } else if(st === 'sakit') { 
                   cellText = "S"; 
                   cellColor = "#86198f"; 
-                  cellBg = "#fae8ff"; 
+                  cellBg = "#fae8ff"; // UNGU
                   countS++; 
                 } else if(st === 'izin') { 
                   cellText = "I"; 
                   cellColor = "#0369a1"; 
-                  cellBg = "#e0f2fe"; 
+                  cellBg = "#e0f2fe"; // BIRU
                   countI++; 
                 }
               }
@@ -1337,19 +1332,14 @@
       if(elMatrix) elMatrix.innerHTML = html;
     }
 
-function downloadExcelMatrix() {
+    function downloadExcelMatrix() {
       let kelasVal = loggedInUser.role === 'walikelas' ? loggedInUser.classScope : document.getElementById('rekap-excel-kelas').value;
       if(!kelasVal) { alert("Pilih kelas terlebih dahulu!"); return; }
 
       let bulanIndex = parseInt(document.getElementById('rekap-pilih-bulan').value);
       let year = new Date().getFullYear();
 
-      let startDate = new Date(year, bulanIndex, 1);
-      startDate.setHours(0,0,0,0);
-      let endDate = new Date(year, bulanIndex + 1, 0);
-      endDate.setHours(23,59,59,999);
-
-      let daysInMonth = endDate.getDate();
+      let daysInMonth = new Date(year, bulanIndex + 1, 0).getDate();
       const hariArr = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
 
       let siswaKelas = globalSiswaData.filter(s => s.kelas === kelasVal);
@@ -1373,7 +1363,6 @@ function downloadExcelMatrix() {
 
         for(let i=1; i<=daysInMonth; i++) {
           let d = new Date(year, bulanIndex, i);
-          d.setHours(12,0,0,0);
           let dayOfWeek = d.getDay();
           let isLibur = (dayOfWeek === 0 || dayOfWeek === 6);
 
@@ -1381,13 +1370,17 @@ function downloadExcelMatrix() {
             row.push("LIBUR");
           } else {
             let val = "-";
-            // PENCARIAN DATA ABSENSI YANG 100% SINKRON DENGAN WEB MATRIX
+            // PENCARIAN DATA ABSENSI EXCEL YANG SINKRON 100% DENGAN WEB
             let record = globalAbsenHariIni.find(a => {
               if (a.nis.toString() !== s.nis.toString()) return false;
               if (a.tanggal) {
-                let aDate = new Date(a.tanggal);
-                aDate.setHours(12,0,0,0);
-                if (aDate.getTime() === d.getTime()) return true;
+                let parts = a.tanggal.split("-");
+                if (parts.length === 3) {
+                  let aY = parseInt(parts[0]);
+                  let aM = parseInt(parts[1]) - 1;
+                  let aD = parseInt(parts[2]);
+                  if (aY === year && aM === bulanIndex && aD === i) return true;
+                }
               }
               return false;
             });
