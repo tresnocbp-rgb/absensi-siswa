@@ -404,7 +404,7 @@
         <div id="tab-admin-rekap" class="admin-tab" style="display: none;">
           <div style="margin-bottom: 28px;">
             <h2 style="font-size: 1.6rem; font-weight: 800; color: #0f172a;">Rekapitulasi Bulanan</h2>
-            <p style="color: var(--text-muted); font-size: 0.95rem;">Matriks kehadiran siswa per bulan dengan filter rentang tanggal, kelas, dan bulan.</p>
+            <p style="color: var(--text-muted); font-size: 0.95rem;">Matriks kehadiran siswa per bulan dengan filter bulan otomatis atau kustom tanggal.</p>
           </div>
 
           <div class="card" style="display: grid; grid-template-columns: repeat(4, 1fr) auto auto; gap: 14px; align-items: flex-end; margin-bottom: 24px;">
@@ -436,7 +436,7 @@
 
           <div class="card" style="overflow-x: auto;">
             <div id="web-matrix-container">
-              <p style="text-align:center; color:var(--text-muted); padding:35px; font-weight: 500;">Silahkan pilih bulan/tanggal, kelas, dan klik Tampilkan Matriks.</p>
+              <p style="text-align:center; color:var(--text-muted); padding:35px; font-weight: 500;">Silahkan pilih bulan, kelas, dan klik Tampilkan Matriks.</p>
             </div>
           </div>
         </div>
@@ -568,7 +568,7 @@
         globalAbsenHariIni = [];
       }
 
-      // OTOMATIS SET DEFAULT BULAN & TANGGAL AGUSTUS 2026 DI REKAP BULANAN
+      // OTOMATIS SET DEFAULT BULAN AGUSTUS 2026
       let nowInit = new Date();
       let yInit = nowInit.getFullYear();
       let mInit = String(nowInit.getMonth() + 1).padStart(2, '0');
@@ -1317,14 +1317,12 @@
             let isInRange = d >= startDate && d <= endDate;
 
             if (isLibur) {
-              cellText = "LIBUR";
-              cellColor = "#991b1b";
-              cellBg = "#fef2f2";
+              cellText = "";
+              cellBg = "#fef2f2"; // BLOK MERAH LEMBUT TANPA TEKS BERANTAKAN
             } else if (!isInRange) {
               cellText = "-";
               cellColor = "#cbd5e1";
             } else {
-              // PENCARIAN DATA ABSENSI YANG PRESISI DENGAN GLOBAL ABSEN
               let record = globalAbsenHariIni.find(a => {
                 if (a.nis.toString() !== s.nis.toString()) return false;
                 if (a.tanggal) {
@@ -1361,12 +1359,7 @@
               }
             }
 
-            // TAMPILAN TEKS VERTIKAL RAPI UNTUK LIBUR
-            if (cellText === "LIBUR") {
-              html += `<td style="text-align:center; font-weight:700; font-size:0.65rem; color:${cellColor}; background:${cellBg}; writing-mode: vertical-rl; text-orientation: upright; letter-spacing: 2px; padding: 6px;" title="Hari Libur">LIBUR</td>`;
-            } else {
-              html += `<td style="text-align:center; font-weight:700; color:${cellColor}; background:${cellBg};">${cellText}</td>`;
-            }
+            html += `<td style="text-align:center; font-weight:700; color:${cellColor}; background:${cellBg};">${cellText}</td>`;
           }
 
           let totalHadirTelat = countH + countT;
@@ -1551,7 +1544,7 @@
 
     function filterSiswaByKelas() {
       let val = document.getElementById('filter-kelas').value;
-      filteredSiswaData = val ? globalSiswaData.filter(s => s.kelas === val) : globalSiswaData;
+      filteredSiswaData = val ? globalSiswaData.filter(s => s.kelas === val) : globalSissanData;
       renderTabelSiswa();
     }
 
