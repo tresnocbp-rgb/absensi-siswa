@@ -404,14 +404,13 @@
         <div id="tab-admin-rekap" class="admin-tab" style="display: none;">
           <div style="margin-bottom: 28px;">
             <h2 style="font-size: 1.6rem; font-weight: 800; color: #0f172a;">Rekapitulasi Bulanan</h2>
-            <p style="color: var(--text-muted); font-size: 0.95rem;">Matriks kehadiran siswa per bulan dengan filter bulan otomatis atau kustom tanggal.</p>
+            <p style="color: var(--text-muted); font-size: 0.95rem;">Matriks kehadiran 1 kelas penuh selama 1 bulan penuh secara otomatis.</p>
           </div>
 
-          <div class="card" style="display: grid; grid-template-columns: repeat(4, 1fr) auto auto; gap: 14px; align-items: flex-end; margin-bottom: 24px;">
+          <div class="card" style="display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 16px; align-items: flex-end; margin-bottom: 24px;">
             <div>
               <label style="font-weight: 700; font-size: 0.85rem; color: var(--text-muted);">PILIH BULAN</label>
               <select id="rekap-pilih-bulan" onchange="onSelectBulanRekap()">
-                <option value="">-- Pilih Bulan --</option>
                 <option value="0">Januari</option><option value="1">Februari</option><option value="2">Maret</option>
                 <option value="3">April</option><option value="4">Mei</option><option value="5">Juni</option>
                 <option value="6">Juli</option><option value="7" selected>Agustus</option><option value="8">September</option>
@@ -419,16 +418,8 @@
               </select>
             </div>
             <div>
-              <label style="font-weight: 700; font-size: 0.85rem; color: var(--text-muted);">DARI TANGGAL</label>
-              <input type="date" id="rekap-tgl-mulai">
-            </div>
-            <div>
-              <label style="font-weight: 700; font-size: 0.85rem; color: var(--text-muted);">SAMPAI TANGGAL</label>
-              <input type="date" id="rekap-tgl-selesai">
-            </div>
-            <div>
               <label style="font-weight: 700; font-size: 0.85rem; color: var(--text-muted);">FILTER KELAS</label>
-              <select id="rekap-excel-kelas"><option value="">-- Semua Kelas --</option></select>
+              <select id="rekap-excel-kelas"><option value="">-- Pilih Kelas --</option></select>
             </div>
             <button onclick="renderWebMatrixTable()" class="btn" style="height: 48px;">Tampilkan Matriks</button>
             <button onclick="downloadExcelMatrix()" class="btn btn-success" style="height: 48px;">📥 Download Excel</button>
@@ -568,17 +559,6 @@
         globalAbsenHariIni = [];
       }
 
-      // OTOMATIS SET DEFAULT BULAN AGUSTUS 2026
-      let nowInit = new Date();
-      let yInit = nowInit.getFullYear();
-      let mInit = String(nowInit.getMonth() + 1).padStart(2, '0');
-      let lastDayInit = new Date(yInit, nowInit.getMonth() + 1, 0).getDate();
-      
-      let tglMulaiEl = document.getElementById('rekap-tgl-mulai');
-      let tglSelesaiEl = document.getElementById('rekap-tgl-selesai');
-      if(tglMulaiEl && !tglMulaiEl.value) tglMulaiEl.value = `${yInit}-${mInit}-01`;
-      if(tglSelesaiEl && !tglSelesaiEl.value) tglSelesaiEl.value = `${yInit}-${mInit}-${lastDayInit}`;
-
       let sessionTime = localStorage.getItem('admin_session_time');
       let currentTime = new Date().getTime();
       if (sessionTime && (currentTime - sessionTime < 10 * 60 * 1000)) {
@@ -597,16 +577,7 @@
     });
 
     function onSelectBulanRekap() {
-      let selBulan = document.getElementById('rekap-pilih-bulan').value;
-      if(selBulan === "") return;
-      let year = new Date().getFullYear();
-      let monthIndex = parseInt(selBulan);
-      
-      let startDate = new Date(year, monthIndex, 1);
-      let endDate = new Date(year, monthIndex + 1, 0);
-
-      document.getElementById('rekap-tgl-mulai').value = startDate.toISOString().split('T')[0];
-      document.getElementById('rekap-tgl-selesai').value = endDate.toISOString().split('T')[0];
+      // Fungsi penyeleksi bulan otomatis (Agustus, dll)
     }
 
     function switchPage(page) {
@@ -749,7 +720,6 @@
       initStandbyCamera(selectVal);
     }
 
-    // ZERO-DELAY (0 DETIK) & INSTANT LIVE PREVIEW
     let isProcessingScan = false;
     let lastScannedNIS = "";
 
@@ -808,10 +778,9 @@
       let currentHour = now.getHours();
       let currentMinute = now.getMinutes();
       let totalMinutes = currentHour * 60 + currentMinute;
-      let limitMinutes = 7 * 60 + 30; // Default 07:30
+      let limitMinutes = 7 * 60 + 30;
       let statusKet = totalMinutes > limitMinutes ? "Telat" : "Hadir";
 
-      // 1. TAMPILKAN KE LAYAR SECARA INSTAN TANPA MENUNGGU JARINGAN
       let notifyBox = document.getElementById('notification-box');
       if(notifyBox) notifyBox.innerHTML = `<span style="color: #065f46; font-weight: bold;">✅ ${namaSiswa} Berhasil Absen (${statusKet})</span>`;
       
@@ -832,7 +801,6 @@
       }
       if(statusText) statusText.innerText = "Kamera Standby (Zero-Delay / Siap 2000 Siswa)";
 
-      // 2. MASUKKAN KE CACHE LOKAL HARI INI
       let newRecord = { nis: nis, nama: namaSiswa, kelas: kelasSiswa, waktu: now.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'}), tanggal: todayDateStr, status: statusKet };
       globalAbsenHariIni.push(newRecord);
       if(statusKet === 'Telat') {
@@ -844,7 +812,6 @@
       }
       renderFastDashboardInstant();
 
-      // 3. KIRIM KE SPREADSHEET DI LATAR BELAKANG
       let targetUrl = `${SCRIPT_URL}?action=absen&nis=${encodeURIComponent(nis)}&status=${encodeURIComponent(statusKet)}`;
       fetch(targetUrl)
         .then(res => res.json())
@@ -852,7 +819,6 @@
           loadAdminDataBackground();
         }).catch(() => {});
 
-      // 4. BUKA KUNCI SCANNER SEKETIKA (0.05 DETIK)
       setTimeout(() => { 
         isProcessingScan = false; 
         lastScannedNIS = "";
@@ -924,7 +890,7 @@
       let kelasSet = [...new Set(globalSiswaData.map(s => s.kelas))].sort();
       let selectRekap = document.getElementById('rekap-excel-kelas');
       if(selectRekap) {
-        selectRekap.innerHTML = '<option value="">-- Semua Kelas --</option>';
+        selectRekap.innerHTML = '<option value="">-- Pilih Kelas --</option>';
         if(loggedInUser.role === 'walikelas') {
           selectRekap.innerHTML = `<option value="${loggedInUser.classScope}">${loggedInUser.classScope}</option>`;
           selectRekap.value = loggedInUser.classScope;
@@ -1256,19 +1222,15 @@
       let kelasVal = loggedInUser.role === 'walikelas' ? loggedInUser.classScope : document.getElementById('rekap-excel-kelas').value;
       if(!kelasVal) { alert("Pilih kelas terlebih dahulu!"); return; }
 
-      let tglMulaiStr = document.getElementById('rekap-tgl-mulai').value;
-      let tglSelesaiStr = document.getElementById('rekap-tgl-selesai').value;
+      let bulanIndex = parseInt(document.getElementById('rekap-pilih-bulan').value);
+      let year = new Date().getFullYear();
 
-      if(!tglMulaiStr || !tglSelesaiStr) { alert("Pilih rentang tanggal atau bulan terlebih dahulu!"); return; }
-
-      let startDate = new Date(tglMulaiStr);
+      let startDate = new Date(year, bulanIndex, 1);
       startDate.setHours(0,0,0,0);
-      let endDate = new Date(tglSelesaiStr);
+      let endDate = new Date(year, bulanIndex + 1, 0);
       endDate.setHours(23,59,59,999);
 
-      let year = startDate.getFullYear();
-      let month = startDate.getMonth();
-      let daysInMonth = new Date(year, month + 1, 0).getDate();
+      let daysInMonth = endDate.getDate();
       const hariArr = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
 
       let siswaKelas = globalSiswaData.filter(s => s.kelas === kelasVal);
@@ -1280,7 +1242,7 @@
 
       html += `<tr><th>NO</th><th>NAMA SISWA</th><th>NIS</th><th>KELAS</th>`;
       for(let i=1; i<=daysInMonth; i++) {
-        let d = new Date(year, month, i);
+        let d = new Date(year, bulanIndex, i);
         let dayOfWeek = d.getDay();
         let isLibur = (dayOfWeek === 0 || dayOfWeek === 6);
         html += `<th style="text-align:center; font-size:0.65rem; ${isLibur ? 'background:#fee2e2; color:#991b1b;' : 'color:#64748b;'}">${hariArr[dayOfWeek]}</th>`;
@@ -1289,7 +1251,7 @@
 
       html += `<tr><th></th><th></th><th></th><th></th>`;
       for(let i=1; i<=daysInMonth; i++) {
-        let d = new Date(year, month, i);
+        let d = new Date(year, bulanIndex, i);
         let dayOfWeek = d.getDay();
         let isLibur = (dayOfWeek === 0 || dayOfWeek === 6);
         html += `<th style="text-align:center; ${isLibur ? 'background:#fee2e2; color:#991b1b;' : ''}">${i}</th>`;
@@ -1297,7 +1259,7 @@
       html += `<th></th><th></th><th></th><th></th><th></th></tr></thead><tbody>`;
 
       if(siswaKelas.length === 0) {
-        html += `<tr><td colspan="${daysInMonth + 9}" style="text-align:center;">Tidak ada data siswa.</td></tr>`;
+        html += `<tr><td colspan="${daysInMonth + 9}" style="text-align:center;">Tidak ada data siswa untuk kelas ini.</td></tr>`;
       } else {
         siswaKelas.forEach((s, idx) => {
           html += `<tr><td>${idx + 1}</td><td style="font-weight:600; white-space:nowrap;">${s.nama}</td><td>${s.nis}</td><td>${s.kelas}</td>`;
@@ -1305,7 +1267,7 @@
           let countH = 0, countT = 0, countS = 0, countI = 0;
 
           for(let i=1; i<=daysInMonth; i++) {
-            let d = new Date(year, month, i);
+            let d = new Date(year, bulanIndex, i);
             d.setHours(12,0,0,0);
             let dayOfWeek = d.getDay();
             let isLibur = (dayOfWeek === 0 || dayOfWeek === 6);
@@ -1314,15 +1276,11 @@
             let cellColor = "#94a3b8";
             let cellBg = "";
 
-            let isInRange = d >= startDate && d <= endDate;
-
             if (isLibur) {
               cellText = "";
-              cellBg = "#fef2f2"; // BLOK MERAH LEMBUT TANPA TEKS BERANTAKAN
-            } else if (!isInRange) {
-              cellText = "-";
-              cellColor = "#cbd5e1";
+              cellBg = "#fef2f2"; // BLOK MERAH LEMBUT (LIBUR) TANPA TEKS BERANTAKAN
             } else {
+              // SINKRONISASI 100% SAMA DENGAN DATA GLOBAL ABSEN (HADIR, TELAT, IZIN, SAKIT)
               let record = globalAbsenHariIni.find(a => {
                 if (a.nis.toString() !== s.nis.toString()) return false;
                 if (a.tanggal) {
@@ -1338,12 +1296,12 @@
                 if(st === 'hadir') { 
                   cellText = "H"; 
                   cellColor = "#065f46"; 
-                  cellBg = "#d1fae5"; 
+                  cellBg = "#d1fae5"; // HIJAU UNTUK HADIR
                   countH++; 
                 } else if(st === 'telat') { 
                   cellText = "T"; 
                   cellColor = "#92400e"; 
-                  cellBg = "#fef3c7"; 
+                  cellBg = "#fef3c7"; // KUNING UNTUK TELAT
                   countT++; 
                 } else if(st === 'sakit') { 
                   cellText = "S"; 
@@ -1383,18 +1341,15 @@
       let kelasVal = loggedInUser.role === 'walikelas' ? loggedInUser.classScope : document.getElementById('rekap-excel-kelas').value;
       if(!kelasVal) { alert("Pilih kelas terlebih dahulu!"); return; }
 
-      let tglMulaiStr = document.getElementById('rekap-tgl-mulai').value;
-      let tglSelesaiStr = document.getElementById('rekap-tgl-selesai').value;
-      if(!tglMulaiStr || !tglSelesaiStr) { alert("Pilih rentang tanggal atau bulan terlebih dahulu!"); return; }
+      let bulanIndex = parseInt(document.getElementById('rekap-pilih-bulan').value);
+      let year = new Date().getFullYear();
 
-      let startDate = new Date(tglMulaiStr);
+      let startDate = new Date(year, bulanIndex, 1);
       startDate.setHours(0,0,0,0);
-      let endDate = new Date(tglSelesaiStr);
+      let endDate = new Date(year, bulanIndex + 1, 0);
       endDate.setHours(23,59,59,999);
 
-      let year = startDate.getFullYear();
-      let month = startDate.getMonth();
-      let daysInMonth = new Date(year, month + 1, 0).getDate();
+      let daysInMonth = endDate.getDate();
       const hariArr = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
 
       let siswaKelas = globalSiswaData.filter(s => s.kelas === kelasVal);
@@ -1402,7 +1357,7 @@
       let wbData = [];
       let dayRow = ["", "", "", "HARI:"];
       for(let i=1; i<=daysInMonth; i++) {
-        let d = new Date(year, month, i);
+        let d = new Date(year, bulanIndex, i);
         dayRow.push(hariArr[d.getDay()]);
       }
       wbData.push(dayRow);
@@ -1417,15 +1372,12 @@
         let countH = 0, countT = 0, countS = 0, countI = 0;
 
         for(let i=1; i<=daysInMonth; i++) {
-          let d = new Date(year, month, i);
+          let d = new Date(year, bulanIndex, i);
           let dayOfWeek = d.getDay();
           let isLibur = (dayOfWeek === 0 || dayOfWeek === 6);
-          let isInRange = d >= startDate && d <= endDate;
 
           if (isLibur) {
             row.push("LIBUR");
-          } else if (!isInRange) {
-            row.push("-");
           } else {
             let val = "-";
             let record = globalAbsenHariIni.find(a => {
@@ -1544,7 +1496,7 @@
 
     function filterSiswaByKelas() {
       let val = document.getElementById('filter-kelas').value;
-      filteredSiswaData = val ? globalSiswaData.filter(s => s.kelas === val) : globalSissanData;
+      filteredSiswaData = val ? globalSiswaData.filter(s => s.kelas === val) : globalSiswaData;
       renderTabelSiswa();
     }
 
