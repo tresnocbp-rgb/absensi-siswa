@@ -30,7 +30,7 @@
     .brand-header { display: flex; align-items: center; gap: 14px; }
     .container { max-width: 1360px; margin: 35px auto; padding: 0 24px; width: 100%; flex: 1; }
     
-     aside { width: 280px; background-color: var(--sidebar-bg); color: white; display: flex; flex-direction: column; justify-content: space-between; position: fixed; height: 100vh; z-index: 100; border-right: 1px solid rgba(255,255,255,0.05); box-shadow: 5px 0 30px rgba(0,0,0,0.1); }
+    aside { width: 280px; background-color: var(--sidebar-bg); color: white; display: flex; flex-direction: column; justify-content: space-between; position: fixed; height: 100vh; z-index: 100; border-right: 1px solid rgba(255,255,255,0.05); box-shadow: 5px 0 30px rgba(0,0,0,0.1); }
     .sidebar-brand { padding: 22px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
     .user-profile-box { padding: 14px 18px; background: rgba(255,255,255,0.04); margin: 14px; border-radius: 12px; display: flex; align-items: center; gap: 12px; border: 1px solid rgba(255,255,255,0.06); flex-shrink: 0; }
     .user-avatar { width: 38px; height: 38px; background: linear-gradient(135deg, #818cf8, #4f46e5); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; box-shadow: 0 4px 10px rgba(99,102,241,0.4); }
@@ -143,7 +143,7 @@
             </div>
           </div>
           <div id="reader" style="width: 100%; border-radius: 14px; overflow: hidden; background: #000; margin-top: 10px; min-height: 280px;"></div>
-          <p id="scan-status-text" style="margin-top: 18px; font-weight: 600; color: var(--primary);">Kamera Standby (Zero-Delay / Siap 2000 Siswa)</p>
+          <p id="scan-status-text" style="margin-top: 18px; font-weight: 600; color: var(--primary);"></p>
         </div>
         <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
           <div>
@@ -224,7 +224,7 @@
         <ul class="sidebar-menu" id="dynamic-sidebar-menu"></ul>
       </div>
       <div class="sidebar-footer">
-        <a onclick="switchPage('scanner')">📷 Buka Scanner Utama</a>
+        <a onclick="logoutAdmin()">🚪 Logout Manual</a>
       </div>
     </aside>
 
@@ -607,7 +607,6 @@
           <li><a onclick="switchAdminTab('admin-cetak')" id="menu-admin-cetak">🖨️ Download QR Code</a></li>
           <li><a onclick="switchAdminTab('admin-rekap')" id="menu-admin-rekap">📈 Rekap Bulanan</a></li>
           <li><a onclick="switchAdminTab('admin-daftar-hadir')" id="menu-admin-daftar-hadir">📝 Daftar Hadir</a></li>
-          <li><a onclick="logoutAdmin()" style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 16px; color: #f87171;">🚪 Logout Manual</a></li>
         `;
       } else {
         menuContainer.innerHTML = `
@@ -620,7 +619,6 @@
           <li><a onclick="switchAdminTab('admin-kelola-absen')" id="menu-admin-kelola-absen">⚙️ Kelola Absen</a></li>
           <li><a onclick="switchAdminTab('admin-manajemen-kelas')" id="menu-admin-manajemen-kelas">🏫 Manajemen Kelas</a></li>
           <li><a onclick="switchAdminTab('admin-daftar-hadir')" id="menu-admin-daftar-hadir">📝 Daftar Hadir</a></li>
-          <li><a onclick="logoutAdmin()" style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 16px; color: #f87171;">🚪 Logout Manual</a></li>
         `;
       }
     }
@@ -708,7 +706,7 @@
     let isProcessingScan = false;
     let lastScannedNIS = "";
 
-function onScanSuccess(decodedText) {
+    function onScanSuccess(decodedText) {
       let nis = decodedText.toString().trim();
       if(isProcessingScan || lastScannedNIS === nis) return;
       
@@ -766,69 +764,6 @@ function onScanSuccess(decodedText) {
       let limitMinutes = 7 * 60 + 30; // Default 07:30
       let statusKet = totalMinutes > limitMinutes ? "Telat" : "Hadir";
 
-      // 1. TAMPILKAN KE LAYAR SECARA INSTAN TANPA MENUNGGU JARINGAN (ZERO-DELAY)
-      let notifyBox = document.getElementById('notification-box');
-      if(notifyBox) notifyBox.innerHTML = `<span style="color: #065f46; font-weight: bold;">✅ ${namaSiswa} Berhasil Absen (${statusKet})</span>`;
-      
-      let rNis = document.getElementById('res-nis');
-      let rNama = document.getElementById('res-nama');
-      let rKelas = document.getElementById('res-kelas');
-      let rTgl = document.getElementById('res-tanggal');
-      let rStatus = document.getElementById('res-status');
-      let statusText = document.getElementById('scan-status-text');
-
-      if(rNis) rNis.innerText = nis;
-      if(rNama) rNama.innerText = namaSiswa;
-      if(rKelas) rKelas.innerText = kelasSiswa;
-      if(rTgl) rTgl.innerText = now.toLocaleDateString('id-ID') + ' (' + now.toLocaleTimeString('id-ID') + ')';
-      if(rStatus) {
-        rStatus.className = 'status-badge ' + (statusKet === 'Hadir' ? 'badge-hadir' : 'badge-telat');
-        rStatus.innerText = statusKet.toUpperCase();
-      }
-      if(statusText) statusText.innerText = "Kamera Standby (Zero-Delay / Siap 2000 Siswa)";
-
-      // 2. MASUKKAN KE CACHE LOKAL HARI INI
-      let newRecord = { nis: nis, nama: namaSiswa, kelas: kelasSiswa, waktu: now.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'}), tanggal: todayDateStr, status: statusKet };
-      globalAbsenHariIni.push(newRecord);
-      if(statusKet === 'Telat') {
-        globalListTelat.push(newRecord);
-        localStorage.setItem('cache_telat', JSON.stringify(globalListTelat));
-      } else {
-        globalListHadir.push(newRecord);
-        localStorage.setItem('cache_hadir', JSON.stringify(globalListHadir));
-      }
-      renderFastDashboardInstant();
-
-      // 3. KIRIM KE SPREADSHEET DI LATAR BELAKANG (URL ENCODED YANG AMAN)
-      let targetUrl = `${SCRIPT_URL}?action=absen&nis=${encodeURIComponent(nis)}&status=${encodeURIComponent(statusKet)}`;
-      fetch(targetUrl)
-        .then(res => res.json())
-        .then(res => {
-          loadAdminDataBackground();
-        }).catch(() => {});
-
-      // 4. BUKA KUNCI SCANNER SEKETIKA (0.05 DETIK)
-      setTimeout(() => { 
-        isProcessingScan = false; 
-        lastScannedNIS = "";
-      }, 50);
-    }
-
-      isProcessingScan = true;
-      lastScannedNIS = nis;
-      playBeepSound(); 
-
-      let foundSiswa = globalSiswaData.find(s => s.nis.toString() === nis);
-      let namaSiswa = foundSiswa ? foundSiswa.nama : "Siswa SMK";
-      let kelasSiswa = foundSiswa ? foundSiswa.kelas : "-";
-
-      let now = new Date();
-      let currentHour = now.getHours();
-      let currentMinute = now.getMinutes();
-      let totalMinutes = currentHour * 60 + currentMinute;
-      let limitMinutes = 7 * 60 + 30; // Default 07:30
-      let statusKet = totalMinutes > limitMinutes ? "Telat" : "Hadir";
-
       // 1. TAMPILKAN KE LAYAR SECARA INSTAN TANPA MENUNGGU JARINGAN
       let notifyBox = document.getElementById('notification-box');
       if(notifyBox) notifyBox.innerHTML = `<span style="color: #065f46; font-weight: bold;">✅ ${namaSiswa} Berhasil Absen (${statusKet})</span>`;
@@ -862,8 +797,9 @@ function onScanSuccess(decodedText) {
       }
       renderFastDashboardInstant();
 
-      // 3. KIRIM KE SPREADSHEET DI LATAR BELAKANG (BACKGROUND ASYNC)
-      fetch(`${SCRIPT_URL}?action=absen&nis=${nis}&status=${statusKet}`)
+      // 3. KIRIM KE SPREADSHEET DI LATAR BELAKANG (DENGAN FETCH URL-ENCODED YANG AMAN)
+      let targetUrl = `${SCRIPT_URL}?action=absen&nis=${encodeURIComponent(nis)}&status=${encodeURIComponent(statusKet)}`;
+      fetch(targetUrl)
         .then(res => res.json())
         .then(res => {
           loadAdminDataBackground();
@@ -897,10 +833,6 @@ function onScanSuccess(decodedText) {
       localStorage.setItem('admin_session_time', new Date().getTime());
       localStorage.setItem('admin_user_data', JSON.stringify(loggedInUser));
       switchPage('admin');
-    }
-
-    function capitalizeFirstLetter(string) {
-      return string.charAt(0).toUpperCase() + string.slice(1);
     }
 
     function logoutAdmin() {
@@ -1012,9 +944,9 @@ function onScanSuccess(decodedText) {
             return item.tanggal ? item.tanggal === todayDateStr : true;
           });
 
-          globalListHadir = absenHariIniOnly.filter(h => h.status !== 'Izin' && h.status !== 'Sakit' && h.status !== 'Telat');
-          globalListTelat = absenHariIniOnly.filter(t => t.status === 'Telat');
-          globalListIzinSakit = absenHariIniOnly.filter(i => i.status === 'Izin' || i.status === 'Sakit');
+          globalListHadir = absenHariIniOnly.filter(h => h.status.toLowerCase() !== 'izin' && h.status.toLowerCase() !== 'sakit' && h.status.toLowerCase() !== 'telat');
+          globalListTelat = absenHariIniOnly.filter(t => t.status.toLowerCase() === 'telat');
+          globalListIzinSakit = absenHariIniOnly.filter(i => i.status.toLowerCase() === 'izin' || i.status.toLowerCase() === 'sakit');
 
           localStorage.setItem('cache_hadir', JSON.stringify(globalListHadir));
           localStorage.setItem('cache_telat', JSON.stringify(globalListTelat));
@@ -1033,9 +965,9 @@ function onScanSuccess(decodedText) {
       let todayDateStr = new Date().toISOString().split('T')[0];
       let absenHariIniOnly = globalAbsenHariIni.filter(item => item.tanggal ? item.tanggal === todayDateStr : true);
 
-      let listHadirScope = loggedInUser.role === 'walikelas' ? absenHariIniOnly.filter(h => h.kelas === loggedInUser.classScope && h.status !== 'Izin' && h.status !== 'Sakit' && h.status !== 'Telat') : absenHariIniOnly.filter(h => h.status !== 'Izin' && h.status !== 'Sakit' && h.status !== 'Telat');
-      let listTelatScope = loggedInUser.role === 'walikelas' ? absenHariIniOnly.filter(t => t.kelas === loggedInUser.classScope && t.status === 'Telat') : absenHariIniOnly.filter(t => t.status === 'Telat');
-      let listIzinSakitScope = loggedInUser.role === 'walikelas' ? absenHariIniOnly.filter(i => i.kelas === loggedInUser.classScope && (i.status === 'Izin' || i.status === 'Sakit')) : absenHariIniOnly.filter(i => i.status === 'Izin' || i.status === 'Sakit');
+      let listHadirScope = loggedInUser.role === 'walikelas' ? absenHariIniOnly.filter(h => h.kelas === loggedInUser.classScope && h.status.toLowerCase() !== 'izin' && h.status.toLowerCase() !== 'sakit' && h.status.toLowerCase() !== 'telat') : absenHariIniOnly.filter(h => h.status.toLowerCase() !== 'izin' && h.status.toLowerCase() !== 'sakit' && h.status.toLowerCase() !== 'telat');
+      let listTelatScope = loggedInUser.role === 'walikelas' ? absenHariIniOnly.filter(t => t.kelas === loggedInUser.classScope && t.status.toLowerCase() === 'telat') : absenHariIniOnly.filter(t => t.status.toLowerCase() === 'telat');
+      let listIzinSakitScope = loggedInUser.role === 'walikelas' ? absenHariIniOnly.filter(i => i.kelas === loggedInUser.classScope && (i.status.toLowerCase() === 'izin' || i.status.toLowerCase() === 'sakit')) : absenHariIniOnly.filter(i => i.status.toLowerCase() === 'izin' || i.status.toLowerCase() === 'sakit');
 
       let absentNISSet = new Set(absenHariIniOnly.map(a => a.nis.toString()));
       let listBelumAbsenScope = listSiswaScope.filter(s => !absentNISSet.has(s.nis.toString()));
@@ -1087,7 +1019,7 @@ function onScanSuccess(decodedText) {
         htmlI += `<tr><td colspan="5" style="text-align:center; color:#64748b;">Tidak ada siswa izin atau sakit hari ini</td></tr>`;
       } else {
         listIzinSakitScope.forEach(i => {
-          let badgeSt = i.status === 'Sakit' ? 'badge-sakit' : 'badge-izin';
+          let badgeSt = i.status.toLowerCase() === 'sakit' ? 'badge-sakit' : 'badge-izin';
           htmlI += `<tr><td>${i.nis}</td><td style="font-weight:600;">${i.nama}</td><td>${i.kelas}</td><td><span class="status-badge ${badgeSt}">${i.status}</span></td><td>${i.waktu}</td></tr>`;
         });
       }
@@ -1163,13 +1095,13 @@ function onScanSuccess(decodedText) {
           let absenRecord = absenHariIniOnly.find(a => a.nis.toString() === s.nis.toString());
           let currentStatus = absenRecord ? absenRecord.status : "Belum Absen";
 
-          if(currentStatus === 'Hadir') countHadir++;
-          else if(currentStatus === 'Telat') countTelat++;
-          else if(currentStatus === 'Izin') countIzin++;
-          else if(currentStatus === 'Sakit') countSakit++;
+          if(currentStatus.toLowerCase() === 'hadir') countHadir++;
+          else if(currentStatus.toLowerCase() === 'telat') countTelat++;
+          else if(currentStatus.toLowerCase() === 'izin') countIzin++;
+          else if(currentStatus.toLowerCase() === 'sakit') countSakit++;
 
-          let isLocked = (currentStatus === 'Hadir' || currentStatus === 'Telat');
-          let badgeClass = currentStatus === 'Hadir' ? 'badge-hadir' : (currentStatus === 'Telat' ? 'badge-telat' : (currentStatus === 'Izin' ? 'badge-izin' : (currentStatus === 'Sakit' ? 'badge-sakit' : 'badge-none')));
+          let isLocked = (currentStatus.toLowerCase() === 'hadir' || currentStatus.toLowerCase() === 'telat');
+          let badgeClass = currentStatus.toLowerCase() === 'hadir' ? 'badge-hadir' : (currentStatus.toLowerCase() === 'telat' ? 'badge-telat' : (currentStatus.toLowerCase() === 'izin' ? 'badge-izin' : (currentStatus.toLowerCase() === 'sakit' ? 'badge-sakit' : 'badge-none')));
 
           html += `
             <tr>
@@ -1183,9 +1115,9 @@ function onScanSuccess(decodedText) {
                   `<span style="color:var(--text-muted); font-size:0.8rem;">Terkunci</span>` :
                   `<div style="display:flex; gap:8px; align-items:center;">
                     <select id="status-sel-${s.nis}" style="margin:0; width:130px; padding:6px 10px;">
-                      <option value="Izin" ${currentStatus==='Izin'?'selected':''}>Izin (I)</option>
-                      <option value="Sakit" ${currentStatus==='Sakit'?'selected':''}>Sakit (S)</option>
-                      <option value="Belum Absen" ${currentStatus==='Belum Absen'?'selected':''}>Reset</option>
+                      <option value="Izin" ${currentStatus.toLowerCase()==='izin'?'selected':''}>Izin (I)</option>
+                      <option value="Sakit" ${currentStatus.toLowerCase()==='sakit'?'selected':''}>Sakit (S)</option>
+                      <option value="Belum Absen" ${currentStatus.toLowerCase()==='belum absen'?'selected':''}>Reset</option>
                     </select>
                     <button onclick="updateManualStatus('${s.nis}')" class="btn btn-success" style="padding:6px 12px; font-size:0.8rem;">Simpan</button>
                    </div>`
@@ -1360,11 +1292,11 @@ function onScanSuccess(decodedText) {
               });
 
               if(record) {
-                let st = record.status ? record.status.toString().trim() : "";
-                if(st === 'Hadir') { cellText = "H"; cellColor = "#10b981"; countH++; }
-                else if(st === 'Telat') { cellText = "T"; cellColor = "#f59e0b"; countT++; }
-                else if(st === 'Sakit') { cellText = "S"; cellColor = "#a855f7"; countS++; }
-                else if(st === 'Izin') { cellText = "I"; cellColor = "#0284c7"; countI++; }
+                let st = record.status ? record.status.toString().trim().toLowerCase() : "";
+                if(st === 'hadir') { cellText = "H"; cellColor = "#10b981"; countH++; }
+                else if(st === 'telat') { cellText = "T"; cellColor = "#f59e0b"; countT++; }
+                else if(st === 'sakit') { cellText = "S"; cellColor = "#a855f7"; countS++; }
+                else if(st === 'izin') { cellText = "I"; cellColor = "#0284c7"; countI++; }
               }
             }
 
@@ -1462,11 +1394,11 @@ function onScanSuccess(decodedText) {
             });
 
             if(record) {
-              let st = record.status ? record.status.toString().trim() : "";
-              if(st === 'Hadir') { val = "H"; countH++; }
-              else if(st === 'Telat') { val = "T"; countT++; }
-              else if(st === 'Sakit') { val = "S"; countS++; }
-              else if(st === 'Izin') { val = "I"; countI++; }
+              let st = record.status ? record.status.toString().trim().toLowerCase() : "";
+              if(st === 'hadir') { val = "H"; countH++; }
+              else if(st === 'telat') { val = "T"; countT++; }
+              else if(st === 'sakit') { val = "S"; countS++; }
+              else if(st === 'izin') { val = "I"; countI++; }
             }
             row.push(val);
           }
@@ -1501,7 +1433,7 @@ function onScanSuccess(decodedText) {
         html += `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Tidak ada data absensi.</td></tr>`;
       } else {
         combined.forEach(item => {
-          let badge = item.status === 'Hadir' ? 'badge-hadir' : (item.status === 'Telat' ? 'badge-telat' : (item.status === 'Sakit' ? 'badge-sakit' : 'badge-izin'));
+          let badge = item.status.toLowerCase() === 'hadir' ? 'badge-hadir' : (item.status.toLowerCase() === 'telat' ? 'badge-telat' : (item.status.toLowerCase() === 'sakit' ? 'badge-sakit' : 'badge-izin'));
           html += `<tr><td>${item.waktu}</td><td>${item.nis}</td><td>${item.nama}</td><td>${item.kelas}</td><td><span class="status-badge ${badge}">${item.status}</span></td></tr>`;
         });
       }
