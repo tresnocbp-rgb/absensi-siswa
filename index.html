@@ -763,7 +763,7 @@
       let limitMinutes = 7 * 60 + 30; // Default 07:30
       let statusKet = totalMinutes > limitMinutes ? "Telat" : "Hadir";
 
-      // 1. TAMPILKAN KE LAYAR SECARA INSTAN TANPA MENUNGGU JARINGAN (ZERO-DELAY & LIVE PREVIEW)
+      // 1. TAMPILKAN KE LAYAR SECARA INSTAN TANPA MENUNGGU JARINGAN
       let notifyBox = document.getElementById('notification-box');
       if(notifyBox) notifyBox.innerHTML = `<span style="color: #065f46; font-weight: bold;">✅ ${namaSiswa} Berhasil Absen (${statusKet})</span>`;
       
@@ -796,7 +796,7 @@
       }
       renderFastDashboardInstant();
 
-      // 3. KIRIM KE SPREADSHEET DI LATAR BELAKANG (BACKGROUND ASYNC - KIRIM EMAIL OTOMATIS)
+      // 3. KIRIM KE SPREADSHEET DI LATAR BELAKANG (BACKGROUND ASYNC)
       fetch(`${SCRIPT_URL}?action=absen&nis=${nis}&status=${statusKet}`)
         .then(res => res.json())
         .then(res => {
@@ -1555,7 +1555,6 @@
         link.download = `QR-${namaSiswa.replace(/\s+/g, '_')}-${kelasSiswa.replace(/\s+/g, '_')}.jpg`;
         link.href = canvas.toDataURL('image/jpeg', 1.0);
         link.click();
-.click();
       });
     }
 
@@ -1580,7 +1579,7 @@
         tempDiv.style.left = '-9999px';
         tempDiv.innerHTML = `
           <div id="temp-card-${index}" class="qr-card-item" style="border: 2px solid #0f172a; border-radius: 12px; padding: 16px; background: #fff; width: 220px; display: flex; flex-direction: column; align-items: center; text-align: center;">
-            <div style="font-weight: 700; font-size: 0.85rem; color: #0f172a; margin-bottom: 8px;">SMK TARUNA TERPADU_2</div>
+            <div style="font-weight: 700; font-size: 0.85rem; color: #0f172a; margin-bottom: 8px;">SMK TARUNA TERPADU 2</div>
             <div id="temp-code-${index}" style="width: 130px; height: 130px; margin: 5px auto;"></div>
             <div style="font-size: 0.85rem; font-weight: 700; color: #0f172a; margin-top: 8px; line-height: 1.3;">
               ${s.nama}<br><span style="color: #64748b; font-weight: 500; font-size: 0.75rem;">Kelas: ${s.kelas} | NIS: ${s.nis}</span>
