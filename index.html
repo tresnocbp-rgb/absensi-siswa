@@ -708,7 +708,7 @@
     let isProcessingScan = false;
     let lastScannedNIS = "";
 
-    function onScanSuccess(decodedText) {
+function onScanSuccess(decodedText) {
       let nis = decodedText.toString().trim();
       if(isProcessingScan || lastScannedNIS === nis) return;
       
@@ -750,6 +750,69 @@
         }, 50);
         return;
       }
+
+      isProcessingScan = true;
+      lastScannedNIS = nis;
+      playBeepSound(); 
+
+      let foundSiswa = globalSiswaData.find(s => s.nis.toString() === nis);
+      let namaSiswa = foundSiswa ? foundSiswa.nama : "Siswa SMK";
+      let kelasSiswa = foundSiswa ? foundSiswa.kelas : "-";
+
+      let now = new Date();
+      let currentHour = now.getHours();
+      let currentMinute = now.getMinutes();
+      let totalMinutes = currentHour * 60 + currentMinute;
+      let limitMinutes = 7 * 60 + 30; // Default 07:30
+      let statusKet = totalMinutes > limitMinutes ? "Telat" : "Hadir";
+
+      // 1. TAMPILKAN KE LAYAR SECARA INSTAN TANPA MENUNGGU JARINGAN (ZERO-DELAY)
+      let notifyBox = document.getElementById('notification-box');
+      if(notifyBox) notifyBox.innerHTML = `<span style="color: #065f46; font-weight: bold;">✅ ${namaSiswa} Berhasil Absen (${statusKet})</span>`;
+      
+      let rNis = document.getElementById('res-nis');
+      let rNama = document.getElementById('res-nama');
+      let rKelas = document.getElementById('res-kelas');
+      let rTgl = document.getElementById('res-tanggal');
+      let rStatus = document.getElementById('res-status');
+      let statusText = document.getElementById('scan-status-text');
+
+      if(rNis) rNis.innerText = nis;
+      if(rNama) rNama.innerText = namaSiswa;
+      if(rKelas) rKelas.innerText = kelasSiswa;
+      if(rTgl) rTgl.innerText = now.toLocaleDateString('id-ID') + ' (' + now.toLocaleTimeString('id-ID') + ')';
+      if(rStatus) {
+        rStatus.className = 'status-badge ' + (statusKet === 'Hadir' ? 'badge-hadir' : 'badge-telat');
+        rStatus.innerText = statusKet.toUpperCase();
+      }
+      if(statusText) statusText.innerText = "Kamera Standby (Zero-Delay / Siap 2000 Siswa)";
+
+      // 2. MASUKKAN KE CACHE LOKAL HARI INI
+      let newRecord = { nis: nis, nama: namaSiswa, kelas: kelasSiswa, waktu: now.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'}), tanggal: todayDateStr, status: statusKet };
+      globalAbsenHariIni.push(newRecord);
+      if(statusKet === 'Telat') {
+        globalListTelat.push(newRecord);
+        localStorage.setItem('cache_telat', JSON.stringify(globalListTelat));
+      } else {
+        globalListHadir.push(newRecord);
+        localStorage.setItem('cache_hadir', JSON.stringify(globalListHadir));
+      }
+      renderFastDashboardInstant();
+
+      // 3. KIRIM KE SPREADSHEET DI LATAR BELAKANG (URL ENCODED YANG AMAN)
+      let targetUrl = `${SCRIPT_URL}?action=absen&nis=${encodeURIComponent(nis)}&status=${encodeURIComponent(statusKet)}`;
+      fetch(targetUrl)
+        .then(res => res.json())
+        .then(res => {
+          loadAdminDataBackground();
+        }).catch(() => {});
+
+      // 4. BUKA KUNCI SCANNER SEKETIKA (0.05 DETIK)
+      setTimeout(() => { 
+        isProcessingScan = false; 
+        lastScannedNIS = "";
+      }, 50);
+    }
 
       isProcessingScan = true;
       lastScannedNIS = nis;
