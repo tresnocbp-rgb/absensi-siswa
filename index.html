@@ -529,7 +529,6 @@
     let loggedInUser = JSON.parse(localStorage.getItem('admin_user_data') || '{"username":"admin","name":"Admin","role":"admin","classScope":""}');
 
     window.addEventListener('DOMContentLoaded', () => {
-      // RESET CACHE OTOMATIS JIKA BERGANTI HARI BARU
       let todayStr = new Date().toISOString().split('T')[0];
       let lastSavedDate = localStorage.getItem('app_last_date');
       if (lastSavedDate !== todayStr) {
@@ -702,7 +701,7 @@
       initStandbyCamera(selectVal);
     }
 
-    // ZERO-DELAY (0 DETIK) & ASYNC QUEUE SUPAYA 2000 SISWA BISA SCAN TANPA ANTREAN
+    // ZERO-DELAY (0 DETIK) & INSTANT LIVE PREVIEW
     let isProcessingScan = false;
     let lastScannedNIS = "";
 
@@ -730,9 +729,18 @@
         playBeepSound();
         let notifyBox = document.getElementById('notification-box');
         if(notifyBox) notifyBox.innerHTML = `<span style="color: #d97706; font-weight: bold;">⚠️ Siswa NIS ${nis} SUDAH BERHASIL ABSEN hari ini!</span>`;
-        let statusText = document.getElementById('scan-status-text');
-        if(statusText) statusText.innerText = "Sudah Absen Hari Ini! Lanjut siswa berikutnya...";
         
+        let foundSiswa = globalSiswaData.find(s => s.nis.toString() === nis);
+        if(foundSiswa) {
+          document.getElementById('res-nis').innerText = nis;
+          document.getElementById('res-nama').innerText = foundSiswa.nama;
+          document.getElementById('res-kelas').innerText = foundSiswa.kelas;
+          document.getElementById('res-tanggal').innerText = new Date().toLocaleDateString('id-ID');
+          let badge = document.getElementById('res-status');
+          badge.className = 'status-badge badge-hadir';
+          badge.innerText = "SUDAH ABSEN";
+        }
+
         setTimeout(() => { 
           isProcessingScan = false; 
           lastScannedNIS = "";
@@ -755,7 +763,7 @@
       let limitMinutes = 7 * 60 + 30; // Default 07:30
       let statusKet = totalMinutes > limitMinutes ? "Telat" : "Hadir";
 
-      // 1. TAMPILKAN KE LAYAR SECARA INSTAN TANPA MENUNGGU JARINGAN (ZERO-DELAY)
+      // 1. TAMPILKAN KE LAYAR SECARA INSTAN TANPA MENUNGGU JARINGAN (ZERO-DELAY & LIVE PREVIEW)
       let notifyBox = document.getElementById('notification-box');
       if(notifyBox) notifyBox.innerHTML = `<span style="color: #065f46; font-weight: bold;">✅ ${namaSiswa} Berhasil Absen (${statusKet})</span>`;
       
@@ -788,7 +796,7 @@
       }
       renderFastDashboardInstant();
 
-      // 3. KIRIM KE SPREADSHEET DI LATAR BELAKANG (BACKGROUND ASYNC)
+      // 3. KIRIM KE SPREADSHEET DI LATAR BELAKANG (BACKGROUND ASYNC - KIRIM EMAIL OTOMATIS)
       fetch(`${SCRIPT_URL}?action=absen&nis=${nis}&status=${statusKet}`)
         .then(res => res.json())
         .then(res => {
@@ -1547,6 +1555,7 @@
         link.download = `QR-${namaSiswa.replace(/\s+/g, '_')}-${kelasSiswa.replace(/\s+/g, '_')}.jpg`;
         link.href = canvas.toDataURL('image/jpeg', 1.0);
         link.click();
+.click();
       });
     }
 
@@ -1571,7 +1580,7 @@
         tempDiv.style.left = '-9999px';
         tempDiv.innerHTML = `
           <div id="temp-card-${index}" class="qr-card-item" style="border: 2px solid #0f172a; border-radius: 12px; padding: 16px; background: #fff; width: 220px; display: flex; flex-direction: column; align-items: center; text-align: center;">
-            <div style="font-weight: 700; font-size: 0.85rem; color: #0f172a; margin-bottom: 8px;">SMK TARUNA TERPADU 2</div>
+            <div style="font-weight: 700; font-size: 0.85rem; color: #0f172a; margin-bottom: 8px;">SMK TARUNA TERPADU_2</div>
             <div id="temp-code-${index}" style="width: 130px; height: 130px; margin: 5px auto;"></div>
             <div style="font-size: 0.85rem; font-weight: 700; color: #0f172a; margin-top: 8px; line-height: 1.3;">
               ${s.nama}<br><span style="color: #64748b; font-weight: 500; font-size: 0.75rem;">Kelas: ${s.kelas} | NIS: ${s.nis}</span>
