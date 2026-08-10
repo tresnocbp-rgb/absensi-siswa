@@ -899,7 +899,7 @@
       setupPerwalianTabView();
     }
 
-    function loadAdminDataBackground() {
+function loadAdminDataBackground() {
       fetch(`${SCRIPT_URL}?action=admin_data`)
         .then(res => res.json())
         .then(data => {
@@ -910,12 +910,23 @@
           filteredSiswaData = loggedInUser.role === 'walikelas' ? globalSiswaData.filter(s => s.kelas === loggedInUser.classScope) : globalSiswaData;
           
           let rawHadir = data.listHadir || [];
-          globalListHadir = rawHadir.filter(h => {
+          let rawTelat = data.listTelat || [];
+          
+          // SIMPAN SELURUH RIWAYAT ABSENSI UNTUK REKAP BULANAN & LAPORAN
+          globalAbsenHariIni = [...rawHadir, ...rawTelat];
+          
+          // Filter khusus untuk tampilan Dashboard hari ini
+          let todayDateStr = new Date().toISOString().split('T')[0];
+          let absenHariIniOnly = globalAbsenHariIni.filter(item => {
+            return item.tanggal ? item.tanggal === todayDateStr : true;
+          });
+
+          globalListHadir = absenHariIniOnly.filter(h => {
             let s = h.status ? h.status.toString().trim() : "Hadir";
             return s !== 'Izin' && s !== 'Sakit';
           });
-          globalListTelat = data.listTelat || [];
-          globalListIzinSakit = rawHadir.filter(h => {
+          globalListTelat = absenHariIniOnly.filter(t => t.status && t.status.toString().trim() === 'Telat');
+          globalListIzinSakit = absenHariIniOnly.filter(h => {
             let s = h.status ? h.status.toString().trim() : "";
             return s === 'Izin' || s === 'Sakit';
           });
@@ -924,7 +935,6 @@
           localStorage.setItem('cache_telat', JSON.stringify(globalListTelat));
           localStorage.setItem('cache_izinsakit', JSON.stringify(globalListIzinSakit));
 
-          globalAbsenHariIni = [...rawHadir, ...globalListTelat];
           renderFastDashboardInstant();
         }).catch(() => {});
     }
