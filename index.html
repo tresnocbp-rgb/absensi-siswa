@@ -121,7 +121,7 @@
     <header style="background: linear-gradient(135deg, #0f172a, #1e1b4b); color: white; padding: 20px 36px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: space-between; border-bottom: none; position: sticky; top: 0; z-index: 90;">
       <div class="brand-header" style="display: flex; align-items: center; gap: 16px;">
         <div style="background: #ffffff; padding: 4px; border-radius: 12px; display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
-          <img src="https://lh3.googleusercontent.com/d/1AqOlLndmJ6rwOmtcDGYQa0ofYiTVMyeh" alt="Logo SMK" style="width: 38px; height: 38px; object-fit: contain;">
+          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" id="school-logo-img" alt="Logo SMK" style="width: 38px; height: 38px; object-fit: contain;">
         </div>
         <div>
           <h2 style="font-size: 1.3rem; font-weight: 800; color: #ffffff; letter-spacing: -0.5px;">E-ABSENSI SCHOOL SYSTEM</h2>
@@ -519,6 +519,19 @@
 
   <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxBmOiWq0Zs6Db7LKdgVbq_HFdwURhygu1EALEQYajdZGAKld127I8urdxAZSnz-6XVDA/exec";
+
+    // FUNGSI LOAD LOGO GAMBAR ASLI DARI DRIVE SECARA AMAN
+    window.addEventListener('DOMContentLoaded', () => {
+      let logoImg = document.getElementById('school-logo-img');
+      if(logoImg) {
+        let driveLogoUrl = "https://lh3.googleusercontent.com/d/1AqOlLndmJ6rwOmtcDGYQa0ofYiTVMyeh=s220";
+        logoImg.src = driveLogoUrl;
+        logoImg.onerror = function() {
+          // Fallback jika Google Drive membatasi direct-link
+          this.src = "https://raw.githubusercontent.com/favicon.ico"; 
+        };
+      }
+    });
 
     setInterval(() => {
       let el = document.getElementById('realtime-clock');
