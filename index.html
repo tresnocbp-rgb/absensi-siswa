@@ -404,10 +404,20 @@
         <div id="tab-admin-rekap" class="admin-tab" style="display: none;">
           <div style="margin-bottom: 28px;">
             <h2 style="font-size: 1.6rem; font-weight: 800; color: #0f172a;">Rekapitulasi Bulanan</h2>
-            <p style="color: var(--text-muted); font-size: 0.95rem;">Matriks kehadiran siswa per bulan dengan filter rentang tanggal.</p>
+            <p style="color: var(--text-muted); font-size: 0.95rem;">Matriks kehadiran siswa per bulan dengan filter rentang tanggal, kelas, dan bulan.</p>
           </div>
 
-          <div class="card" style="display: grid; grid-template-columns: repeat(3, 1fr) auto auto; gap: 16px; align-items: flex-end; margin-bottom: 24px;">
+          <div class="card" style="display: grid; grid-template-columns: repeat(4, 1fr) auto auto; gap: 14px; align-items: flex-end; margin-bottom: 24px;">
+            <div>
+              <label style="font-weight: 700; font-size: 0.85rem; color: var(--text-muted);">PILIH BULAN</label>
+              <select id="rekap-pilih-bulan" onchange="onSelectBulanRekap()">
+                <option value="">-- Pilih Bulan --</option>
+                <option value="0">Januari</option><option value="1">Februari</option><option value="2">Maret</option>
+                <option value="3">April</option><option value="4">Mei</option><option value="5">Juni</option>
+                <option value="6">Juli</option><option value="7" selected>Agustus</option><option value="8">September</option>
+                <option value="9">Oktober</option><option value="10">November</option><option value="11">Desember</option>
+              </select>
+            </div>
             <div>
               <label style="font-weight: 700; font-size: 0.85rem; color: var(--text-muted);">DARI TANGGAL</label>
               <input type="date" id="rekap-tgl-mulai">
@@ -426,7 +436,7 @@
 
           <div class="card" style="overflow-x: auto;">
             <div id="web-matrix-container">
-              <p style="text-align:center; color:var(--text-muted); padding:35px; font-weight: 500;">Silahkan pilih rentang tanggal, kelas, dan klik Tampilkan Matriks.</p>
+              <p style="text-align:center; color:var(--text-muted); padding:35px; font-weight: 500;">Silahkan pilih bulan/tanggal, kelas, dan klik Tampilkan Matriks.</p>
             </div>
           </div>
         </div>
@@ -558,6 +568,17 @@
         globalAbsenHariIni = [];
       }
 
+      // OTOMATIS SET DEFAULT BULAN & TANGGAL AGUSTUS 2026 DI REKAP BULANAN
+      let nowInit = new Date();
+      let yInit = nowInit.getFullYear();
+      let mInit = String(nowInit.getMonth() + 1).padStart(2, '0');
+      let lastDayInit = new Date(yInit, nowInit.getMonth() + 1, 0).getDate();
+      
+      let tglMulaiEl = document.getElementById('rekap-tgl-mulai');
+      let tglSelesaiEl = document.getElementById('rekap-tgl-selesai');
+      if(tglMulaiEl && !tglMulaiEl.value) tglMulaiEl.value = `${yInit}-${mInit}-01`;
+      if(tglSelesaiEl && !tglSelesaiEl.value) tglSelesaiEl.value = `${yInit}-${mInit}-${lastDayInit}`;
+
       let sessionTime = localStorage.getItem('admin_session_time');
       let currentTime = new Date().getTime();
       if (sessionTime && (currentTime - sessionTime < 10 * 60 * 1000)) {
@@ -574,6 +595,19 @@
       }
       loadAdminDataBackground();
     });
+
+    function onSelectBulanRekap() {
+      let selBulan = document.getElementById('rekap-pilih-bulan').value;
+      if(selBulan === "") return;
+      let year = new Date().getFullYear();
+      let monthIndex = parseInt(selBulan);
+      
+      let startDate = new Date(year, monthIndex, 1);
+      let endDate = new Date(year, monthIndex + 1, 0);
+
+      document.getElementById('rekap-tgl-mulai').value = startDate.toISOString().split('T')[0];
+      document.getElementById('rekap-tgl-selesai').value = endDate.toISOString().split('T')[0];
+    }
 
     function switchPage(page) {
       let scanPage = document.getElementById('wrapper-scanner-page');
@@ -1225,17 +1259,19 @@
       let tglMulaiStr = document.getElementById('rekap-tgl-mulai').value;
       let tglSelesaiStr = document.getElementById('rekap-tgl-selesai').value;
 
-      let siswaKelas = globalSiswaData.filter(s => s.kelas === kelasVal);
-      let now = new Date();
-      let year = now.getFullYear();
-      let month = now.getMonth();
+      if(!tglMulaiStr || !tglSelesaiStr) { alert("Pilih rentang tanggal atau bulan terlebih dahulu!"); return; }
+
+      let startDate = new Date(tglMulaiStr);
+      startDate.setHours(0,0,0,0);
+      let endDate = new Date(tglSelesaiStr);
+      endDate.setHours(23,59,59,999);
+
+      let year = startDate.getFullYear();
+      let month = startDate.getMonth();
       let daysInMonth = new Date(year, month + 1, 0).getDate();
       const hariArr = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
 
-      let startDate = tglMulaiStr ? new Date(tglMulaiStr) : new Date(year, month, 1);
-      startDate.setHours(0,0,0,0);
-      let endDate = tglSelesaiStr ? new Date(tglSelesaiStr) : new Date(year, month, daysInMonth);
-      endDate.setHours(23,59,59,999);
+      let siswaKelas = globalSiswaData.filter(s => s.kelas === kelasVal);
 
       let html = `<table><thead>`;
       html += `<tr><th colspan="4" style="text-align:center; background:#f1f5f9;">DATA SISWA</th>`;
@@ -1288,7 +1324,7 @@
               cellText = "-";
               cellColor = "#cbd5e1";
             } else {
-              // PENCARIAN DATA ABSENSI YANG AMAN DAN PRESISI UNTUK TANGGAL BERJALAN & SEBELUMNYA
+              // PENCARIAN DATA ABSENSI YANG PRESISI DENGAN GLOBAL ABSEN
               let record = globalAbsenHariIni.find(a => {
                 if (a.nis.toString() !== s.nis.toString()) return false;
                 if (a.tanggal) {
@@ -1325,9 +1361,9 @@
               }
             }
 
-            // GAYA TEKS VERTIKAL UNTUK HARI LIBUR, WARNA HIJAU UNTUK HADIR, KUNING UNTUK TELAT
+            // TAMPILAN TEKS VERTIKAL RAPI UNTUK LIBUR
             if (cellText === "LIBUR") {
-              html += `<td style="text-align:center; font-weight:700; font-size:0.7rem; color:${cellColor}; background:${cellBg}; writing-mode: vertical-rl; text-orientation: upright; letter-spacing: 2px; padding: 6px;" title="Hari Libur">LIBUR</td>`;
+              html += `<td style="text-align:center; font-weight:700; font-size:0.65rem; color:${cellColor}; background:${cellBg}; writing-mode: vertical-rl; text-orientation: upright; letter-spacing: 2px; padding: 6px;" title="Hari Libur">LIBUR</td>`;
             } else {
               html += `<td style="text-align:center; font-weight:700; color:${cellColor}; background:${cellBg};">${cellText}</td>`;
             }
@@ -1354,12 +1390,21 @@
       let kelasVal = loggedInUser.role === 'walikelas' ? loggedInUser.classScope : document.getElementById('rekap-excel-kelas').value;
       if(!kelasVal) { alert("Pilih kelas terlebih dahulu!"); return; }
 
-      let siswaKelas = globalSiswaData.filter(s => s.kelas === kelasVal);
-      let now = new Date();
-      let year = now.getFullYear();
-      let month = now.getMonth();
+      let tglMulaiStr = document.getElementById('rekap-tgl-mulai').value;
+      let tglSelesaiStr = document.getElementById('rekap-tgl-selesai').value;
+      if(!tglMulaiStr || !tglSelesaiStr) { alert("Pilih rentang tanggal atau bulan terlebih dahulu!"); return; }
+
+      let startDate = new Date(tglMulaiStr);
+      startDate.setHours(0,0,0,0);
+      let endDate = new Date(tglSelesaiStr);
+      endDate.setHours(23,59,59,999);
+
+      let year = startDate.getFullYear();
+      let month = startDate.getMonth();
       let daysInMonth = new Date(year, month + 1, 0).getDate();
       const hariArr = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+
+      let siswaKelas = globalSiswaData.filter(s => s.kelas === kelasVal);
 
       let wbData = [];
       let dayRow = ["", "", "", "HARI:"];
@@ -1382,9 +1427,12 @@
           let d = new Date(year, month, i);
           let dayOfWeek = d.getDay();
           let isLibur = (dayOfWeek === 0 || dayOfWeek === 6);
+          let isInRange = d >= startDate && d <= endDate;
 
           if (isLibur) {
             row.push("LIBUR");
+          } else if (!isInRange) {
+            row.push("-");
           } else {
             let val = "-";
             let record = globalAbsenHariIni.find(a => {
