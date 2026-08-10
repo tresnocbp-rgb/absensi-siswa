@@ -1337,7 +1337,7 @@
       if(elMatrix) elMatrix.innerHTML = html;
     }
 
-    function downloadExcelMatrix() {
+function downloadExcelMatrix() {
       let kelasVal = loggedInUser.role === 'walikelas' ? loggedInUser.classScope : document.getElementById('rekap-excel-kelas').value;
       if(!kelasVal) { alert("Pilih kelas terlebih dahulu!"); return; }
 
@@ -1373,6 +1373,7 @@
 
         for(let i=1; i<=daysInMonth; i++) {
           let d = new Date(year, bulanIndex, i);
+          d.setHours(12,0,0,0);
           let dayOfWeek = d.getDay();
           let isLibur = (dayOfWeek === 0 || dayOfWeek === 6);
 
@@ -1380,6 +1381,7 @@
             row.push("LIBUR");
           } else {
             let val = "-";
+            // PENCARIAN DATA ABSENSI YANG 100% SINKRON DENGAN WEB MATRIX
             let record = globalAbsenHariIni.find(a => {
               if (a.nis.toString() !== s.nis.toString()) return false;
               if (a.tanggal) {
@@ -1401,7 +1403,7 @@
           }
         }
         let totalHadirTelat = countH + countT;
-        let persentase = Math.round((totalHadirTelat / daysInMonth) * 100) + "%";
+        let persentase = daysInMonth > 0 ? Math.round((totalHadirTelat / daysInMonth) * 100) + "%" : "0%";
         
         row.push(countH, countT, countS, countI, persentase);
         wbData.push(row);
