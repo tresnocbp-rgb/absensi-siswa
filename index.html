@@ -695,7 +695,7 @@ function onScanSuccess(decodedText) {
       let nis = decodedText.toString().trim();
       let currentTime = new Date().getTime();
 
-      if (scannedCooldownMap[nis] && (currentTime - scannedCooldownMap[nis] < 3000)) {
+      if (scannedCooldownMap[nis] && (currentTime - scannedCooldownMap[nis] < 2000)) {
         return;
       }
 
@@ -706,16 +706,13 @@ function onScanSuccess(decodedText) {
         return;
       }
 
-      // PERBAIKAN: Hanya anggap sudah absen jika siswa tersebut sudah absen HARI INI (bukan hari kemarin)
+      // Validasi instan khusus hari ini
       let todayDateStr = new Date().toISOString().split('T')[0];
       let sudahAbsenHariIni = globalAbsenHariIni.some(item => {
         let matchNis = item.nis.toString() === nis;
         let matchTgl = item.tanggal ? item.tanggal === todayDateStr : true;
         return matchNis && matchTgl;
       });
-
-      if(sudahAbsenDiServer) { // variabel diganti/disesuaikan dengan sudahAbsenHariIni
-      }
 
       if(sudahAbsenHariIni) {
         scannedCooldownMap[nis] = currentTime;
@@ -741,6 +738,7 @@ function onScanSuccess(decodedText) {
       let limitMinutes = 7 * 60 + 30; // Default 07:30
       let statusKet = totalMinutes > limitMinutes ? "Telat" : "Hadir";
 
+      // TAMPILKAN KE LAYAR SEBELUM JARINGAN SELESAI (ZERO-DELAY)
       let notifyBox = document.getElementById('notification-box');
       if(notifyBox) notifyBox.innerHTML = `<span style="color: #065f46; font-weight: bold;">✅ ${namaSiswa} Berhasil Absen (${statusKet})</span>`;
       
@@ -772,6 +770,7 @@ function onScanSuccess(decodedText) {
       }
       renderDashboardTables();
 
+      // KIRIM KE SPREADSHEET DI LATAR BELAKANG TANPA MEMBLOKIR KAMERA
       fetch(`${SCRIPT_URL}?action=absen&nis=${nis}&status=${statusKet}`)
         .then(res => res.json())
         .then(res => {
