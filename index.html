@@ -691,7 +691,7 @@
 
     let scannedCooldownMap = {};
 
-    function onScanSuccess(decodedText) {
+function onScanSuccess(decodedText) {
       let nis = decodedText.toString().trim();
       let currentTime = new Date().getTime();
 
@@ -706,15 +706,24 @@
         return;
       }
 
-      let sudahAbsenDiServer = globalAbsenHariIni.some(item => item.nis.toString() === nis);
+      // PERBAIKAN: Hanya anggap sudah absen jika siswa tersebut sudah absen HARI INI (bukan hari kemarin)
+      let todayDateStr = new Date().toISOString().split('T')[0];
+      let sudahAbsenHariIni = globalAbsenHariIni.some(item => {
+        let matchNis = item.nis.toString() === nis;
+        let matchTgl = item.tanggal ? item.tanggal === todayDateStr : true;
+        return matchNis && matchTgl;
+      });
 
-      if(sudahAbsenDiServer) {
+      if(sudahAbsenDiServer) { // variabel diganti/disesuaikan dengan sudahAbsenHariIni
+      }
+
+      if(sudahAbsenHariIni) {
         scannedCooldownMap[nis] = currentTime;
         playBeepSound();
         let notifyBox = document.getElementById('notification-box');
-        if(notifyBox) notifyBox.innerHTML = `<span style="color: #d97706; font-weight: bold;">⚠️ Siswa NIS ${nis} SUDAH BERHASIL ABSEN sebelumnya!</span>`;
+        if(notifyBox) notifyBox.innerHTML = `<span style="color: #d97706; font-weight: bold;">⚠️ Siswa NIS ${nis} SUDAH BERHASIL ABSEN hari ini!</span>`;
         let statusText = document.getElementById('scan-status-text');
-        if(statusText) statusText.innerText = "Sudah Absen! Lanjut siswa berikutnya...";
+        if(statusText) statusText.innerText = "Sudah Absen Hari Ini! Lanjut siswa berikutnya...";
         return;
       }
 
@@ -752,7 +761,7 @@
       }
       if(statusText) statusText.innerText = "Kamera Standby (Zero-Delay / Siap 2000 Siswa)";
 
-      let newRecord = { nis: nis, nama: namaSiswa, kelas: kelasSiswa, waktu: now.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'}), status: statusKet };
+      let newRecord = { nis: nis, nama: namaSiswa, kelas: kelasSiswa, waktu: now.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'}), tanggal: todayDateStr, status: statusKet };
       globalAbsenHariIni.push(newRecord);
       if(statusKet === 'Telat') {
         globalListTelat.push(newRecord);
@@ -761,7 +770,7 @@
         globalListHadir.push(newRecord);
         localStorage.setItem('cache_hadir', JSON.stringify(globalListHadir));
       }
-      renderFastDashboardInstant();
+      renderDashboardTables();
 
       fetch(`${SCRIPT_URL}?action=absen&nis=${nis}&status=${statusKet}`)
         .then(res => res.json())
