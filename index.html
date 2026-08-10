@@ -118,21 +118,21 @@
 
   <!-- HALAMAN UTAMA: SCANNER -->
   <div id="wrapper-scanner-page">
-    <header style="background: linear-gradient(135deg, #0f172a, #1e1b4b); color: white; padding: 20px 36px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: space-between; border-bottom: none; position: sticky; top: 0; z-index: 90;">
+    <header style="background: linear-gradient(135deg, #0f172a, #1e1b4b); color: white; padding: 22px 36px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: space-between; border-bottom: none; position: sticky; top: 0; z-index: 90;">
       <div class="brand-header" style="display: flex; align-items: center; gap: 16px;">
         <div style="background: linear-gradient(135deg, #6366f1, #4f46e5); padding: 10px; border-radius: 14px; display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; box-shadow: 0 4px 15px rgba(99,102,241,0.4);">
-  <svg style="width: 24px; height: 24px; fill: #ffffff;" viewBox="0 0 24 24"><path d="M12 3L1 9l11 6 9-4.91V17h2V9M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>
-</div>
+          <svg style="width: 24px; height: 24px; fill: #ffffff;" viewBox="0 0 24 24"><path d="M12 3L1 9l11 6 9-4.91V17h2V9M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>
+        </div>
         <div>
           <h2 style="font-size: 1.3rem; font-weight: 800; color: #ffffff; letter-spacing: -0.5px;">E-ABSENSI SCHOOL SYSTEM</h2>
           <p style="font-size: 0.82rem; color: #94a3b8; font-weight: 500;">SMK Taruna Terpadu 2</p>
         </div>
       </div>
 
-      <!-- TAMPILAN HARI & JAM BESAR DI TENGAH -->
-      <div style="text-align: center; background: rgba(255, 255, 255, 0.07); padding: 8px 24px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.12); backdrop-filter: blur(8px);">
-        <div id="header-display-date" style="font-size: 0.8rem; color: #38bdf8; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">-</div>
-        <div id="realtime-clock" style="font-size: 1.8rem; font-weight: 800; color: #ffffff; letter-spacing: 1px; line-height: 1.2;">00:00:00</div>
+      <!-- TAMPILAN HARI & JAM BESAR DI TENGAH (CENTER) -->
+      <div style="text-align: center; background: rgba(255, 255, 255, 0.08); padding: 12px 32px; border-radius: 18px; border: 1px solid rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+        <div id="header-display-date" style="font-size: 0.9rem; color: #38bdf8; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 2px;">-</div>
+        <div id="realtime-clock" style="font-size: 2.3rem; font-weight: 900; color: #ffffff; letter-spacing: 1.5px; line-height: 1.1;">00:00:00</div>
       </div>
 
       <div style="font-size: 0.85rem; color: #cbd5e1; font-weight: 600; background: rgba(255,255,255,0.08); padding: 10px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">📍 Bogor, Jawa Barat</div>
@@ -519,19 +519,6 @@
 
   <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxBmOiWq0Zs6Db7LKdgVbq_HFdwURhygu1EALEQYajdZGAKld127I8urdxAZSnz-6XVDA/exec";
-
-    // FUNGSI LOAD LOGO GAMBAR ASLI DARI DRIVE SECARA AMAN
-    window.addEventListener('DOMContentLoaded', () => {
-      let logoImg = document.getElementById('school-logo-img');
-      if(logoImg) {
-        let driveLogoUrl = "https://lh3.googleusercontent.com/d/1AqOlLndmJ6rwOmtcDGYQa0ofYiTVMyeh=s220";
-        logoImg.src = driveLogoUrl;
-        logoImg.onerror = function() {
-          // Fallback jika Google Drive membatasi direct-link
-          this.src = "https://raw.githubusercontent.com/favicon.ico"; 
-        };
-      }
-    });
 
     setInterval(() => {
       let el = document.getElementById('realtime-clock');
@@ -965,14 +952,9 @@
           let rawTelat = data.listTelat || [];
           globalAbsenHariIni = [...rawHadir, ...rawTelat];
 
-          let todayDateStr = new Date().toISOString().split('T')[0];
-          let absenHariIniOnly = globalAbsenHariIni.filter(item => {
-            return item.tanggal ? item.tanggal === todayDateStr : true;
-          });
-
-          globalListHadir = absenHariIniOnly.filter(h => h.status.toLowerCase() !== 'izin' && h.status.toLowerCase() !== 'sakit' && h.status.toLowerCase() !== 'telat');
-          globalListTelat = absenHariIniOnly.filter(t => t.status.toLowerCase() === 'telat');
-          globalListIzinSakit = absenHariIniOnly.filter(i => i.status.toLowerCase() === 'izin' || i.status.toLowerCase() === 'sakit');
+          globalListHadir = rawHadir.filter(h => h.status.toLowerCase() !== 'izin' && h.status.toLowerCase() !== 'sakit' && h.status.toLowerCase() !== 'telat');
+          globalListTelat = rawTelat;
+          globalListIzinSakit = [...rawHadir, ...rawTelat].filter(i => i.status.toLowerCase() === 'izin' || i.status.toLowerCase() === 'sakit');
 
           localStorage.setItem('cache_hadir', JSON.stringify(globalListHadir));
           localStorage.setItem('cache_telat', JSON.stringify(globalListTelat));
@@ -1294,39 +1276,61 @@
 
             let cellText = "-";
             let cellColor = "#94a3b8";
+            let cellBg = "";
 
             let isInRange = d >= startDate && d <= endDate;
 
             if (isLibur) {
-              cellText = "L";
-              cellColor = "#ef4444";
+              cellText = "LIBUR";
+              cellColor = "#991b1b";
+              cellBg = "#fef2f2";
             } else if (!isInRange) {
               cellText = "-";
               cellColor = "#cbd5e1";
             } else {
+              // PENCARIAN DATA ABSENSI YANG AMAN DAN PRESISI UNTUK TANGGAL BERJALAN & SEBELUMNYA
               let record = globalAbsenHariIni.find(a => {
                 if (a.nis.toString() !== s.nis.toString()) return false;
                 if (a.tanggal) {
-                  let tParts = a.tanggal.split("-");
-                  if (tParts.length === 3 && parseInt(tParts[2]) === i && parseInt(tParts[1]) === (month + 1)) return true;
-                }
-                if (a.waktu && a.waktu.includes("/")) {
-                  let parts = a.waktu.split(" ")[0].split("/");
-                  if (parts.length === 3 && parseInt(parts[0]) === i) return true;
+                  let aDate = new Date(a.tanggal);
+                  aDate.setHours(12,0,0,0);
+                  if (aDate.getTime() === d.getTime()) return true;
                 }
                 return false;
               });
 
               if(record) {
                 let st = record.status ? record.status.toString().trim().toLowerCase() : "";
-                if(st === 'hadir') { cellText = "H"; cellColor = "#10b981"; countH++; }
-                else if(st === 'telat') { cellText = "T"; cellColor = "#f59e0b"; countT++; }
-                else if(st === 'sakit') { cellText = "S"; cellColor = "#a855f7"; countS++; }
-                else if(st === 'izin') { cellText = "I"; cellColor = "#0284c7"; countI++; }
+                if(st === 'hadir') { 
+                  cellText = "H"; 
+                  cellColor = "#065f46"; 
+                  cellBg = "#d1fae5"; 
+                  countH++; 
+                } else if(st === 'telat') { 
+                  cellText = "T"; 
+                  cellColor = "#92400e"; 
+                  cellBg = "#fef3c7"; 
+                  countT++; 
+                } else if(st === 'sakit') { 
+                  cellText = "S"; 
+                  cellColor = "#86198f"; 
+                  cellBg = "#fae8ff"; 
+                  countS++; 
+                } else if(st === 'izin') { 
+                  cellText = "I"; 
+                  cellColor = "#0369a1"; 
+                  cellBg = "#e0f2fe"; 
+                  countI++; 
+                }
               }
             }
 
-            html += `<td style="text-align:center; font-weight:600; color:${cellColor}; ${isLibur ? 'background:#fef2f2;' : ''}">${cellText}</td>`;
+            // GAYA TEKS VERTIKAL UNTUK HARI LIBUR, WARNA HIJAU UNTUK HADIR, KUNING UNTUK TELAT
+            if (cellText === "LIBUR") {
+              html += `<td style="text-align:center; font-weight:700; font-size:0.7rem; color:${cellColor}; background:${cellBg}; writing-mode: vertical-rl; text-orientation: upright; letter-spacing: 2px; padding: 6px;" title="Hari Libur">LIBUR</td>`;
+            } else {
+              html += `<td style="text-align:center; font-weight:700; color:${cellColor}; background:${cellBg};">${cellText}</td>`;
+            }
           }
 
           let totalHadirTelat = countH + countT;
@@ -1370,29 +1374,6 @@
       headerRow.push("Hadir (H)", "Telat (T)", "S", "I", "Total %");
       wbData.push(headerRow);
 
-      let merges = [];
-      let startLiburCol = null;
-      for(let i=1; i<=daysInMonth; i++) {
-        let d = new Date(year, month, i);
-        let dayOfWeek = d.getDay();
-        let isLibur = (dayOfWeek === 0 || dayOfWeek === 6);
-        let colIdx = 3 + i;
-
-        if(isLibur) {
-          if(startLiburCol === null) startLiburCol = colIdx;
-        } else {
-          if(startLiburCol !== null) {
-            if(colIdx - 1 > startLiburCol) {
-              merges.push({ s: { r: 0, c: startLiburCol }, e: { r: 0, c: colIdx - 1 } });
-            }
-            startLiburCol = null;
-          }
-        }
-      }
-      if(startLiburCol !== null && (3 + daysInMonth) > startLiburCol) {
-        merges.push({ s: { r: 0, c: startLiburCol }, e: { r: 0, c: 3 + daysInMonth } });
-      }
-
       siswaKelas.forEach((s, idx) => {
         let row = [idx + 1, s.nis, s.nama, s.kelas];
         let countH = 0, countT = 0, countS = 0, countI = 0;
@@ -1403,18 +1384,15 @@
           let isLibur = (dayOfWeek === 0 || dayOfWeek === 6);
 
           if (isLibur) {
-            row.push("L");
+            row.push("LIBUR");
           } else {
             let val = "-";
             let record = globalAbsenHariIni.find(a => {
               if (a.nis.toString() !== s.nis.toString()) return false;
               if (a.tanggal) {
-                let tParts = a.tanggal.split("-");
-                if (tParts.length === 3 && parseInt(tParts[2]) === i && parseInt(tParts[1]) === (month + 1)) return true;
-              }
-              if (a.waktu && a.waktu.includes("/")) {
-                let parts = a.waktu.split(" ")[0].split("/");
-                if (parts.length === 3 && parseInt(parts[0]) === i) return true;
+                let aDate = new Date(a.tanggal);
+                aDate.setHours(12,0,0,0);
+                if (aDate.getTime() === d.getTime()) return true;
               }
               return false;
             });
@@ -1437,8 +1415,6 @@
       });
 
       let ws = XLSX.utils.aoa_to_sheet(wbData);
-      if(merges.length > 0) ws['!merges'] = merges;
-
       let wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, `Rekap_${kelasVal.replace(/\s+/g, '_')}`);
       XLSX.writeFile(wb, `Rekap_Bulanan_${kelasVal.replace(/\s+/g, '_')}.xlsx`);
