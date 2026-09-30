@@ -1515,22 +1515,24 @@
         let qrId = `qrcode-${index}`;
         let wrapper = document.createElement('div');
         wrapper.style.marginBottom = "15px";
+        
+        // DI SINI KITA HILANGKAN CLASS qr-card-item AGAR BORDERNYA HILANG
+        // KITA JUGA HAPUS TEKS SEKOLAH DAN TEKS KELAS/NIS
         wrapper.innerHTML = `
-          <div id="${cardId}" class="qr-card-item">
-            <div style="font-weight: 700; font-size: 0.85rem; color: var(--sidebar-bg); margin-bottom: 8px;">SMK TARUNA TERPADU 2</div>
-            <div id="${qrId}" style="width: 130px; height: 130px; margin: 5px auto;"></div>
-            <div style="font-size: 0.85rem; font-weight: 700; color: #0f172a; margin-top: 8px; line-height: 1.3;">
-              ${s.nama}<br><span style="color: var(--text-muted); font-weight: 500; font-size: 0.75rem;">Kelas: ${s.kelas} | NIS: ${s.nis}</span>
+          <div id="${cardId}" style="background: #ffffff; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 220px; margin: 0 auto; border: none; outline: none; box-shadow: none;">
+            <div id="${qrId}" style="margin: 0 auto;"></div>
+            <div style="font-size: 1.1rem; font-weight: 900; color: #000000; margin-top: 15px; text-align: center; line-height: 1.2; font-family: Arial, sans-serif;">
+              ${s.nama}
             </div>
           </div>
-          <button onclick="downloadSingleQr('${cardId}', '${s.nama}', '${s.kelas}')" class="btn btn-success" style="margin-top: 8px; padding: 6px 10px; font-size: 0.75rem; width: 220px;">💾 Download QR (HD)</button>
+          <button onclick="downloadSingleQr('${cardId}', '${s.nama}', '${s.kelas}')" class="btn btn-success" style="margin-top: 10px; padding: 8px 10px; font-size: 0.8rem; width: 100%;">💾 Download QR (HD)</button>
         `;
         container.appendChild(wrapper);
         
         new QRCode(document.getElementById(qrId), {
           text: s.nis.toString(),
-          width: 130,
-          height: 130,
+          width: 170, // Diperbesar agar lebih jelas tanpa teks lain
+          height: 170,
           correctLevel: QRCode.CorrectLevel.H
         });
       });
@@ -1538,7 +1540,8 @@
 
     function downloadSingleQr(elementId, namaSiswa, kelasSiswa) {
       let el = document.getElementById(elementId);
-      html2canvas(el, { scale: 5, useCORS: true }).then(canvas => {
+      // Tambahkan backgroundColor: "#ffffff" agar belakangnya dijamin putih murni
+      html2canvas(el, { scale: 5, useCORS: true, backgroundColor: "#ffffff" }).then(canvas => {
         let link = document.createElement('a');
         link.download = `QR-${namaSiswa.replace(/\s+/g, '_')}-${kelasSiswa.replace(/\s+/g, '_')}.jpg`;
         link.href = canvas.toDataURL('image/jpeg', 1.0);
@@ -1557,6 +1560,50 @@
       btn.innerText = "⏳ Memproses ZIP HD...";
       btn.disabled = true;
 
+      let zip = new JSZip();
+      let folder = zip.folder(`QR_Codes_${kelasVal.replace(/\s+/g, '_')}`);
+
+      for (let index = 0; index < siswaList.length; index++) {
+        let s = siswaList[index];
+        let tempDiv = document.createElement('div');
+        tempDiv.style.position = 'absolute';
+        tempDiv.style.left = '-9999px';
+        
+        // TAMPILAN UNTUK ZIP JUGA KITA BERSIHKAN DARI SEMUA BORDER DAN TEKS EKSTRA
+        tempDiv.innerHTML = `
+          <div id="temp-card-${index}" style="background: #ffffff; padding: 30px; display: flex; flex-direction: column; align-items: center; text-align: center; border: none; width: max-content;">
+            <div id="temp-code-${index}"></div>
+            <div style="font-size: 1.3rem; font-weight: 900; color: #000000; margin-top: 20px; line-height: 1.2; font-family: Arial, sans-serif;">
+              ${s.nama}
+            </div>
+          </div>
+        `;
+        document.body.appendChild(tempDiv);
+        
+        new QRCode(document.getElementById(`temp-code-${index}`), {
+          text: s.nis.toString(),
+          width: 200, // Diperbesar khusus untuk ZIP agar sangat HD
+          height: 200,
+          correctLevel: QRCode.CorrectLevel.H
+        });
+
+        // Paksa render dengan background putih
+        let canvas = await html2canvas(document.getElementById(`temp-card-${index}`), { scale: 4, useCORS: true, backgroundColor: "#ffffff" });
+        let imgData = canvas.toDataURL('image/jpeg', 1.0).replace(/^data:image\/jpeg;base64,/, "");
+        folder.file(`QR-${s.nama.replace(/\s+/g, '_')}-${s.nis}.jpg`, imgData, { base64: true });
+
+        document.body.removeChild(tempDiv);
+      }
+
+      let content = await zip.generateAsync({ type: "blob" });
+      let link = document.createElement('a');
+      link.href = URL.createObjectURL(content);
+      link.download = `QR_Codes_${kelasVal.replace(/\s+/g, '_')}.zip`;
+      link.click();
+
+      btn.innerText = "📦 Download All QR Code (ZIP HD)";
+      btn.disabled = false;
+    
       let zip = new JSZip();
       let folder = zip.folder(`QR_Codes_${kelasVal.replace(/\s+/g, '_')}`);
 
