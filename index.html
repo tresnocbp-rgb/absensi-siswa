@@ -111,7 +111,6 @@
     .kartu-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
     @media(max-width: 1200px) { .kartu-grid { grid-template-columns: repeat(2, 1fr); } }
     
-    /* PERUBAHAN CSS: TANPA GARIS TEPI, TANPA LENGKUNGAN */
     .qr-card-item { border: none; border-radius: 0; padding: 18px; background: #fff; width: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 12px; box-shadow: none; }
   </style>
 </head>
@@ -153,7 +152,8 @@
             </div>
           </div>
           <div id="reader" style="width: 100%; border-radius: 14px; overflow: hidden; background: #000; margin-top: 10px; min-height: 280px;"></div>
-          <p id="scan-status-text" style="margin-top: 18px; font-weight: 600; color: var(--primary);">Kamera Standby </p>
+          <!-- Notifikasi tambahan untuk pengguna Alat Scan Fisik -->
+          <p id="scan-status-text" style="margin-top: 18px; font-weight: 600; color: var(--primary);">Kamera Standby <br><span style="font-size: 0.8rem; color: var(--text-muted); font-weight: normal;">(Gunakan Kamera di atas, ATAU tembak menggunakan Alat Scan Barcode Fisik)</span></p>
         </div>
         <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
           <div>
@@ -796,7 +796,7 @@
         rStatus.className = 'status-badge ' + (statusKet === 'Hadir' ? 'badge-hadir' : 'badge-telat');
         rStatus.innerText = statusKet.toUpperCase();
       }
-      if(statusText) statusText.innerText = "Kamera Standby (Zero-Delay / Siap 2000 Siswa)";
+      if(statusText) statusText.innerHTML = "Kamera Standby <br><span style='font-size: 0.8rem; color: var(--text-muted); font-weight: normal;'>(Gunakan Kamera di atas, ATAU tembak menggunakan Alat Scan Barcode Fisik)</span>";
 
       let newRecord = { nis: nis, nama: namaSiswa, kelas: kelasSiswa, waktu: now.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'}), tanggal: todayDateStr, status: statusKet };
       globalAbsenHariIni.push(newRecord);
@@ -821,6 +821,43 @@
         lastScannedNIS = "";
       }, 50);
     }
+
+    // =========================================================
+    // FITUR TAMBAHAN: DUKUNGAN ALAT SCAN BARCODE/QR FISIK (USB/BLUETOOTH)
+    // =========================================================
+    let physicalScannerBuffer = "";
+    let physicalScannerTimeout;
+
+    document.addEventListener("keydown", function(e) {
+      // Pastikan kita sedang berada di halaman Scanner
+      let scanPage = document.getElementById('wrapper-scanner-page');
+      if (scanPage.style.display === 'none') return;
+
+      // Jika user sedang mengetik di dalam kotak input (misal ada input box nantinya), abaikan
+      if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+
+      // Alat Scan fisik biasanya menekan "Enter" di akhir scan
+      if (e.key === "Enter") {
+        if (physicalScannerBuffer.length > 0) {
+          // Kirim teks dari alat scan fisik ke fungsi yang sama seperti kamera
+          onScanSuccess(physicalScannerBuffer);
+          physicalScannerBuffer = "";
+        }
+      } else {
+        // Abaikan tombol aneh seperti Shift, Ctrl, dll. Hanya simpan huruf/angka
+        if (e.key.length === 1) {
+          physicalScannerBuffer += e.key;
+        }
+      }
+
+      // Alat scan mengetik sangat cepat (biasanya < 30ms per karakter).
+      // Jika dalam waktu 200ms tidak ada ketikan baru, kosongkan buffer (berarti itu ketikan manusia biasa/salah ketik)
+      clearTimeout(physicalScannerTimeout);
+      physicalScannerTimeout = setTimeout(() => {
+        physicalScannerBuffer = "";
+      }, 200); 
+    });
+    // =========================================================
 
     function handleLoginInstant(e) {
       e.preventDefault();
@@ -1496,7 +1533,6 @@
       renderTabelSiswa();
     }
 
-    // PERUBAHAN JAVASCRIPT PADA GENERATE KARTU (TAMPILAN WEB)
     function generateQrPreview() {
       let kelasVal = loggedInUser.role === 'walikelas' ? loggedInUser.classScope : document.getElementById('cetak-kelas').value;
       let container = document.getElementById('kartu-container');
@@ -1547,7 +1583,6 @@
       });
     }
 
-    // PERUBAHAN JAVASCRIPT PADA GENERATE KARTU (DOWNLOAD ZIP)
     async function downloadAllQrZip() {
       let kelasVal = loggedInUser.role === 'walikelas' ? loggedInUser.classScope : document.getElementById('cetak-kelas').value;
       if(!kelasVal) return;
