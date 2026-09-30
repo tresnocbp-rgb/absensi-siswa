@@ -111,7 +111,8 @@
     .kartu-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
     @media(max-width: 1200px) { .kartu-grid { grid-template-columns: repeat(2, 1fr); } }
     
-    .qr-card-item { border: 2px solid var(--sidebar-bg); border-radius: 14px; padding: 18px; background: #fff; width: 220px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; box-shadow: 0 10px 20px -5px rgba(0,0,0,0.06); text-align: center; }
+    /* PERUBAHAN CSS: TANPA GARIS TEPI, TANPA LENGKUNGAN */
+    .qr-card-item { border: none; border-radius: 0; padding: 18px; background: #fff; width: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 12px; box-shadow: none; }
   </style>
 </head>
 <body onclick="initAudioContext()">
@@ -1495,6 +1496,7 @@
       renderTabelSiswa();
     }
 
+    // PERUBAHAN JAVASCRIPT PADA GENERATE KARTU (TAMPILAN WEB)
     function generateQrPreview() {
       let kelasVal = loggedInUser.role === 'walikelas' ? loggedInUser.classScope : document.getElementById('cetak-kelas').value;
       let container = document.getElementById('kartu-container');
@@ -1517,10 +1519,9 @@
         wrapper.style.marginBottom = "15px";
         wrapper.innerHTML = `
           <div id="${cardId}" class="qr-card-item">
-            <div style="font-weight: 700; font-size: 0.85rem; color: var(--sidebar-bg); margin-bottom: 8px;">SMK TARUNA TERPADU 2</div>
-            <div id="${qrId}" style="width: 130px; height: 130px; margin: 5px auto;"></div>
-            <div style="font-size: 0.85rem; font-weight: 700; color: #0f172a; margin-top: 8px; line-height: 1.3;">
-              ${s.nama}<br><span style="color: var(--text-muted); font-weight: 500; font-size: 0.75rem;">Kelas: ${s.kelas} | NIS: ${s.nis}</span>
+            <div id="${qrId}" style="width: 130px; height: 130px; margin: 0 auto;"></div>
+            <div style="font-size: 1rem; font-weight: 700; color: #0f172a; line-height: 1.3;">
+              ${s.nama}
             </div>
           </div>
           <button onclick="downloadSingleQr('${cardId}', '${s.nama}', '${s.kelas}')" class="btn btn-success" style="margin-top: 8px; padding: 6px 10px; font-size: 0.75rem; width: 220px;">💾 Download QR (HD)</button>
@@ -1546,6 +1547,7 @@
       });
     }
 
+    // PERUBAHAN JAVASCRIPT PADA GENERATE KARTU (DOWNLOAD ZIP)
     async function downloadAllQrZip() {
       let kelasVal = loggedInUser.role === 'walikelas' ? loggedInUser.classScope : document.getElementById('cetak-kelas').value;
       if(!kelasVal) return;
@@ -1566,11 +1568,10 @@
         tempDiv.style.position = 'absolute';
         tempDiv.style.left = '-9999px';
         tempDiv.innerHTML = `
-          <div id="temp-card-${index}" class="qr-card-item" style="border: 2px solid #0f172a; border-radius: 12px; padding: 16px; background: #fff; width: 220px; display: flex; flex-direction: column; align-items: center; text-align: center;">
-            <div style="font-weight: 700; font-size: 0.85rem; color: #0f172a; margin-bottom: 8px;">SMK TARUNA TERPADU 2</div>
-            <div id="temp-code-${index}" style="width: 130px; height: 130px; margin: 5px auto;"></div>
-            <div style="font-size: 0.85rem; font-weight: 700; color: #0f172a; margin-top: 8px; line-height: 1.3;">
-              ${s.nama}<br><span style="color: #64748b; font-weight: 500; font-size: 0.75rem;">Kelas: ${s.kelas} | NIS: ${s.nis}</span>
+          <div id="temp-card-${index}" class="qr-card-item" style="padding: 16px; background: #fff; width: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 10px;">
+            <div id="temp-code-${index}" style="width: 130px; height: 130px; margin: 0 auto;"></div>
+            <div style="font-size: 1rem; font-weight: 700; color: #0f172a; line-height: 1.3;">
+              ${s.nama}
             </div>
           </div>
         `;
