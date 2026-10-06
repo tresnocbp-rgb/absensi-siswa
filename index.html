@@ -142,7 +142,7 @@
       <div class="grid-layout">
         <div class="card" style="text-align: center;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
-            <h3 style="font-size: 1.1rem; font-weight: 700; color: #0f172a;">📷 Scan QR Code Kartu Pelajar</h3>
+            <h3 style="font-size: 1.1rem; font-weight: 700; color: #0f172a;">📷 Scan QR Code / Barcode</h3>
             <div style="display: flex; align-items: center; gap: 6px;">
               <span style="font-size: 1.1rem;">🔄</span>
               <select id="camera-select" onchange="switchCameraMode()" style="width: 140px; display: inline-block; margin: 0; padding: 6px 10px; font-size: 0.85rem;">
@@ -152,14 +152,19 @@
             </div>
           </div>
           <div id="reader" style="width: 100%; border-radius: 14px; overflow: hidden; background: #000; margin-top: 10px; min-height: 280px;"></div>
-          <!-- Notifikasi tambahan untuk pengguna Alat Scan Fisik -->
-          <p id="scan-status-text" style="margin-top: 18px; font-weight: 600; color: var(--primary);">Kamera Standby <br><span style="font-size: 0.8rem; color: var(--text-muted); font-weight: normal;">(Gunakan Kamera di atas, ATAU tembak menggunakan Alat Scan Barcode Fisik)</span></p>
+          
+          <!-- PENAMBAHAN INPUT SCANNER FISIK -->
+          <div style="margin-top: 15px; text-align: center;">
+            <label style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted);">Gunakan Scanner Fisik / Ketik Manual NIS:</label>
+            <input type="text" id="manual-nis-input" placeholder="Tembak Barcode disini..." style="width: 100%; padding: 12px; margin-top: 5px; border-radius: 8px; border: 2px solid var(--primary); text-align: center; font-weight: bold; font-size: 1.2rem; background-color: #eef2ff;" autofocus>
+          </div>
+          
         </div>
         <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
           <div>
             <h3 style="font-weight: 700; color: #0f172a; margin-bottom: 4px;">📋 Detail Absensi Siswa</h3>
             <div style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 2px dashed #cbd5e1; margin: 15px 0; text-align: center;" id="notification-box">
-              <span style="color: var(--text-muted); font-weight: 500;">Menunggu scan QR Code siswa...</span>
+              <span style="color: var(--text-muted); font-weight: 500;">Menunggu scan QR Code / Barcode siswa...</span>
             </div>
             <div class="info-group"><span>NIS</span><span id="res-nis" style="font-weight: 700;">-</span></div>
             <div class="info-group"><span>Nama Siswa</span><span id="res-nama" style="font-weight: 700;">-</span></div>
@@ -786,7 +791,6 @@
       let rKelas = document.getElementById('res-kelas');
       let rTgl = document.getElementById('res-tanggal');
       let rStatus = document.getElementById('res-status');
-      let statusText = document.getElementById('scan-status-text');
 
       if(rNis) rNis.innerText = nis;
       if(rNama) rNama.innerText = namaSiswa;
@@ -796,7 +800,6 @@
         rStatus.className = 'status-badge ' + (statusKet === 'Hadir' ? 'badge-hadir' : 'badge-telat');
         rStatus.innerText = statusKet.toUpperCase();
       }
-      if(statusText) statusText.innerHTML = "Kamera Standby <br><span style='font-size: 0.8rem; color: var(--text-muted); font-weight: normal;'>(Gunakan Kamera di atas, ATAU tembak menggunakan Alat Scan Barcode Fisik)</span>";
 
       let newRecord = { nis: nis, nama: namaSiswa, kelas: kelasSiswa, waktu: now.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'}), tanggal: todayDateStr, status: statusKet };
       globalAbsenHariIni.push(newRecord);
@@ -823,41 +826,38 @@
     }
 
     // =========================================================
-    // REVISI FITUR: DUKUNGAN ALAT SCAN BARCODE FISIK (METODE INPUT GAIB)
+    // FITUR: DUKUNGAN ALAT SCAN BARCODE FISIK MELALUI INPUT BOX
     // =========================================================
-    let scannerInput = document.createElement("input");
-    scannerInput.setAttribute("type", "text");
-    scannerInput.setAttribute("id", "hidden-scanner-input");
-    scannerInput.setAttribute("autocomplete", "off");
-    scannerInput.style.position = "absolute";
-    scannerInput.style.left = "-9999px";
-    scannerInput.style.opacity = "0";
-    document.body.appendChild(scannerInput);
+    let manualInput = document.getElementById('manual-nis-input');
 
-    function keepFocusOnScanner() {
-      let scanPage = document.getElementById('wrapper-scanner-page');
-      let activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
-      
-      if (scanPage && scanPage.style.display !== 'none' && activeTag !== 'input' && activeTag !== 'textarea') {
-        scannerInput.focus();
-      }
+    if (manualInput) {
+      manualInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          let nis = this.value.trim();
+          if (nis !== '') {
+            onScanSuccess(nis);
+            this.value = ''; // Kosongkan input setelah dikirim
+          }
+        }
+      });
     }
 
-    document.addEventListener('click', keepFocusOnScanner);
-    window.addEventListener('focus', keepFocusOnScanner);
-    setInterval(keepFocusOnScanner, 500); 
-
-    scannerInput.addEventListener("keydown", function(e) {
-      if (e.key === "Enter") {
-        e.preventDefault(); 
-        let scannedNis = this.value.trim();
-        
-        if (scannedNis !== "") {
-          onScanSuccess(scannedNis);
-          this.value = "";
+    // Auto-focus ke input box agar user tidak perlu klik manual setiap saat
+    function autoFocusScanner() {
+      let scanPage = document.getElementById('wrapper-scanner-page');
+      if (scanPage && scanPage.style.display !== 'none' && manualInput) {
+        let activeEl = document.activeElement;
+        // Hanya paksa fokus jika user tidak sedang klik kotak login atau tombol lain
+        if (!activeEl || (activeEl.tagName !== 'INPUT' && activeEl.tagName !== 'SELECT' && activeEl.tagName !== 'BUTTON')) {
+          manualInput.focus();
         }
       }
-    });
+    }
+    
+    // Panggil auto-focus setiap saat
+    document.addEventListener('click', autoFocusScanner);
+    setInterval(autoFocusScanner, 1500); 
     // =========================================================
 
     function handleLoginInstant(e) {
