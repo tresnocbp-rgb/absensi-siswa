@@ -823,43 +823,40 @@
     }
 
     // =========================================================
-    // FITUR: DUKUNGAN ALAT SCAN BARCODE FISIK 1D/2D (USB/BLUETOOTH)
+    // REVISI FITUR: DUKUNGAN ALAT SCAN BARCODE FISIK (METODE INPUT GAIB)
     // =========================================================
-    let barcodeBuffer = "";
-    let barcodeTimeout;
+    let scannerInput = document.createElement("input");
+    scannerInput.setAttribute("type", "text");
+    scannerInput.setAttribute("id", "hidden-scanner-input");
+    scannerInput.setAttribute("autocomplete", "off");
+    scannerInput.style.position = "absolute";
+    scannerInput.style.left = "-9999px";
+    scannerInput.style.opacity = "0";
+    document.body.appendChild(scannerInput);
 
-    document.addEventListener("keydown", function(e) {
-      // 1. Pastikan kita sedang berada di halaman Scanner (Bukan di halaman Login/Admin)
+    function keepFocusOnScanner() {
       let scanPage = document.getElementById('wrapper-scanner-page');
-      if (scanPage && scanPage.style.display === 'none') return;
-
-      // 2. Jangan ganggu jika user sedang mengetik manual di kolom input
       let activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
-      if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') return;
+      
+      if (scanPage && scanPage.style.display !== 'none' && activeTag !== 'input' && activeTag !== 'textarea') {
+        scannerInput.focus();
+      }
+    }
 
-      // 3. Alat scan fisik selalu menekan "Enter" secara otomatis di akhir barcode
+    document.addEventListener('click', keepFocusOnScanner);
+    window.addEventListener('focus', keepFocusOnScanner);
+    setInterval(keepFocusOnScanner, 500); 
+
+    scannerInput.addEventListener("keydown", function(e) {
       if (e.key === "Enter") {
-        if (barcodeBuffer.length > 0) {
-          e.preventDefault(); // Mencegah halaman scroll ke bawah
-          
-          // Kirim angka barcode ke fungsi pemroses absen yang sama dengan kamera
-          onScanSuccess(barcodeBuffer); 
-          
-          barcodeBuffer = ""; // Kosongkan memori setelah berhasil
+        e.preventDefault(); 
+        let scannedNis = this.value.trim();
+        
+        if (scannedNis !== "") {
+          onScanSuccess(scannedNis);
+          this.value = "";
         }
-        return;
       }
-
-      // 4. Tangkap karakter yang diketik oleh alat scanner (Abaikan tombol Shift, Ctrl, dll)
-      if (e.key.length === 1) {
-        barcodeBuffer += e.key;
-      }
-
-      // 5. Timer Cerdas: Alat scan mengetik super cepat (< 50ms per huruf).
-      clearTimeout(barcodeTimeout);
-      barcodeTimeout = setTimeout(() => {
-        barcodeBuffer = "";
-      }, 150); 
     });
     // =========================================================
 
@@ -1558,8 +1555,6 @@
         let wrapper = document.createElement('div');
         wrapper.style.marginBottom = "15px";
         
-        // DI SINI KITA HILANGKAN CLASS qr-card-item AGAR BORDERNYA HILANG
-        // KITA JUGA HAPUS TEKS SEKOLAH DAN TEKS KELAS/NIS
         wrapper.innerHTML = `
           <div id="${cardId}" style="background: #ffffff; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 220px; margin: 0 auto; border: none; outline: none; box-shadow: none;">
             <div id="${qrId}" style="margin: 0 auto;"></div>
@@ -1573,7 +1568,7 @@
         
         new QRCode(document.getElementById(qrId), {
           text: s.nis.toString(),
-          width: 170, // Diperbesar agar lebih jelas tanpa teks lain
+          width: 170, 
           height: 170,
           correctLevel: QRCode.CorrectLevel.H
         });
@@ -1582,7 +1577,6 @@
 
     function downloadSingleQr(elementId, namaSiswa, kelasSiswa) {
       let el = document.getElementById(elementId);
-      // Tambahkan backgroundColor: "#ffffff" agar belakangnya dijamin putih murni
       html2canvas(el, { scale: 5, useCORS: true, backgroundColor: "#ffffff" }).then(canvas => {
         let link = document.createElement('a');
         link.download = `QR-${namaSiswa.replace(/\s+/g, '_')}-${kelasSiswa.replace(/\s+/g, '_')}.jpg`;
@@ -1611,7 +1605,6 @@
         tempDiv.style.position = 'absolute';
         tempDiv.style.left = '-9999px';
         
-        // TAMPILAN UNTUK ZIP JUGA KITA BERSIHKAN DARI SEMUA BORDER DAN TEKS EKSTRA
         tempDiv.innerHTML = `
           <div id="temp-card-${index}" style="background: #ffffff; padding: 30px; display: flex; flex-direction: column; align-items: center; text-align: center; border: none; width: max-content;">
             <div id="temp-code-${index}"></div>
@@ -1624,12 +1617,11 @@
         
         new QRCode(document.getElementById(`temp-code-${index}`), {
           text: s.nis.toString(),
-          width: 200, // Diperbesar khusus untuk ZIP agar sangat HD
+          width: 200, 
           height: 200,
           correctLevel: QRCode.CorrectLevel.H
         });
 
-        // Paksa render dengan background putih
         let canvas = await html2canvas(document.getElementById(`temp-card-${index}`), { scale: 4, useCORS: true, backgroundColor: "#ffffff" });
         let imgData = canvas.toDataURL('image/jpeg', 1.0).replace(/^data:image\/jpeg;base64,/, "");
         folder.file(`QR-${s.nama.replace(/\s+/g, '_')}-${s.nis}.jpg`, imgData, { base64: true });
