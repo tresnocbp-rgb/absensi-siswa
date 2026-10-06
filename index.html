@@ -113,13 +113,12 @@
     #manual-nis-input:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(79, 70, 229, 0.2); background-color: #ffffff; }
     #manual-nis-input::placeholder { color: #818cf8; font-weight: 500; font-size: 1rem; }
 
-    /* TABLES OVERRIDE (Agar tabel bawaan JS terlihat premium) */
+    /* TABLES OVERRIDE */
     table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 15px; border-radius: 16px; overflow: hidden; border: 1px solid var(--border-color); }
     th, td { padding: 16px; text-align: left; font-size: 0.9rem; border-bottom: 1px solid var(--border-color); }
     th { background-color: #f8fafc !important; color: #475569 !important; font-weight: 700 !important; text-transform: uppercase; font-size: 0.75rem !important; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0 !important; }
     tr:last-child td { border-bottom: none; }
     tr:hover td { background-color: #f8fafc; }
-    /* Paksa override gaya inline JS untuk tabel Admin */
     table th[style] { border: none !important; border-bottom: 2px solid #e2e8f0 !important; background: #f8fafc !important; color: #475569 !important; }
     table td[style] { border: none !important; border-bottom: 1px solid var(--border-color) !important; }
 
@@ -148,9 +147,33 @@
 
     .kartu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 24px; }
     
-    /* CAMERA VIEWFINDER STYLING */
-    #reader { border: none !important; box-shadow: inset 0 0 0 4px #e2e8f0; background: #0f172a !important; border-radius: 16px !important; position: relative;}
-    #reader video { border-radius: 12px !important; object-fit: cover; }
+    /* =========================================
+       CAMERA VIEWFINDER STYLING - RESPONSIVE FIX
+       ========================================= */
+    #reader { 
+      width: 100% !important; 
+      max-width: 100% !important;
+      border: none !important; 
+      background: #0f172a !important; 
+      border-radius: 16px !important; 
+      position: relative;
+      overflow: hidden !important; /* Mencegah video meluber keluar dari batas card */
+      aspect-ratio: 4/3; /* Memaksa proporsi kotak kamera selalu rapi di semua layar */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 0 0 4px #e2e8f0; 
+    }
+    #reader video { 
+      width: 100% !important; 
+      height: 100% !important; 
+      object-fit: cover !important; /* Membuat video penuh di dalam kotak tanpa mengubah rasio */
+      border-radius: 16px !important; 
+    }
+    
+    /* Menyembunyikan elemen bawaan library yang tidak diperlukan */
+    #reader img, #reader span { display: none !important; }
+    #reader__dashboard_section_csr span { display: none !important; }
     
     /* CUSTOM ANIMATION FOR NOTIFICATION */
     @keyframes pulse-soft { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
@@ -188,11 +211,11 @@
         
         <!-- KOLOM KIRI: SCANNER -->
         <div class="card" style="display: flex; flex-direction: column;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 15px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 15px; flex-wrap: wrap; gap: 10px;">
             <h3 style="font-size: 1.2rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px;">
               <span style="background: #e0e7ff; color: #4f46e5; padding: 8px; border-radius: 10px;">📷</span> Input Kehadiran
             </h3>
-            <div style="display: flex; gap: 10px;">
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
               <select id="scan-input-mode" onchange="switchInputMode()" title="Pilih sumber scanner" style="width: auto; margin: 0; padding: 8px 12px; border-radius: 10px; font-weight: 600; cursor: pointer; box-shadow: var(--shadow-sm);">
                  <option value="camera">📹 Mode Kamera</option>
                  <option value="usb">🔌 Mode Scanner Fisik</option>
@@ -203,7 +226,7 @@
             </div>
           </div>
           
-          <div id="reader" style="width: 100%; min-height: 320px; display: flex; align-items: center; justify-content: center;"></div>
+          <div id="reader"></div>
           
           <!-- INPUT SCANNER FISIK (KASIR) -->
           <div style="margin-top: 24px;">
@@ -211,7 +234,7 @@
             <input type="text" id="manual-nis-input" placeholder="Arahkan kursor kesini..." autocomplete="off">
           </div>
           
-          <div style="margin-top: auto; padding-top: 20px;">
+          <div style="margin-top: auto; padding-top: 10px;">
             <p id="scan-status-text" class="scanning-active" style="font-weight: 700; color: var(--primary); background: #e0e7ff; padding: 12px; border-radius: 12px; text-align: center;">🟢 Sistem Standby & Siap</p>
           </div>
         </div>
@@ -259,7 +282,7 @@
       
       <form onsubmit="handleLoginInstant(event)">
         <label style="font-weight: 700; font-size: 0.85rem; color: #475569; text-transform: uppercase; letter-spacing: 1px;">Username</label>
-        <input type="text" id="username" required placeholder="Masukkan username Anda..." style="padding: 16px;">
+        <input type="text" id="username" required placeholder="admin atau budi (wali kelas)" style="padding: 16px;">
         
         <label style="font-weight: 700; font-size: 0.85rem; color: #475569; text-transform: uppercase; letter-spacing: 1px; margin-top: 10px; display: block;">Password</label>
         <input type="password" id="password" required placeholder="••••••••" style="padding: 16px;">
@@ -774,14 +797,27 @@
       } catch(e) {}
     }
 
+    // =========================================================
+    // MESIN KAMERA UNIVERSAL (DETEKSI SEMUA HARDWARE)
+    // =========================================================
     let cameraDevices = [];
     let currentCameraId = null;
     let cameraRefreshTimer = null;
 
-    async function requestCameraPermission() {
-      if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        return false;
+    function initStandbyCamera() {
+      if(!html5QrCode) { html5QrCode = new Html5Qrcode("reader"); }
+      let readerEl = document.getElementById('reader');
+      if(readerEl && readerEl.offsetParent !== null) {
+        if(html5QrCode.isScanning) {
+          html5QrCode.stop().then(() => { loadAllCameras(); }).catch(() => { loadAllCameras(); });
+        } else {
+          loadAllCameras();
+        }
       }
+    }
+
+    async function requestCameraPermission() {
+      if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { return false; }
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
         stream.getTracks().forEach(track => track.stop());
@@ -793,18 +829,13 @@
       const modeEl = document.getElementById('scan-input-mode');
       const mode = modeEl ? modeEl.value : 'camera';
 
-      if(mode === 'usb') {
-        activateUsbScannerMode();
-      } else {
+      if(mode === 'usb') { activateUsbScannerMode(); } 
+      else {
         deactivateUsbScannerMode();
         const reader = document.getElementById('reader');
-        if(reader) reader.style.display = 'block';
-
-        if(html5QrCode && html5QrCode.isScanning) {
-          html5QrCode.stop().catch(() => {}).finally(() => loadAllCameras());
-        } else {
-          loadAllCameras();
-        }
+        if(reader) reader.style.display = 'flex'; // Kembalikan display flex agar aspect-ratio jalan
+        if(html5QrCode && html5QrCode.isScanning) { html5QrCode.stop().catch(() => {}).finally(() => loadAllCameras()); } 
+        else { loadAllCameras(); }
       }
       localStorage.setItem('scan_input_mode', mode);
     }
@@ -815,19 +846,11 @@
       const input = document.getElementById('manual-nis-input');
       const status = document.getElementById('scan-status-text');
 
-      if(html5QrCode && html5QrCode.isScanning) html5QrCode.stop().catch(() => {});
+      if(html5QrCode && html5QrCode.isScanning) { html5QrCode.stop().catch(() => {}); }
       if(reader) { reader.style.display = 'none'; reader.innerHTML = ''; }
       if(cameraSelect) cameraSelect.disabled = true;
-
-      if(input) {
-        input.disabled = false;
-        input.placeholder = '🔌 Tembak barcode di sini...';
-        input.focus();
-      }
-
-      if(status) {
-        status.innerHTML = '<span style="color:#10b981;font-weight:800;">🔌 Mode Scanner Fisik AKTIF</span>';
-      }
+      if(input) { input.disabled = false; input.placeholder = '🔌 Tembak barcode di sini...'; input.style.borderColor = '#10b981'; input.focus(); }
+      if(status) { status.innerHTML = '<span style="color:#10b981;font-weight:800;">🔌 Scanner Barcode USB AKTIF — siap membaca barcode.</span>'; }
     }
 
     function deactivateUsbScannerMode() {
@@ -835,30 +858,19 @@
       const input = document.getElementById('manual-nis-input');
 
       if(cameraSelect) cameraSelect.disabled = false;
-      if(input) input.placeholder = 'Ketik Manual / Tembak...';
-    }
-
-    function initStandbyCamera() {
-      if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
-      let readerEl = document.getElementById('reader');
-      if(readerEl && readerEl.offsetParent !== null) {
-        if(html5QrCode.isScanning) {
-          html5QrCode.stop().then(() => { loadAllCameras(); }).catch(() => { loadAllCameras(); });
-        } else {
-          loadAllCameras();
-        }
-      }
+      if(input) { input.placeholder = 'Tembak Barcode di sini...'; input.style.borderColor = 'var(--primary)'; }
     }
 
     async function loadAllCameras() {
       const selectEl = document.getElementById('camera-select');
       const statusEl = document.getElementById('scan-status-text');
       if(!selectEl) return;
-      selectEl.innerHTML = '<option value="">🔄 Mencari Hardware...</option>';
+
+      selectEl.innerHTML = '<option value="">🔄 Mendeteksi kamera...</option>';
 
       if(!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
-        selectEl.innerHTML = '<option value="">❌ Browser tidak mendukung</option>';
-        if(statusEl) statusEl.innerHTML = '<span style="color:#ef4444;">Browser tidak mendukung deteksi kamera.</span>';
+        selectEl.innerHTML = '<option value="">❌ Tidak mendukung</option>';
+        if(statusEl) { statusEl.innerHTML = '<span style="color:#ef4444;">Browser tidak mendukung deteksi kamera.</span>'; }
         return;
       }
 
@@ -872,44 +884,45 @@
           try {
             const qrDevices = await Html5Qrcode.getCameras();
             if(qrDevices && qrDevices.length) {
-              cameraDevices = qrDevices.map((device, index) => ({
-                deviceId: device.id,
-                label: device.label || `Kamera ${index + 1}`,
-                kind: 'videoinput'
-              }));
+              cameraDevices = qrDevices.map((device, index) => ({ deviceId: device.id, label: device.label || `Kamera ${index + 1}`, kind: 'videoinput' }));
             }
-          } catch(qrError) {}
+          } catch(qrError) { }
         }
 
         if(!cameraDevices.length) {
           selectEl.innerHTML = '<option value="">❌ Tidak ada kamera</option>';
-          if(statusEl) statusEl.innerHTML = '<span style="color:#ef4444;">❌ Tidak ada kamera. Gunakan Scanner Fisik.</span>';
+          if(statusEl) { statusEl.innerHTML = '<span style="color:#ef4444;">❌ Tidak ada kamera. Gunakan Scanner Fisik.</span>'; }
           return;
         }
 
         selectEl.innerHTML = '';
+
         cameraDevices.forEach((camera, index) => {
           const option = document.createElement('option');
           option.value = camera.deviceId;
           let nama = (camera.label || '').trim() || `Kamera ${index + 1}`;
           const lowerName = nama.toLowerCase();
-          option.textContent = (lowerName.includes('integrated') || lowerName.includes('built-in') || lowerName.includes('internal') || lowerName.includes('facetime')) ? '💻 ' + nama : '📹 ' + nama;
+
+          if(lowerName.includes('integrated') || lowerName.includes('built-in') || lowerName.includes('internal') || lowerName.includes('facetime')) {
+            option.textContent = '💻 ' + nama;
+          } else {
+            option.textContent = '📹 ' + nama;
+          }
           selectEl.appendChild(option);
         });
 
         let selectedCamera = cameraDevices.find(camera => camera.deviceId === currentCameraId);
-        if(!selectedCamera) selectedCamera = cameraDevices[0];
+        if(!selectedCamera) { selectedCamera = cameraDevices[0]; }
         if(selectedCamera) {
           currentCameraId = selectedCamera.deviceId;
           selectEl.value = currentCameraId;
         }
 
-        if(statusEl) statusEl.innerHTML = `<span style="color:#10b981;">✅ Kamera siap digunakan.</span>`;
         startSelectedCamera();
 
       } catch(error) {
-        selectEl.innerHTML = '<option value="">⚠️ Gagal memuat</option>';
-        if(statusEl) statusEl.innerHTML = '<span style="color:#ef4444;">⚠️ Gagal memuat perangkat kamera.</span>';
+        selectEl.innerHTML = '<option value="">⚠️ Gagal membaca</option>';
+        if(statusEl) { statusEl.innerHTML = '<span style="color:#ef4444;">⚠️ Gagal membaca perangkat kamera.</span>'; }
       }
     }
 
@@ -919,6 +932,7 @@
       const cameraId = selectEl.value;
       if(!cameraId) return;
       currentCameraId = cameraId;
+
       const config = { fps: 15, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
 
       if(html5QrCode.isScanning) {
@@ -930,11 +944,13 @@
 
     function startCameraById(cameraId, config) {
       const statusEl = document.getElementById('scan-status-text');
+
       html5QrCode.start(cameraId, config, onScanSuccess, () => {}).then(() => {
         const camera = cameraDevices.find(item => item.deviceId === cameraId);
-        if(statusEl) statusEl.innerHTML = `<span style="color:#10b981;">🟢 Scanning...</span>`;
+        const nama = camera?.label || 'Kamera';
+        if(statusEl) { statusEl.innerHTML = `<span style="color:#10b981;">🟢 Kamera aktif: ${nama}</span>`; }
       }).catch(error => {
-        if(statusEl) statusEl.innerHTML = '<span style="color:#ef4444;">❌ Kamera error. Pilih kamera lain.</span>';
+        if(statusEl) { statusEl.innerHTML = '<span style="color:#ef4444;">❌ Kamera gagal dibuka. Pilih kamera lain.</span>'; }
       });
     }
 
@@ -948,7 +964,9 @@
           if(readerEl && readerEl.offsetParent !== null) {
             if(html5QrCode && html5QrCode.isScanning) {
               html5QrCode.stop().then(() => { loadAllCameras(); }).catch(() => { loadAllCameras(); });
-            } else { loadAllCameras(); }
+            } else {
+              loadAllCameras();
+            }
           }
         }, 1000);
       });
@@ -1020,7 +1038,6 @@
       let rKelas = document.getElementById('res-kelas');
       let rTgl = document.getElementById('res-tanggal');
       let rStatus = document.getElementById('res-status');
-      let statusText = document.getElementById('scan-status-text');
 
       if(rNis) rNis.innerText = nis;
       if(rNama) rNama.innerText = namaSiswa;
@@ -1043,14 +1060,16 @@
       renderFastDashboardInstant();
 
       let targetUrl = `${SCRIPT_URL}?action=absen&nis=${encodeURIComponent(nis)}&status=${encodeURIComponent(statusKet)}`;
-      fetch(targetUrl)
-        .then(res => res.json())
-        .then(res => { loadAdminDataBackground(); }).catch(() => {});
+      fetch(targetUrl).then(res => res.json()).then(res => { loadAdminDataBackground(); }).catch(() => {});
 
       setTimeout(() => { isProcessingScan = false; lastScannedNIS = ""; }, 50);
     }
 
+    // =========================================================
+    // FITUR: SCANNER BARCODE USB FISIK
+    // =========================================================
     let manualInput = document.getElementById('manual-nis-input');
+
     function processUsbScanValue(value) {
       const nis = String(value || '').replace(/[\\r\\n\\t]/g, '').trim();
       if(nis !== '') onScanSuccess(nis);
@@ -1091,12 +1110,14 @@
         if(manualInput) manualInput.focus();
         return;
       }
+
       if(e.key && e.key.length === 1) { usbScannerBuffer += e.key; }
     }, true);
 
     function autoFocusScanner() {
       let scanPage = document.getElementById('wrapper-scanner-page');
       const modeEl = document.getElementById('scan-input-mode');
+
       if (scanPage && scanPage.style.display !== 'none' && manualInput && modeEl && modeEl.value === 'usb') {
         let activeEl = document.activeElement;
         if(!activeEl || (activeEl.tagName !== 'INPUT' && activeEl.tagName !== 'SELECT' && activeEl.tagName !== 'BUTTON' && activeEl.tagName !== 'TEXTAREA')) {
@@ -1104,6 +1125,7 @@
         }
       }
     }
+
     document.addEventListener('click', autoFocusScanner);
     setInterval(autoFocusScanner, 1500);
 
@@ -1278,7 +1300,7 @@
       if(subHadir.length === 0) {
         htmlH += `<tr><td colspan="4" style="text-align:center; color:#64748b;">Belum ada yang hadir tepat waktu hari ini</td></tr>`;
       } else {
-        subHadir.forEach(h => htmlH += `<tr><td>${h.nis}</td><td style="font-weight:700;">${h.nama}</td><td>${h.kelas}</td><td>${h.waktu}</td></tr>`);
+        subHadir.forEach(h => htmlH += `<tr><td>${h.nis}</td><td style="font-weight:600;">${h.nama}</td><td>${h.kelas}</td><td>${h.waktu}</td></tr>`);
       }
       htmlH += `</table>`;
       let elH = document.getElementById('tabel-hadir-container');
@@ -1288,7 +1310,7 @@
       if(subTelat.length === 0) {
         htmlT += `<tr><td colspan="4" style="text-align:center; color:#64748b;">Tidak ada siswa telat hari ini</td></tr>`;
       } else {
-        subTelat.forEach(t => htmlT += `<tr><td>${t.nis}</td><td style="font-weight:700;">${t.nama}</td><td>${t.kelas}</td><td>${t.waktu}</td></tr>`);
+        subTelat.forEach(t => htmlT += `<tr><td>${t.nis}</td><td style="font-weight:600;">${t.nama}</td><td>${t.kelas}</td><td>${t.waktu}</td></tr>`);
       }
       htmlT += `</table>`;
       let elT = document.getElementById('tabel-telat-container');
@@ -1298,7 +1320,7 @@
       if(subBelum.length === 0) {
         htmlB += `<tr><td colspan="4" style="text-align:center; color:#10b981; font-weight:700;">🎉 Luar biasa! Seluruh siswa sudah absen hari ini.</td></tr>`;
       } else {
-        subBelum.forEach(b => htmlB += `<tr><td>${b.nis}</td><td style="font-weight:700;">${b.nama}</td><td>${b.kelas}</td><td><span class="status-badge badge-none">Belum Absen</span></td></tr>`);
+        subBelum.forEach(b => htmlB += `<tr><td>${b.nis}</td><td style="font-weight:600;">${b.nama}</td><td>${b.kelas}</td><td><span class="status-badge badge-none">Belum Absen</span></td></tr>`);
       }
       htmlB += `</table>`;
       let elB = document.getElementById('tabel-belum-container');
@@ -1310,7 +1332,7 @@
       } else {
         listIzinSakitScope.forEach(i => {
           let badgeSt = i.status.toLowerCase() === 'sakit' ? 'badge-sakit' : 'badge-izin';
-          htmlI += `<tr><td>${i.nis}</td><td style="font-weight:700;">${i.nama}</td><td>${i.kelas}</td><td><span class="status-badge ${badgeSt}">${i.status}</span></td><td>${i.waktu}</td></tr>`;
+          htmlI += `<tr><td>${i.nis}</td><td style="font-weight:600;">${i.nama}</td><td>${i.kelas}</td><td><span class="status-badge ${badgeSt}">${i.status}</span></td><td>${i.waktu}</td></tr>`;
         });
       }
       htmlI += `</table>`;
@@ -1327,7 +1349,7 @@
         html += `<tr><td colspan="6" style="text-align:center;">Tidak ada data guru.</td></tr>`;
       } else {
         globalGuruData.forEach((g, idx) => {
-          html += `<tr><td>${idx + 1}</td><td>${g.username}</td><td style="font-weight:700;">${g.nama}</td><td>${g.role}</td><td>${g.kelas}</td><td>${g.email}</td></tr>`;
+          html += `<tr><td>${idx + 1}</td><td>${g.username}</td><td style="font-weight:600;">${g.nama}</td><td>${g.role}</td><td>${g.kelas}</td><td>${g.email}</td></tr>`;
         });
       }
       html += `</table>`;
@@ -1397,7 +1419,7 @@
             <tr>
               <td>${idx + 1}</td>
               <td>${s.nis}</td>
-              <td style="font-weight:700;">${s.nama}</td>
+              <td style="font-weight:600;">${s.nama}</td>
               <td>${s.kelas}</td>
               <td><span class="status-badge ${badgeClass}">${currentStatus} ${isLocked ? '(Scan QR)' : ''}</span></td>
               <td>
@@ -1514,7 +1536,7 @@
 
       let html = `<table><thead>`;
       html += `<tr><th colspan="4" style="text-align:center; background:#f1f5f9;">DATA SISWA</th>`;
-      html += `<th colspan="${daysInMonth}" style="text-align:center; background:#e2e8f0; color:#0f172a; font-weight:800;">TANGGAL (1 s.d. ${daysInMonth})</th>`;
+      html += `<th colspan="${daysInMonth}" style="text-align:center; background:#e2e8f0; color:#0f172a; font-weight:700;">TANGGAL (1 s.d. ${daysInMonth})</th>`;
       html += `<th colspan="5" style="text-align:center; background:#f1f5f9;">REKAP</th></tr>`;
 
       html += `<tr><th>NO</th><th>NAMA SISWA</th><th>NIS</th><th>KELAS</th>`;
@@ -1539,7 +1561,7 @@
         html += `<tr><td colspan="${daysInMonth + 9}" style="text-align:center;">Tidak ada data siswa untuk kelas ini.</td></tr>`;
       } else {
         siswaKelas.forEach((s, idx) => {
-          html += `<tr><td>${idx + 1}</td><td style="font-weight:700; white-space:nowrap;">${s.nama}</td><td>${s.nis}</td><td>${s.kelas}</td>`;
+          html += `<tr><td>${idx + 1}</td><td style="font-weight:600; white-space:nowrap;">${s.nama}</td><td>${s.nis}</td><td>${s.kelas}</td>`;
           
           let countH = 0, countT = 0, countS = 0, countI = 0;
 
@@ -1604,11 +1626,11 @@
           let persentase = daysInMonth > 0 ? Math.round((totalHadirTelat / daysInMonth) * 100) : 0;
 
           html += `
-            <td style="text-align:center; font-weight:700; color:var(--accent);">${countH}</td>
-            <td style="text-align:center; font-weight:700; color:var(--warning);">${countT}</td>
-            <td style="text-align:center; font-weight:700;">${countS}</td>
-            <td style="text-align:center; font-weight:700;">${countI}</td>
-            <td style="text-align:center; font-weight:700;">${persentase}%</td>
+            <td style="text-align:center; font-weight:600; color:var(--accent);">${countH}</td>
+            <td style="text-align:center; font-weight:600; color:var(--warning);">${countT}</td>
+            <td style="text-align:center; font-weight:600;">${countS}</td>
+            <td style="text-align:center; font-weight:600;">${countI}</td>
+            <td style="text-align:center; font-weight:600;">${persentase}%</td>
           </tr>`;
         });
       }
@@ -1708,7 +1730,7 @@
       } else {
         combined.forEach(item => {
           let badge = item.status.toLowerCase() === 'hadir' ? 'badge-hadir' : (item.status.toLowerCase() === 'telat' ? 'badge-telat' : (item.status.toLowerCase() === 'sakit' ? 'badge-sakit' : 'badge-izin'));
-          html += `<tr><td>${item.waktu}</td><td>${item.nis}</td><td style="font-weight:700;">${item.nama}</td><td>${item.kelas}</td><td><span class="status-badge ${badge}">${item.status}</span></td></tr>`;
+          html += `<tr><td>${item.waktu}</td><td>${item.nis}</td><td>${item.nama}</td><td>${item.kelas}</td><td><span class="status-badge ${badge}">${item.status}</span></td></tr>`;
         });
       }
       html += `</table>`;
@@ -1729,7 +1751,7 @@
       let html = `<table><tr><th>No</th><th>Nama Kelas</th><th>Jumlah Siswa</th><th>Aksi</th></tr>`;
       kelasSet.forEach((kls, idx) => {
         let count = globalSiswaData.filter(s => s.kelas === kls).length;
-        html += `<tr><td>${idx + 1}</td><td style="font-weight:700;">${kls}</td><td>${count} Siswa</td><td><span style="color:var(--danger); cursor:pointer; font-weight:700;">Hapus</span></td></tr>`;
+        html += `<tr><td>${idx + 1}</td><td style="font-weight:600;">${kls}</td><td>${count} Siswa</td><td><span style="color:var(--danger); cursor:pointer;">Hapus</span></td></tr>`;
       });
       html += `</table>`;
       let el = document.getElementById('tabel-manajemen-kelas-container');
@@ -1764,7 +1786,7 @@
       if(displayList.length === 0) {
         html += `<tr><td colspan="4" style="text-align:center;">Data kosong</td></tr>`;
       } else {
-        displayList.forEach(s => html += `<tr><td>${s.nis}</td><td style="font-weight:700;">${s.nama}</td><td>${s.kelas}</td><td>${s.wali}</td></tr>`);
+        displayList.forEach(s => html += `<tr><td>${s.nis}</td><td>${s.nama}</td><td>${s.kelas}</td><td>${s.wali}</td></tr>`);
       }
       html += `</table>`;
       let el = document.getElementById('tabel-siswa-area');
@@ -1807,7 +1829,7 @@
               ${s.nama}
             </div>
           </div>
-          <button onclick="downloadSingleQr('${cardId}', '${s.nama}', '${s.kelas}')" class="btn btn-success" style="margin-top: 10px; padding: 8px 10px; font-size: 0.8rem; width: 100%;">💾 Download QR</button>
+          <button onclick="downloadSingleQr('${cardId}', '${s.nama}', '${s.kelas}')" class="btn btn-success" style="margin-top: 10px; padding: 8px 10px; font-size: 0.8rem; width: 100%;">💾 Download QR (HD)</button>
         `;
         container.appendChild(wrapper);
         
