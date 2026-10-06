@@ -143,8 +143,8 @@
             <h3 style="font-size: 1.1rem; font-weight: 700; color: #0f172a;">📷 Scan QR Code / Barcode</h3>
             <div style="display: flex; align-items: center; gap: 6px;">
               <span style="font-size: 1.1rem;">🔄</span>
-              <select id="camera-select" onchange="switchCameraMode()" style="width: 180px; display: inline-block; margin: 0; padding: 6px 10px; font-size: 0.85rem;">
-                <option value="">Mencari Kamera...</option>
+              <select id="camera-select" onchange="switchCameraMode()" title="Pilih kamera" style="width: 300px; max-width: 100%; display: inline-block; margin: 0; padding: 8px 10px; font-size: 0.85rem; font-weight: 600; border: 1px solid #cbd5e1; border-radius: 10px; background: #fff;">
+                <option value="">🔄 Mencari Kamera...</option>
               </select>
             </div>
           </div>
@@ -694,61 +694,286 @@
     }
 
     // =========================================================
-    // MESIN KAMERA DINAMIS (Mendeteksi Hardware USB & Built-in)
     // =========================================================
+    // MESIN KAMERA UNIVERSAL
+    // Mendeteksi SEMUA kamera yang dikenali browser/Windows:
+    // - Kamera bawaan laptop (Integrated Camera)
+    // - USB Webcam / USB2.0 PC CAMERA
+    // - Logitech / external webcam lainnya
+    // - Kamera yang baru dicolok setelah halaman dibuka
+    // =========================================================
+
+    let cameraDevices = [];
+    let currentCameraId = null;
+    let cameraRefreshTimer = null;
+
+    // ---------------------------------------------------------
+    // Inisialisasi kamera saat halaman scanner dibuka
+    // ---------------------------------------------------------
     function initStandbyCamera() {
-      if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
-      
+      if(!html5QrCode) {
+        html5QrCode = new Html5Qrcode("reader");
+      }
+
       let readerEl = document.getElementById('reader');
+
       if(readerEl && readerEl.offsetParent !== null) {
         if(html5QrCode.isScanning) {
-          html5QrCode.stop().then(() => { startCameraScan(); }).catch(() => { startCameraScan(); });
+          html5QrCode.stop()
+            .then(() => { loadAllCameras(); })
+            .catch(() => { loadAllCameras(); });
         } else {
-          startCameraScan();
+          loadAllCameras();
         }
       }
     }
 
-    function startCameraScan() {
-      let config = { fps: 30, qrbox: { width: 250, height: 250 } };
-      let selectEl = document.getElementById('camera-select');
-      
-      Html5Qrcode.getCameras().then(devices => {
-        if (devices && devices.length > 0) {
-          
-          if (selectEl.options.length <= 1) {
-            selectEl.innerHTML = ''; 
-            devices.forEach((device, index) => {
-              let option = document.createElement('option');
-              option.value = device.id;
-              option.text = device.label || `Kamera ${index + 1}`; 
-              selectEl.appendChild(option);
-            });
-            
-            if (devices.length > 1 && navigator.userAgent.match(/Android|iPhone|iPad/i)) {
-              selectEl.selectedIndex = devices.length - 1; 
+    // ---------------------------------------------------------
+    // Minta izin kamera terlebih dahulu.
+    // Ini membantu Chrome menampilkan nama perangkat kamera
+    // seperti "USB2.0 PC CAMERA" dan "Integrated Camera".
+    // ---------------------------------------------------------
+    async function requestCameraPermission() {
+      if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        return false;
+      }
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false
+        });
+
+        stream.getTracks().forEach(track => track.stop());
+        return true;
+      } catch(error) {
+        console.warn('Izin kamera belum diberikan:', error);
+        return false;
+      }
+    }
+
+    // ---------------------------------------------------------
+    // Baca SEMUA kamera yang tersedia
+    // ---------------------------------------------------------
+    async function loadAllCameras() {
+      const selectEl = document.getElementById('camera-select');
+      const statusEl = document.getElementById('scan-status-text');
+
+      if(!selectEl) return;
+
+      selectEl.innerHTML = '<option value="">🔄 Mendeteksi semua kamera...</option>';
+
+      if(!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+        selectEl.innerHTML = '<option value="">❌ Browser tidak mendukung kamera</option>';
+        if(statusEl) {
+          statusEl.innerHTML = '<span style="color:#ef4444;">Browser tidak mendukung deteksi kamera.</span>';
+        }
+        return;
+      }
+
+      // Minta izin supaya label/nama kamera dapat dibaca.
+      await requestCameraPermission();
+
+      try {
+        // Gunakan API browser agar seluruh videoinput Windows terbaca.
+        const devices = await navigator.mediaDevices.enumerateDevices();
+
+        cameraDevices = devices.filter(device => device.kind === 'videoinput');
+
+        // Jika label masih kosong, coba melalui html5-qrcode.
+        if(cameraDevices.some(device => !device.label)) {
+          try {
+            const qrDevices = await Html5Qrcode.getCameras();
+            if(qrDevices && qrDevices.length) {
+              cameraDevices = qrDevices.map((device, index) => ({
+                deviceId: device.id,
+                label: device.label || `Kamera ${index + 1}`,
+                kind: 'videoinput'
+              }));
             }
+          } catch(qrError) {
+            console.warn('html5-qrcode getCameras:', qrError);
+          }
+        }
+
+        console.log('=== SEMUA KAMERA TERDETEKSI ===');
+        cameraDevices.forEach((camera, index) => {
+          console.log(`${index + 1}. ${camera.label || 'Kamera ' + (index + 1)} | ID: ${camera.deviceId}`);
+        });
+
+        // -----------------------------------------------------
+        // TIDAK ADA KAMERA
+        // -----------------------------------------------------
+        if(!cameraDevices.length) {
+          selectEl.innerHTML = '<option value="">❌ Tidak ada kamera terdeteksi</option>';
+
+          if(statusEl) {
+            statusEl.innerHTML = '<span style="color:#ef4444;">❌ Tidak ada kamera. Colok USB Webcam atau gunakan Scanner Fisik / Ketik Manual NIS.</span>';
+          }
+          return;
+        }
+
+        // -----------------------------------------------------
+        // ISI ULANG DROPDOWN DENGAN SEMUA KAMERA
+        // -----------------------------------------------------
+        selectEl.innerHTML = '';
+
+        cameraDevices.forEach((camera, index) => {
+          const option = document.createElement('option');
+          option.value = camera.deviceId;
+
+          let nama = (camera.label || '').trim();
+          if(!nama) {
+            nama = `Kamera ${index + 1}`;
           }
 
-          let selectedCameraId = selectEl.value;
+          const lowerName = nama.toLowerCase();
 
-          html5QrCode.start(selectedCameraId, config, onScanSuccess, () => {})
-          .catch((err) => {
-             document.getElementById('scan-status-text').innerHTML = `<span style="color: #ef4444;">Gagal memulai kamera: ${err.message}</span>`;
-          });
+          // Beri penanda visual saja; nama perangkat asli tetap dipertahankan.
+          if(
+            lowerName.includes('integrated') ||
+            lowerName.includes('built-in') ||
+            lowerName.includes('internal') ||
+            lowerName.includes('facetime')
+          ) {
+            option.textContent = '💻 ' + nama;
+          } else {
+            option.textContent = '📹 ' + nama;
+          }
 
-        } else {
-          selectEl.innerHTML = '<option value="">Tidak Ada Kamera</option>';
-          document.getElementById('scan-status-text').innerHTML = `<span style="color: #ef4444;">Tidak ada kamera yang terdeteksi di perangkat ini!</span>`;
+          selectEl.appendChild(option);
+        });
+
+        // -----------------------------------------------------
+        // Pertahankan kamera yang sedang dipakai jika masih ada.
+        // Jika kamera USB baru saja dipasang, pilih kamera baru
+        // hanya jika kamera sebelumnya sudah tidak tersedia.
+        // -----------------------------------------------------
+        let selectedCamera = cameraDevices.find(
+          camera => camera.deviceId === currentCameraId
+        );
+
+        if(!selectedCamera) {
+          selectedCamera = cameraDevices[0];
         }
-      }).catch(err => {
-         selectEl.innerHTML = '<option value="">Izin Ditolak</option>';
-         document.getElementById('scan-status-text').innerHTML = `<span style="color: #ef4444;">Izin Kamera diblokir browser. Izinkan melalui pengaturan situs.</span>`;
+
+        if(selectedCamera) {
+          currentCameraId = selectedCamera.deviceId;
+          selectEl.value = currentCameraId;
+        }
+
+        if(statusEl) {
+          statusEl.innerHTML = `<span style="color:#10b981;">✅ ${cameraDevices.length} kamera terdeteksi. Silakan pilih kamera.</span>`;
+        }
+
+        // Mulai kamera yang dipilih.
+        startSelectedCamera();
+
+      } catch(error) {
+        console.error('Gagal membaca daftar kamera:', error);
+
+        selectEl.innerHTML = '<option value="">⚠️ Gagal membaca kamera</option>';
+
+        if(statusEl) {
+          statusEl.innerHTML = '<span style="color:#ef4444;">⚠️ Gagal membaca perangkat kamera. Periksa izin kamera Chrome.</span>';
+        }
+      }
+    }
+
+    // ---------------------------------------------------------
+    // Jalankan kamera sesuai pilihan dropdown
+    // ---------------------------------------------------------
+    function startSelectedCamera() {
+      const selectEl = document.getElementById('camera-select');
+      if(!selectEl) return;
+
+      const cameraId = selectEl.value;
+      if(!cameraId) return;
+
+      currentCameraId = cameraId;
+
+      const config = {
+        fps: 15,
+        qrbox: { width: 250, height: 250 },
+        aspectRatio: 1.0
+      };
+
+      if(html5QrCode.isScanning) {
+        html5QrCode.stop()
+          .then(() => { startCameraById(cameraId, config); })
+          .catch(() => { startCameraById(cameraId, config); });
+      } else {
+        startCameraById(cameraId, config);
+      }
+    }
+
+    // ---------------------------------------------------------
+    // Start kamera berdasarkan deviceId
+    // ---------------------------------------------------------
+    function startCameraById(cameraId, config) {
+      const statusEl = document.getElementById('scan-status-text');
+
+      html5QrCode.start(
+        cameraId,
+        config,
+        onScanSuccess,
+        () => {}
+      ).then(() => {
+
+        const camera = cameraDevices.find(
+          item => item.deviceId === cameraId
+        );
+
+        const nama = camera?.label || 'Kamera';
+
+        if(statusEl) {
+          statusEl.innerHTML = `<span style="color:#10b981;">📷 Kamera aktif: ${nama}</span>`;
+        }
+
+      }).catch(error => {
+
+        console.error('Gagal memulai kamera:', error);
+
+        if(statusEl) {
+          statusEl.innerHTML = '<span style="color:#ef4444;">❌ Kamera gagal dibuka. Silakan pilih kamera lain.</span>';
+        }
       });
     }
 
+    // ---------------------------------------------------------
+    // Ganti kamera dari dropdown
+    // ---------------------------------------------------------
     function switchCameraMode() {
-      initStandbyCamera();
+      startSelectedCamera();
+    }
+
+    // ---------------------------------------------------------
+    // OTOMATIS DETEKSI USB CAMERA
+    // Jika webcam USB dicolok / dilepas, daftar diperbarui.
+    // ---------------------------------------------------------
+    if(navigator.mediaDevices) {
+      navigator.mediaDevices.addEventListener('devicechange', function() {
+
+        console.log('Perangkat kamera berubah. Memuat ulang daftar kamera...');
+
+        clearTimeout(cameraRefreshTimer);
+
+        cameraRefreshTimer = setTimeout(() => {
+
+          const readerEl = document.getElementById('reader');
+
+          if(readerEl && readerEl.offsetParent !== null) {
+            if(html5QrCode && html5QrCode.isScanning) {
+              html5QrCode.stop()
+                .then(() => { loadAllCameras(); })
+                .catch(() => { loadAllCameras(); });
+            } else {
+              loadAllCameras();
+            }
+          }
+
+        }, 1000);
+      });
     }
 
     let isProcessingScan = false;
