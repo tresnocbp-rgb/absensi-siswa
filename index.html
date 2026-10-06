@@ -143,7 +143,11 @@
             <h3 style="font-size: 1.1rem; font-weight: 700; color: #0f172a;">📷 Scan QR Code / Barcode</h3>
             <div style="display: flex; align-items: center; gap: 6px;">
               <span style="font-size: 1.1rem;">🔄</span>
-              <select id="camera-select" onchange="switchCameraMode()" title="Pilih kamera" style="width: 300px; max-width: 100%; display: inline-block; margin: 0; padding: 8px 10px; font-size: 0.85rem; font-weight: 600; border: 1px solid #cbd5e1; border-radius: 10px; background: #fff;">
+              <select id="scan-input-mode" onchange="switchInputMode()" title="Pilih sumber scanner" style="width: 210px; max-width: 100%; display: inline-block; margin: 0; padding: 8px 10px; font-size: 0.85rem; font-weight: 700; border: 1px solid #cbd5e1; border-radius: 10px; background: #fff;">
+                 <option value="camera">📷 Kamera</option>
+                 <option value="usb">🔌 Scanner Barcode USB</option>
+               </select>
+               <select id="camera-select" onchange="switchCameraMode()" title="Pilih kamera" style="width: 300px; max-width: 100%; display: inline-block; margin: 0; padding: 8px 10px; font-size: 0.85rem; font-weight: 600; border: 1px solid #cbd5e1; border-radius: 10px; background: #fff;">
                 <option value="">🔄 Mencari Kamera...</option>
               </select>
             </div>
@@ -752,6 +756,94 @@
       }
     }
 
+    // =========================================================
+    // MODE SCANNER BARCODE USB (HID / KEYBOARD WEDGE)
+    // Scanner USB seperti CS-700 PLUS biasanya dikenali Windows
+    // sebagai keyboard. Browser cukup menerima hasil ketikannya.
+    // =========================================================
+    let usbScannerBuffer = '';
+    let usbScannerLastKeyTime = 0;
+
+    function switchInputMode() {
+      const modeEl = document.getElementById('scan-input-mode');
+      const mode = modeEl ? modeEl.value : 'camera';
+
+      if(mode === 'usb') {
+        activateUsbScannerMode();
+      } else {
+        deactivateUsbScannerMode();
+        const reader = document.getElementById('reader');
+        if(reader) reader.style.display = 'block';
+
+        if(html5QrCode && html5QrCode.isScanning) {
+          html5QrCode.stop().catch(() => {}).finally(() => loadAllCameras());
+        } else {
+          loadAllCameras();
+        }
+      }
+
+      localStorage.setItem('scan_input_mode', mode);
+    }
+
+    function activateUsbScannerMode() {
+      const reader = document.getElementById('reader');
+      const cameraSelect = document.getElementById('camera-select');
+      const input = document.getElementById('manual-nis-input');
+      const status = document.getElementById('scan-status-text');
+      const usbStatus = document.getElementById('usb-scanner-status');
+
+      if(html5QrCode && html5QrCode.isScanning) {
+        html5QrCode.stop().catch(() => {});
+      }
+
+      if(reader) {
+        reader.style.display = 'none';
+        reader.innerHTML = '';
+      }
+
+      if(cameraSelect) cameraSelect.disabled = true;
+
+      if(input) {
+        input.disabled = false;
+        input.placeholder = '🔌 Tembak barcode di sini...';
+        input.style.borderColor = '#10b981';
+        input.focus();
+      }
+
+      if(status) {
+        status.innerHTML = '<span style="color:#10b981;font-weight:800;">🔌 Scanner Barcode USB AKTIF — siap membaca barcode.</span>';
+      }
+
+      if(usbStatus) {
+        usbStatus.innerHTML = '<span style="color:#10b981;">● Scanner USB siap. Pastikan kabel USB terhubung dan tembak barcode.</span>';
+      }
+    }
+
+    function deactivateUsbScannerMode() {
+      const cameraSelect = document.getElementById('camera-select');
+      const input = document.getElementById('manual-nis-input');
+      const usbStatus = document.getElementById('usb-scanner-status');
+
+      if(cameraSelect) cameraSelect.disabled = false;
+
+      if(input) {
+        input.placeholder = 'Tembak Barcode di sini...';
+        input.style.borderColor = 'var(--primary)';
+      }
+
+      if(usbStatus) {
+        usbStatus.textContent = 'Mode kamera aktif.';
+        usbStatus.style.color = '#64748b';
+      }
+    }
+
+    function setUsbModeFromStorage() {
+      const modeEl = document.getElementById('scan-input-mode');
+      const savedMode = localStorage.getItem('scan_input_mode') || 'camera';
+      if(modeEl) modeEl.value = savedMode;
+      if(savedMode === 'usb') activateUsbScannerMode();
+    }
+
     // ---------------------------------------------------------
     // Baca SEMUA kamera yang tersedia
     // ---------------------------------------------------------
@@ -1082,35 +1174,80 @@
     }
 
     // =========================================================
-    // FITUR: DUKUNGAN ALAT SCAN BARCODE FISIK MELALUI INPUT BOX
+    // FITUR: SCANNER BARCODE USB FISIK (HID / KEYBOARD)
     // =========================================================
     let manualInput = document.getElementById('manual-nis-input');
 
+    function processUsbScanValue(value) {
+      const nis = String(value || '').replace(/[\\r\\n\\t]/g, '').trim();
+      if(nis !== '') onScanSuccess(nis);
+    }
+
     if (manualInput) {
-      manualInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
+      manualInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === 'Tab') {
           e.preventDefault();
-          let nis = this.value.trim();
-          if (nis !== '') {
-            onScanSuccess(nis);
-            this.value = ''; 
-          }
+          const value = this.value;
+          this.value = '';
+          processUsbScanValue(value);
+          setTimeout(() => this.focus(), 50);
         }
       });
     }
 
+    // Backup: bila fokus input hilang, scanner HID tetap dapat dibaca
+    // selama mode Scanner Barcode USB aktif.
+    document.addEventListener('keydown', function(e) {
+      const modeEl = document.getElementById('scan-input-mode');
+      if(!modeEl || modeEl.value !== 'usb') return;
+
+      const target = e.target;
+      const typingField = target && (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.tagName === 'SELECT'
+      );
+
+      if(typingField && target !== manualInput) return;
+      if(target === manualInput) return;
+
+      const now = Date.now();
+      if(now - usbScannerLastKeyTime > 120) usbScannerBuffer = '';
+      usbScannerLastKeyTime = now;
+
+      if(e.key === 'Enter' || e.key === 'Tab') {
+        e.preventDefault();
+        const value = usbScannerBuffer;
+        usbScannerBuffer = '';
+        processUsbScanValue(value);
+        if(manualInput) manualInput.focus();
+        return;
+      }
+
+      if(e.key && e.key.length === 1) {
+        usbScannerBuffer += e.key;
+      }
+    }, true);
+
     function autoFocusScanner() {
       let scanPage = document.getElementById('wrapper-scanner-page');
-      if (scanPage && scanPage.style.display !== 'none' && manualInput) {
+      const modeEl = document.getElementById('scan-input-mode');
+
+      if (scanPage && scanPage.style.display !== 'none' &&
+          manualInput && modeEl && modeEl.value === 'usb') {
         let activeEl = document.activeElement;
-        if (!activeEl || (activeEl.tagName !== 'INPUT' && activeEl.tagName !== 'SELECT' && activeEl.tagName !== 'BUTTON')) {
+        if(!activeEl ||
+           (activeEl.tagName !== 'INPUT' &&
+            activeEl.tagName !== 'SELECT' &&
+            activeEl.tagName !== 'BUTTON' &&
+            activeEl.tagName !== 'TEXTAREA')) {
           manualInput.focus();
         }
       }
     }
-    
+
     document.addEventListener('click', autoFocusScanner);
-    setInterval(autoFocusScanner, 1500); 
+    setInterval(autoFocusScanner, 1500);
     // =========================================================
 
     function handleLoginInstant(e) {
