@@ -110,8 +110,6 @@
 
     .kartu-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
     @media(max-width: 1200px) { .kartu-grid { grid-template-columns: repeat(2, 1fr); } }
-    
-    .qr-card-item { border: none; border-radius: 0; padding: 18px; background: #fff; width: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 12px; box-shadow: none; }
   </style>
 </head>
 <body onclick="initAudioContext()">
@@ -145,20 +143,20 @@
             <h3 style="font-size: 1.1rem; font-weight: 700; color: #0f172a;">📷 Scan QR Code / Barcode</h3>
             <div style="display: flex; align-items: center; gap: 6px;">
               <span style="font-size: 1.1rem;">🔄</span>
-              <select id="camera-select" onchange="switchCameraMode()" style="width: 140px; display: inline-block; margin: 0; padding: 6px 10px; font-size: 0.85rem;">
-                <option value="environment">Belakang (Rear)</option>
-                <option value="user">Depan (Front)</option>
+              <select id="camera-select" onchange="switchCameraMode()" style="width: 180px; display: inline-block; margin: 0; padding: 6px 10px; font-size: 0.85rem;">
+                <option value="">Mencari Kamera...</option>
               </select>
             </div>
           </div>
           <div id="reader" style="width: 100%; border-radius: 14px; overflow: hidden; background: #000; margin-top: 10px; min-height: 280px;"></div>
           
-          <!-- PENAMBAHAN INPUT SCANNER FISIK -->
+          <!-- INPUT SCANNER FISIK (KASIR) -->
           <div style="margin-top: 15px; text-align: center;">
             <label style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted);">Gunakan Scanner Fisik / Ketik Manual NIS:</label>
             <input type="text" id="manual-nis-input" placeholder="Tembak Barcode disini..." style="width: 100%; padding: 12px; margin-top: 5px; border-radius: 8px; border: 2px solid var(--primary); text-align: center; font-weight: bold; font-size: 1.2rem; background-color: #eef2ff;" autofocus>
           </div>
           
+          <p id="scan-status-text" style="margin-top: 18px; font-weight: 600; color: var(--primary);">Kamera Standby</p>
         </div>
         <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
           <div>
@@ -695,31 +693,62 @@
       } catch(e) {}
     }
 
-    function initStandbyCamera(facing = "environment") {
+    // =========================================================
+    // MESIN KAMERA DINAMIS (Mendeteksi Hardware USB & Built-in)
+    // =========================================================
+    function initStandbyCamera() {
       if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+      
       let readerEl = document.getElementById('reader');
       if(readerEl && readerEl.offsetParent !== null) {
         if(html5QrCode.isScanning) {
-          html5QrCode.stop().then(() => { startCameraScan(facing); }).catch(() => { startCameraScan(facing); });
+          html5QrCode.stop().then(() => { startCameraScan(); }).catch(() => { startCameraScan(); });
         } else {
-          startCameraScan(facing);
+          startCameraScan();
         }
       }
     }
 
-    function startCameraScan(facing) {
+    function startCameraScan() {
       let config = { fps: 30, qrbox: { width: 250, height: 250 } };
-      let cameraConfig = { facingMode: facing };
+      let selectEl = document.getElementById('camera-select');
       
-      html5QrCode.start(cameraConfig, config, onScanSuccess, () => {})
-      .catch((err) => {
-        html5QrCode.start({ facingMode: "user" }, config, onScanSuccess, () => {}).catch(() => {});
+      Html5Qrcode.getCameras().then(devices => {
+        if (devices && devices.length > 0) {
+          
+          if (selectEl.options.length <= 1) {
+            selectEl.innerHTML = ''; 
+            devices.forEach((device, index) => {
+              let option = document.createElement('option');
+              option.value = device.id;
+              option.text = device.label || `Kamera ${index + 1}`; 
+              selectEl.appendChild(option);
+            });
+            
+            if (devices.length > 1 && navigator.userAgent.match(/Android|iPhone|iPad/i)) {
+              selectEl.selectedIndex = devices.length - 1; 
+            }
+          }
+
+          let selectedCameraId = selectEl.value;
+
+          html5QrCode.start(selectedCameraId, config, onScanSuccess, () => {})
+          .catch((err) => {
+             document.getElementById('scan-status-text').innerHTML = `<span style="color: #ef4444;">Gagal memulai kamera: ${err.message}</span>`;
+          });
+
+        } else {
+          selectEl.innerHTML = '<option value="">Tidak Ada Kamera</option>';
+          document.getElementById('scan-status-text').innerHTML = `<span style="color: #ef4444;">Tidak ada kamera yang terdeteksi di perangkat ini!</span>`;
+        }
+      }).catch(err => {
+         selectEl.innerHTML = '<option value="">Izin Ditolak</option>';
+         document.getElementById('scan-status-text').innerHTML = `<span style="color: #ef4444;">Izin Kamera diblokir browser. Izinkan melalui pengaturan situs.</span>`;
       });
     }
 
     function switchCameraMode() {
-      let selectVal = document.getElementById('camera-select').value;
-      initStandbyCamera(selectVal);
+      initStandbyCamera();
     }
 
     let isProcessingScan = false;
@@ -791,6 +820,7 @@
       let rKelas = document.getElementById('res-kelas');
       let rTgl = document.getElementById('res-tanggal');
       let rStatus = document.getElementById('res-status');
+      let statusText = document.getElementById('scan-status-text');
 
       if(rNis) rNis.innerText = nis;
       if(rNama) rNama.innerText = namaSiswa;
@@ -800,6 +830,7 @@
         rStatus.className = 'status-badge ' + (statusKet === 'Hadir' ? 'badge-hadir' : 'badge-telat');
         rStatus.innerText = statusKet.toUpperCase();
       }
+      if(statusText) statusText.innerText = "Kamera Standby";
 
       let newRecord = { nis: nis, nama: namaSiswa, kelas: kelasSiswa, waktu: now.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'}), tanggal: todayDateStr, status: statusKet };
       globalAbsenHariIni.push(newRecord);
@@ -837,25 +868,22 @@
           let nis = this.value.trim();
           if (nis !== '') {
             onScanSuccess(nis);
-            this.value = ''; // Kosongkan input setelah dikirim
+            this.value = ''; 
           }
         }
       });
     }
 
-    // Auto-focus ke input box agar user tidak perlu klik manual setiap saat
     function autoFocusScanner() {
       let scanPage = document.getElementById('wrapper-scanner-page');
       if (scanPage && scanPage.style.display !== 'none' && manualInput) {
         let activeEl = document.activeElement;
-        // Hanya paksa fokus jika user tidak sedang klik kotak login atau tombol lain
         if (!activeEl || (activeEl.tagName !== 'INPUT' && activeEl.tagName !== 'SELECT' && activeEl.tagName !== 'BUTTON')) {
           manualInput.focus();
         }
       }
     }
     
-    // Panggil auto-focus setiap saat
     document.addEventListener('click', autoFocusScanner);
     setInterval(autoFocusScanner, 1500); 
     // =========================================================
