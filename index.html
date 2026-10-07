@@ -148,7 +148,9 @@
 
     .kartu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 24px; }
     
-    /* CAMERA VIEWFINDER STYLING - RESPONSIVE FIX */
+    /* =========================================
+       CAMERA VIEWFINDER STYLING - FULL 100% AREA
+       ========================================= */
     #reader { 
       width: 100% !important; 
       max-width: 100% !important;
@@ -161,7 +163,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: inset 0 0 0 4px #e2e8f0; 
+      /* Box shadow tepi dihapus agar video benar-benar 100% full */
     }
     #reader video { 
       width: 100% !important; 
@@ -170,7 +172,7 @@
       border-radius: 16px !important; 
     }
     
-    /* Menyembunyikan elemen bawaan library yang tidak diperlukan */
+    /* Sembunyikan elemen dekorasi dari library QR agar bersih 100% */
     #reader img, #reader span { display: none !important; }
     #reader__dashboard_section_csr span { display: none !important; }
     
@@ -210,11 +212,11 @@
         
         <!-- KOLOM KIRI: SCANNER -->
         <div class="card" style="display: flex; flex-direction: column;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 15px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 15px; flex-wrap: wrap; gap: 10px;">
             <h3 style="font-size: 1.2rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px;">
               <span style="background: #e0e7ff; color: #4f46e5; padding: 8px; border-radius: 10px;">📷</span> Input Kehadiran
             </h3>
-            <div style="display: flex; gap: 10px;">
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
               <select id="scan-input-mode" onchange="switchInputMode()" title="Pilih sumber scanner" style="width: auto; margin: 0; padding: 8px 12px; border-radius: 10px; font-weight: 600; cursor: pointer; box-shadow: var(--shadow-sm);">
                  <option value="camera">📹 Mode Kamera</option>
                  <option value="usb">🔌 Mode Scanner Fisik</option>
@@ -796,14 +798,27 @@
       } catch(e) {}
     }
 
+    // =========================================================
+    // MESIN KAMERA UNIVERSAL (DETEKSI SEMUA HARDWARE)
+    // =========================================================
     let cameraDevices = [];
     let currentCameraId = null;
     let cameraRefreshTimer = null;
 
-    async function requestCameraPermission() {
-      if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        return false;
+    function initStandbyCamera() {
+      if(!html5QrCode) { html5QrCode = new Html5Qrcode("reader"); }
+      let readerEl = document.getElementById('reader');
+      if(readerEl && readerEl.offsetParent !== null) {
+        if(html5QrCode.isScanning) {
+          html5QrCode.stop().then(() => { loadAllCameras(); }).catch(() => { loadAllCameras(); });
+        } else {
+          loadAllCameras();
+        }
       }
+    }
+
+    async function requestCameraPermission() {
+      if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { return false; }
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
         stream.getTracks().forEach(track => track.stop());
@@ -845,18 +860,6 @@
 
       if(cameraSelect) cameraSelect.disabled = false;
       if(input) { input.placeholder = 'Arahkan kursor kesini...'; input.style.borderColor = 'var(--primary)'; }
-    }
-
-    function initStandbyCamera() {
-      if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
-      let readerEl = document.getElementById('reader');
-      if(readerEl && readerEl.offsetParent !== null) {
-        if(html5QrCode.isScanning) {
-          html5QrCode.stop().then(() => { loadAllCameras(); }).catch(() => { loadAllCameras(); });
-        } else {
-          loadAllCameras();
-        }
-      }
     }
 
     async function loadAllCameras() {
@@ -930,17 +933,8 @@
       if(!cameraId) return;
       currentCameraId = cameraId;
 
-      // PENGATURAN AREA SCAN (KOTAK PUTIH) DIPERBESAR MENJADI 80% DARI UKURAN LAYAR KAMERA
-      const config = { 
-        fps: 30, 
-        qrbox: function(viewfinderWidth, viewfinderHeight) {
-            let minEdgePercentage = 0.80; 
-            let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
-            let qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
-            return { width: qrboxSize, height: qrboxSize };
-        }, 
-        aspectRatio: 1.0 
-      };
+      // SETTING AREA SCAN MENJADI 100% FULL LAYAR (HAPUS BATASAN KOTAK PUTIH)
+      const config = { fps: 30 }; // Hapus parameter qrbox
 
       if(html5QrCode.isScanning) {
         html5QrCode.stop().then(() => { startCameraById(cameraId, config); }).catch(() => { startCameraById(cameraId, config); });
@@ -1582,6 +1576,7 @@
               cellText = "";
               cellBg = "#fef2f2"; 
             } else {
+              // PENCARIAN DATA ABSENSI BERDASARKAN TAHUN, BULAN, DAN TANGGAL YANG 100% AKURAT
               let record = globalAbsenHariIni.find(a => {
                 if (a.nis.toString() !== s.nis.toString()) return false;
                 if (a.tanggal) {
@@ -1680,6 +1675,7 @@
             row.push("LIBUR");
           } else {
             let val = "-";
+            // PENCARIAN DATA ABSENSI EXCEL YANG SINKRON 100% DENGAN WEB
             let record = globalAbsenHariIni.find(a => {
               if (a.nis.toString() !== s.nis.toString()) return false;
               if (a.tanggal) {
