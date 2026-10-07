@@ -11,7 +11,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   
   <script src="https://unpkg.com/html5-qrcode"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- GANTI LIBRARY QR CODE MENJADI LIBRARY BARCODE 1D -->
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+  
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -113,13 +115,12 @@
     #manual-nis-input:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(79, 70, 229, 0.2); background-color: #ffffff; }
     #manual-nis-input::placeholder { color: #818cf8; font-weight: 500; font-size: 1rem; }
 
-    /* TABLES OVERRIDE (Agar tabel bawaan JS terlihat premium) */
+    /* TABLES OVERRIDE */
     table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 15px; border-radius: 16px; overflow: hidden; border: 1px solid var(--border-color); }
     th, td { padding: 16px; text-align: left; font-size: 0.9rem; border-bottom: 1px solid var(--border-color); }
     th { background-color: #f8fafc !important; color: #475569 !important; font-weight: 700 !important; text-transform: uppercase; font-size: 0.75rem !important; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0 !important; }
     tr:last-child td { border-bottom: none; }
     tr:hover td { background-color: #f8fafc; }
-    /* Paksa override gaya inline JS untuk tabel Admin */
     table th[style] { border: none !important; border-bottom: 2px solid #e2e8f0 !important; background: #f8fafc !important; color: #475569 !important; }
     table td[style] { border: none !important; border-bottom: 1px solid var(--border-color) !important; }
 
@@ -146,11 +147,9 @@
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); display: none; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(8px); }
     .modal-box { background: white; border-radius: 24px; padding: 40px; width: 100%; max-width: 480px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3); }
 
-    .kartu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 24px; }
+    .kartu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
     
-    /* =========================================
-       CAMERA VIEWFINDER STYLING - FULL 100% AREA
-       ========================================= */
+    /* CAMERA VIEWFINDER STYLING - FULL 100% AREA */
     #reader { 
       width: 100% !important; 
       max-width: 100% !important;
@@ -163,7 +162,6 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      /* Box shadow tepi dihapus agar video benar-benar 100% full */
     }
     #reader video { 
       width: 100% !important; 
@@ -172,7 +170,7 @@
       border-radius: 16px !important; 
     }
     
-    /* Sembunyikan elemen dekorasi dari library QR agar bersih 100% */
+    /* Sembunyikan elemen dekorasi library QR */
     #reader img, #reader span { display: none !important; }
     #reader__dashboard_section_csr span { display: none !important; }
     
@@ -196,7 +194,6 @@
         </div>
       </div>
 
-      <!-- TAMPILAN HARI & JAM BENTUK WIDGET -->
       <div style="text-align: center; background: rgba(255, 255, 255, 0.05); padding: 12px 36px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(12px); box-shadow: inset 0 0 20px rgba(255,255,255,0.02);">
         <div id="header-display-date" style="font-size: 0.85rem; color: #38bdf8; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 4px;">-</div>
         <div id="realtime-clock" style="font-size: 2.5rem; font-weight: 900; color: #ffffff; letter-spacing: 2px; line-height: 1; font-variant-numeric: tabular-nums;">00:00:00</div>
@@ -492,10 +489,10 @@
           </div>
         </div>
 
-        <!-- TAB 5: DOWNLOAD QR CODE -->
+        <!-- TAB 5: DOWNLOAD BARCODE 1D -->
         <div id="tab-admin-cetak" class="admin-tab" style="display: none;">
-          <h2 style="font-size: 1.8rem; font-weight: 900; margin-bottom: 6px;">Generator QR Code HD</h2>
-          <p style="color: var(--text-muted); font-size: 1rem; margin-bottom: 30px;">Cetak atau unduh massal QR Code siswa kualitas tinggi.</p>
+          <h2 style="font-size: 1.8rem; font-weight: 900; margin-bottom: 6px;">Generator Barcode (1D)</h2>
+          <p style="color: var(--text-muted); font-size: 1rem; margin-bottom: 30px;">Cetak atau unduh massal Barcode 1D siswaualitas tinggi.</p>
           <div class="card" style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap; background: #f8fafc;">
             <select id="cetak-kelas" onchange="generateQrPreview()" style="max-width: 300px; margin: 0;"><option value="">-- Silahkan Pilih Kelas --</option></select>
             <button onclick="downloadAllQrZip()" class="btn btn-success" id="btn-download-all" style="display: none; padding: 14px 30px;">📦 Download Satu Kelas (ZIP)</button>
@@ -727,7 +724,7 @@
         menuContainer.innerHTML = `
           <li><a onclick="switchAdminTab('admin-dash')" id="menu-admin-dash" class="active">📊 Dashboard</a></li>
           <li><a onclick="switchAdminTab('admin-siswa')" id="menu-admin-siswa">👥 Data Siswa</a></li>
-          <li><a onclick="switchAdminTab('admin-cetak')" id="menu-admin-cetak">🖨️ Download QR Code</a></li>
+          <li><a onclick="switchAdminTab('admin-cetak')" id="menu-admin-cetak">🖨️ Download Barcode 1D</a></li>
           <li><a onclick="switchAdminTab('admin-rekap')" id="menu-admin-rekap">📈 Rekap Bulanan</a></li>
           <li><a onclick="switchAdminTab('admin-daftar-hadir')" id="menu-admin-daftar-hadir">📝 Daftar Hadir</a></li>
         `;
@@ -737,7 +734,7 @@
           <li><a onclick="switchAdminTab('admin-siswa')" id="menu-admin-siswa">👥 Data Siswa</a></li>
           <li><a onclick="switchAdminTab('admin-guru')" id="menu-admin-guru">👨‍🏫 Data Guru</a></li>
           <li><a onclick="switchAdminTab('admin-laporan')" id="menu-admin-laporan">📊 Laporan</a></li>
-          <li><a onclick="switchAdminTab('admin-cetak')" id="menu-admin-cetak">🖨️ Download QR Code</a></li>
+          <li><a onclick="switchAdminTab('admin-cetak')" id="menu-admin-cetak">🖨️ Download Barcode 1D</a></li>
           <li><a onclick="switchAdminTab('admin-rekap')" id="menu-admin-rekap">📈 Rekap Bulanan</a></li>
           <li><a onclick="switchAdminTab('admin-kelola-absen')" id="menu-admin-kelola-absen">⚙️ Kelola Absen</a></li>
           <li><a onclick="switchAdminTab('admin-manajemen-kelas')" id="menu-admin-manajemen-kelas">🏫 Manajemen Kelas</a></li>
@@ -798,24 +795,9 @@
       } catch(e) {}
     }
 
-    // =========================================================
-    // MESIN KAMERA UNIVERSAL (DETEKSI SEMUA HARDWARE)
-    // =========================================================
     let cameraDevices = [];
     let currentCameraId = null;
     let cameraRefreshTimer = null;
-
-    function initStandbyCamera() {
-      if(!html5QrCode) { html5QrCode = new Html5Qrcode("reader"); }
-      let readerEl = document.getElementById('reader');
-      if(readerEl && readerEl.offsetParent !== null) {
-        if(html5QrCode.isScanning) {
-          html5QrCode.stop().then(() => { loadAllCameras(); }).catch(() => { loadAllCameras(); });
-        } else {
-          loadAllCameras();
-        }
-      }
-    }
 
     async function requestCameraPermission() {
       if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { return false; }
@@ -860,6 +842,18 @@
 
       if(cameraSelect) cameraSelect.disabled = false;
       if(input) { input.placeholder = 'Arahkan kursor kesini...'; input.style.borderColor = 'var(--primary)'; }
+    }
+
+    function initStandbyCamera() {
+      if(!html5QrCode) { html5QrCode = new Html5Qrcode("reader"); }
+      let readerEl = document.getElementById('reader');
+      if(readerEl && readerEl.offsetParent !== null) {
+        if(html5QrCode.isScanning) {
+          html5QrCode.stop().then(() => { loadAllCameras(); }).catch(() => { loadAllCameras(); });
+        } else {
+          loadAllCameras();
+        }
+      }
     }
 
     async function loadAllCameras() {
@@ -933,8 +927,16 @@
       if(!cameraId) return;
       currentCameraId = cameraId;
 
-      // SETTING AREA SCAN MENJADI 100% FULL LAYAR (HAPUS BATASAN KOTAK PUTIH)
-      const config = { fps: 30 }; // Hapus parameter qrbox
+      // FORMAT KHUSUS UNTUK MEMBACA 1D BARCODE DENGAN CEPAT
+      const config = { 
+        fps: 30, 
+        formatsToSupport: [ 
+          Html5QrcodeSupportedFormats.CODE_128, 
+          Html5QrcodeSupportedFormats.CODE_39, 
+          Html5QrcodeSupportedFormats.EAN_13, 
+          Html5QrcodeSupportedFormats.QR_CODE 
+        ]
+      }; 
 
       if(html5QrCode.isScanning) {
         html5QrCode.stop().then(() => { startCameraById(cameraId, config); }).catch(() => { startCameraById(cameraId, config); });
@@ -1066,7 +1068,6 @@
     }
 
     let manualInput = document.getElementById('manual-nis-input');
-
     function processUsbScanValue(value) {
       const nis = String(value || '').replace(/[\\r\\n\\t]/g, '').trim();
       if(nis !== '') onScanSuccess(nis);
@@ -1122,7 +1123,6 @@
         }
       }
     }
-
     document.addEventListener('click', autoFocusScanner);
     setInterval(autoFocusScanner, 1500);
 
@@ -1817,26 +1817,27 @@
 
       siswaList.forEach((s, index) => {
         let cardId = `qr-elem-${index}`;
-        let qrId = `qrcode-${index}`;
+        let qrId = `barcode-${index}`;
         let wrapper = document.createElement('div');
         wrapper.style.marginBottom = "15px";
         
         wrapper.innerHTML = `
-          <div id="${cardId}" style="background: #ffffff; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 220px; margin: 0 auto; border: none !important; border-radius: 0 !important; outline: none !important; box-shadow: none !important;">
-            <div id="${qrId}" style="margin: 0 auto;"></div>
-            <div style="font-size: 1.1rem; font-weight: 900; color: #000000; margin-top: 15px; text-align: center; line-height: 1.2; font-family: Arial, sans-serif;">
+          <div id="${cardId}" style="background: #ffffff; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 280px; margin: 0 auto; border: none; outline: none; box-shadow: none;">
+            <svg id="${qrId}" style="margin: 0 auto; width: 100%; max-width: 250px;"></svg>
+            <div style="font-size: 1.1rem; font-weight: 900; color: #000000; margin-top: 10px; text-align: center; line-height: 1.2; font-family: Arial, sans-serif;">
               ${s.nama}
             </div>
           </div>
-          <button onclick="downloadSingleQr('${cardId}', '${s.nama}', '${s.kelas}')" class="btn btn-success" style="margin-top: 10px; padding: 8px 10px; font-size: 0.8rem; width: 100%;">💾 Download QR</button>
+          <button onclick="downloadSingleQr('${cardId}', '${s.nama}', '${s.kelas}')" class="btn btn-success" style="margin-top: 10px; padding: 8px 10px; font-size: 0.8rem; width: 100%;">💾 Download Barcode</button>
         `;
         container.appendChild(wrapper);
         
-        new QRCode(document.getElementById(qrId), {
-          text: s.nis.toString(),
-          width: 170, 
-          height: 170,
-          correctLevel: QRCode.CorrectLevel.H
+        JsBarcode(`#${qrId}`, s.nis.toString(), {
+          format: "CODE128",
+          lineColor: "#000",
+          width: 2,
+          height: 60,
+          displayValue: false
         });
       });
     }
@@ -1845,7 +1846,7 @@
       let el = document.getElementById(elementId);
       html2canvas(el, { scale: 5, useCORS: true, backgroundColor: "#ffffff" }).then(canvas => {
         let link = document.createElement('a');
-        link.download = `QR-${namaSiswa.replace(/\s+/g, '_')}-${kelasSiswa.replace(/\s+/g, '_')}.jpg`;
+        link.download = `Barcode-${namaSiswa.replace(/\s+/g, '_')}-${kelasSiswa.replace(/\s+/g, '_')}.jpg`;
         link.href = canvas.toDataURL('image/jpeg', 1.0);
         link.click();
       });
@@ -1863,7 +1864,7 @@
       btn.disabled = true;
 
       let zip = new JSZip();
-      let folder = zip.folder(`QR_Codes_${kelasVal.replace(/\s+/g, '_')}`);
+      let folder = zip.folder(`Barcode_1D_${kelasVal.replace(/\s+/g, '_')}`);
 
       for (let index = 0; index < siswaList.length; index++) {
         let s = siswaList[index];
@@ -1872,25 +1873,26 @@
         tempDiv.style.left = '-9999px';
         
         tempDiv.innerHTML = `
-          <div id="temp-card-${index}" style="background: #ffffff; padding: 30px; display: flex; flex-direction: column; align-items: center; text-align: center; border: none !important; border-radius: 0 !important; outline: none !important; width: max-content;">
-            <div id="temp-code-${index}"></div>
-            <div style="font-size: 1.3rem; font-weight: 900; color: #000000; margin-top: 20px; line-height: 1.2; font-family: Arial, sans-serif;">
+          <div id="temp-card-${index}" style="background: #ffffff; padding: 30px; display: flex; flex-direction: column; align-items: center; text-align: center; border: none; width: 300px;">
+            <svg id="temp-code-${index}" style="width: 100%; max-width: 280px;"></svg>
+            <div style="font-size: 1.3rem; font-weight: 900; color: #000000; margin-top: 15px; line-height: 1.2; font-family: Arial, sans-serif;">
               ${s.nama}
             </div>
           </div>
         `;
         document.body.appendChild(tempDiv);
         
-        new QRCode(document.getElementById(`temp-code-${index}`), {
-          text: s.nis.toString(),
-          width: 200, 
-          height: 200,
-          correctLevel: QRCode.CorrectLevel.H
+        JsBarcode(`#temp-code-${index}`, s.nis.toString(), {
+          format: "CODE128",
+          lineColor: "#000",
+          width: 3,
+          height: 80,
+          displayValue: false
         });
 
         let canvas = await html2canvas(document.getElementById(`temp-card-${index}`), { scale: 4, useCORS: true, backgroundColor: "#ffffff" });
         let imgData = canvas.toDataURL('image/jpeg', 1.0).replace(/^data:image\/jpeg;base64,/, "");
-        folder.file(`QR-${s.nama.replace(/\s+/g, '_')}-${s.nis}.jpg`, imgData, { base64: true });
+        folder.file(`Barcode-${s.nama.replace(/\s+/g, '_')}-${s.nis}.jpg`, imgData, { base64: true });
 
         document.body.removeChild(tempDiv);
       }
@@ -1898,10 +1900,10 @@
       let content = await zip.generateAsync({ type: "blob" });
       let link = document.createElement('a');
       link.href = URL.createObjectURL(content);
-      link.download = `QR_Codes_${kelasVal.replace(/\s+/g, '_')}.zip`;
+      link.download = `Barcode_1D_${kelasVal.replace(/\s+/g, '_')}.zip`;
       link.click();
 
-      btn.innerText = "📦 Download All QR Code (ZIP HD)";
+      btn.innerText = "📦 Download Satu Kelas (ZIP)";
       btn.disabled = false;
     }
   </script>
